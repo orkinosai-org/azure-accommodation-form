@@ -1,0 +1,115 @@
+{
+  "tenant_details": {
+    "full_name": "",
+    "date_of_birth": "",
+    "place_of_birth": "",
+    "email": "",
+    "telephone": "",
+    "employers_name": "",
+    "gender": ["male", "female"],
+    "ni_number": "",
+    "car": false,
+    "bicycle": false,
+    "right_to_live_in_uk": false,
+    "other_names": {
+      "has_other_names": false,
+      "details": ""
+    },
+    "room_occupancy": ["just_you", "you_and_someone_else"],
+    "medical_condition": {
+      "has_condition": false,
+      "details": ""
+    }
+  },
+  "bank_details": {
+    "bank_name": "",
+    "postcode": "",
+    "account_no": "",
+    "sort_code": ""
+  },
+  "address_history": [
+    {
+      "address": "",
+      "from": "",
+      "to": "",
+      "landlord_name": "",
+      "landlord_tel": "",
+      "landlord_email": ""
+    }
+  ],
+  "contacts": {
+    "next_of_kin": "",
+    "relationship": "",
+    "address": "",
+    "contact_number": ""
+  },
+  "medical_details": {
+    "gp_practice": "",
+    "doctor_name": "",
+    "doctor_address": "",
+    "doctor_telephone": ""
+  },
+  "employment": {
+    "employer_name": "",
+    "employer_address": "",
+    "job_title": "",
+    "manager_name": "",
+    "manager_tel": "",
+    "manager_email": "",
+    "date_of_employment": "",
+    "present_salary": ""
+  },
+  "employment_change": "",
+  "passport_details": {
+    "passport_number": "",
+    "date_of_issue": "",
+    "place_of_issue": ""
+  },
+  "current_living_arrangement": {
+    "landlord_knows": false,
+    "notice_end_date": "",
+    "reason_leaving": "",
+    "landlord_reference": false,
+    "landlord_contact": {
+      "name": "",
+      "address": "",
+      "tel": "",
+      "email": ""
+    }
+  },
+  "other": {
+    "pets": {
+      "has_pets": false,
+      "details": ""
+    },
+    "smoke": false,
+    "coliving": {
+      "has_coliving": false,
+      "details": ""
+    }
+  },
+  "occupation_agreement": {
+    "single_occupancy_agree": false,
+    "hmo_terms_agree": false,
+    "no_unlisted_occupants": false,
+    "no_smoking": false,
+    "kitchen_cooking_only": false
+  },
+  "consent_and_declaration": {
+    "consent_given": false,
+    "signature": "",
+    "date": "",
+    "print_name": "",
+    "declaration": {
+      "main_home": false,
+      "enquiries_permission": false,
+      "certify_no_judgements": false,
+      "certify_no_housing_debt": false,
+      "certify_no_landlord_debt": false,
+      "certify_no_abuse": false
+    },
+    "declaration_signature": "",
+    "declaration_date": "",
+    "declaration_print_name": ""
+  }
+}
