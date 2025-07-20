@@ -641,6 +641,601 @@ const ApplicationFormFields: React.FC = () => {
         </button>
       </fieldset>
 
+      {/* Contacts Section */}
+      <fieldset style={{ border: '1px solid #ccc', padding: '15px', borderRadius: '5px' }}>
+        <legend><strong>4. Contacts</strong></legend>
+        
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+          <div>
+            <label htmlFor="next_of_kin">Next of Kin</label>
+            <input
+              type="text"
+              id="next_of_kin"
+              value={formData.contacts.next_of_kin}
+              onChange={(e) => updateFormData('contacts', 'next_of_kin', e.target.value)}
+              style={{ width: '100%', padding: '5px' }}
+            />
+          </div>
+          
+          <div>
+            <label htmlFor="relationship">Relationship</label>
+            <input
+              type="text"
+              id="relationship"
+              value={formData.contacts.relationship}
+              onChange={(e) => updateFormData('contacts', 'relationship', e.target.value)}
+              style={{ width: '100%', padding: '5px' }}
+            />
+          </div>
+          
+          <div>
+            <label htmlFor="contact_address">Address</label>
+            <textarea
+              id="contact_address"
+              value={formData.contacts.address}
+              onChange={(e) => updateFormData('contacts', 'address', e.target.value)}
+              style={{ width: '100%', padding: '5px' }}
+              rows={2}
+            />
+          </div>
+          
+          <div>
+            <label htmlFor="contact_number">Contact Number</label>
+            <input
+              type="tel"
+              id="contact_number"
+              value={formData.contacts.contact_number}
+              onChange={(e) => updateFormData('contacts', 'contact_number', e.target.value)}
+              style={{ width: '100%', padding: '5px' }}
+            />
+          </div>
+        </div>
+      </fieldset>
+
+      {/* Medical Details Section */}
+      <fieldset style={{ border: '1px solid #ccc', padding: '15px', borderRadius: '5px' }}>
+        <legend><strong>5. Medical Details</strong></legend>
+        
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+          <div>
+            <label htmlFor="gp_practice">GP Practice</label>
+            <input
+              type="text"
+              id="gp_practice"
+              value={formData.medical_details.gp_practice}
+              onChange={(e) => updateFormData('medical_details', 'gp_practice', e.target.value)}
+              style={{ width: '100%', padding: '5px' }}
+            />
+          </div>
+          
+          <div>
+            <label htmlFor="doctor_name">Doctor's Name</label>
+            <input
+              type="text"
+              id="doctor_name"
+              value={formData.medical_details.doctor_name}
+              onChange={(e) => updateFormData('medical_details', 'doctor_name', e.target.value)}
+              style={{ width: '100%', padding: '5px' }}
+            />
+          </div>
+          
+          <div>
+            <label htmlFor="doctor_address">Doctor's Address</label>
+            <textarea
+              id="doctor_address"
+              value={formData.medical_details.doctor_address}
+              onChange={(e) => updateFormData('medical_details', 'doctor_address', e.target.value)}
+              style={{ width: '100%', padding: '5px' }}
+              rows={2}
+            />
+          </div>
+          
+          <div>
+            <label htmlFor="doctor_telephone">Doctor's Telephone No</label>
+            <input
+              type="tel"
+              id="doctor_telephone"
+              value={formData.medical_details.doctor_telephone}
+              onChange={(e) => updateFormData('medical_details', 'doctor_telephone', e.target.value)}
+              style={{ width: '100%', padding: '5px' }}
+            />
+          </div>
+        </div>
+      </fieldset>
+
+      {/* Employment Section */}
+      <fieldset style={{ border: '1px solid #ccc', padding: '15px', borderRadius: '5px' }}>
+        <legend><strong>6. Employment</strong></legend>
+        
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+          <div>
+            <label htmlFor="employer_name">Name & Address of Employer</label>
+            <textarea
+              id="employer_name"
+              value={formData.employment.employer_name}
+              onChange={(e) => updateFormData('employment', 'employer_name', e.target.value)}
+              style={{ width: '100%', padding: '5px' }}
+              rows={2}
+            />
+          </div>
+          
+          <div>
+            <label htmlFor="job_title">Job Title</label>
+            <input
+              type="text"
+              id="job_title"
+              value={formData.employment.job_title}
+              onChange={(e) => updateFormData('employment', 'job_title', e.target.value)}
+              style={{ width: '100%', padding: '5px' }}
+            />
+          </div>
+          
+          <div>
+            <label htmlFor="manager_name">Manager's Name</label>
+            <input
+              type="text"
+              id="manager_name"
+              value={formData.employment.manager_name}
+              onChange={(e) => updateFormData('employment', 'manager_name', e.target.value)}
+              style={{ width: '100%', padding: '5px' }}
+            />
+          </div>
+          
+          <div>
+            <label htmlFor="manager_tel">Manager's Tel</label>
+            <input
+              type="tel"
+              id="manager_tel"
+              value={formData.employment.manager_tel}
+              onChange={(e) => updateFormData('employment', 'manager_tel', e.target.value)}
+              style={{ width: '100%', padding: '5px' }}
+            />
+          </div>
+          
+          <div>
+            <label htmlFor="manager_email">Manager's Email</label>
+            <input
+              type="email"
+              id="manager_email"
+              value={formData.employment.manager_email}
+              onChange={(e) => updateFormData('employment', 'manager_email', e.target.value)}
+              style={{ width: '100%', padding: '5px' }}
+            />
+          </div>
+          
+          <div>
+            <label htmlFor="date_of_employment">Date of Employment</label>
+            <input
+              type="date"
+              id="date_of_employment"
+              value={formData.employment.date_of_employment}
+              onChange={(e) => updateFormData('employment', 'date_of_employment', e.target.value)}
+              style={{ width: '100%', padding: '5px' }}
+            />
+          </div>
+          
+          <div>
+            <label htmlFor="present_salary">Present Salary</label>
+            <input
+              type="text"
+              id="present_salary"
+              value={formData.employment.present_salary}
+              onChange={(e) => updateFormData('employment', 'present_salary', e.target.value)}
+              style={{ width: '100%', padding: '5px' }}
+            />
+          </div>
+        </div>
+      </fieldset>
+
+      {/* Employment Change Section */}
+      <fieldset style={{ border: '1px solid #ccc', padding: '15px', borderRadius: '5px' }}>
+        <legend><strong>7. Employment Change</strong></legend>
+        
+        <div>
+          <label htmlFor="employment_change">Are circumstances likely to change?</label>
+          <textarea
+            id="employment_change"
+            value={formData.employment_change}
+            onChange={(e) => setFormData(prev => ({ ...prev, employment_change: e.target.value }))}
+            style={{ width: '100%', padding: '5px' }}
+            rows={3}
+          />
+        </div>
+      </fieldset>
+
+      {/* Passport Details Section */}
+      <fieldset style={{ border: '1px solid #ccc', padding: '15px', borderRadius: '5px' }}>
+        <legend><strong>8. Passport Details</strong></legend>
+        
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+          <div>
+            <label htmlFor="passport_number">Passport Number</label>
+            <input
+              type="text"
+              id="passport_number"
+              value={formData.passport_details.passport_number}
+              onChange={(e) => updateFormData('passport_details', 'passport_number', e.target.value)}
+              style={{ width: '100%', padding: '5px' }}
+            />
+          </div>
+          
+          <div>
+            <label htmlFor="date_of_issue">Date of Issue</label>
+            <input
+              type="date"
+              id="date_of_issue"
+              value={formData.passport_details.date_of_issue}
+              onChange={(e) => updateFormData('passport_details', 'date_of_issue', e.target.value)}
+              style={{ width: '100%', padding: '5px' }}
+            />
+          </div>
+          
+          <div>
+            <label htmlFor="place_of_issue">Place of Issue</label>
+            <input
+              type="text"
+              id="place_of_issue"
+              value={formData.passport_details.place_of_issue}
+              onChange={(e) => updateFormData('passport_details', 'place_of_issue', e.target.value)}
+              style={{ width: '100%', padding: '5px' }}
+            />
+          </div>
+        </div>
+      </fieldset>
+
+      {/* Current Living Arrangement Section */}
+      <fieldset style={{ border: '1px solid #ccc', padding: '15px', borderRadius: '5px' }}>
+        <legend><strong>9. Current Living Arrangement</strong></legend>
+        
+        <div style={{ marginBottom: '10px' }}>
+          <label>
+            <input
+              type="checkbox"
+              checked={formData.current_living_arrangement.landlord_knows}
+              onChange={(e) => updateFormData('current_living_arrangement', 'landlord_knows', e.target.checked)}
+            />
+            Does landlord know you are leaving?
+          </label>
+        </div>
+        
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '10px' }}>
+          <div>
+            <label htmlFor="notice_end_date">Notice Run Out Date</label>
+            <input
+              type="date"
+              id="notice_end_date"
+              value={formData.current_living_arrangement.notice_end_date}
+              onChange={(e) => updateFormData('current_living_arrangement', 'notice_end_date', e.target.value)}
+              style={{ width: '100%', padding: '5px' }}
+            />
+          </div>
+          
+          <div>
+            <label htmlFor="reason_leaving">Reason for Leaving</label>
+            <input
+              type="text"
+              id="reason_leaving"
+              value={formData.current_living_arrangement.reason_leaving}
+              onChange={(e) => updateFormData('current_living_arrangement', 'reason_leaving', e.target.value)}
+              style={{ width: '100%', padding: '5px' }}
+            />
+          </div>
+        </div>
+        
+        <div style={{ marginBottom: '10px' }}>
+          <label>
+            <input
+              type="checkbox"
+              checked={formData.current_living_arrangement.landlord_reference}
+              onChange={(e) => updateFormData('current_living_arrangement', 'landlord_reference', e.target.checked)}
+            />
+            Will landlord give reference?
+          </label>
+        </div>
+        
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+          <div>
+            <label htmlFor="landlord_contact_name">Existing Landlord/Agent Name</label>
+            <input
+              type="text"
+              id="landlord_contact_name"
+              value={formData.current_living_arrangement.landlord_contact.name}
+              onChange={(e) => updateNestedFormData('current_living_arrangement', 'landlord_contact', 'name', e.target.value)}
+              style={{ width: '100%', padding: '5px' }}
+            />
+          </div>
+          
+          <div>
+            <label htmlFor="landlord_contact_tel">Contact Tel</label>
+            <input
+              type="tel"
+              id="landlord_contact_tel"
+              value={formData.current_living_arrangement.landlord_contact.tel}
+              onChange={(e) => updateNestedFormData('current_living_arrangement', 'landlord_contact', 'tel', e.target.value)}
+              style={{ width: '100%', padding: '5px' }}
+            />
+          </div>
+          
+          <div>
+            <label htmlFor="landlord_contact_address">Contact Address</label>
+            <textarea
+              id="landlord_contact_address"
+              value={formData.current_living_arrangement.landlord_contact.address}
+              onChange={(e) => updateNestedFormData('current_living_arrangement', 'landlord_contact', 'address', e.target.value)}
+              style={{ width: '100%', padding: '5px' }}
+              rows={2}
+            />
+          </div>
+          
+          <div>
+            <label htmlFor="landlord_contact_email">Contact Email</label>
+            <input
+              type="email"
+              id="landlord_contact_email"
+              value={formData.current_living_arrangement.landlord_contact.email}
+              onChange={(e) => updateNestedFormData('current_living_arrangement', 'landlord_contact', 'email', e.target.value)}
+              style={{ width: '100%', padding: '5px' }}
+            />
+          </div>
+        </div>
+      </fieldset>
+
+      {/* Other Details Section */}
+      <fieldset style={{ border: '1px solid #ccc', padding: '15px', borderRadius: '5px' }}>
+        <legend><strong>10. Other</strong></legend>
+        
+        <div style={{ marginBottom: '10px' }}>
+          <label>
+            <input
+              type="checkbox"
+              checked={formData.other.pets.has_pets}
+              onChange={(e) => updateNestedFormData('other', 'pets', 'has_pets', e.target.checked)}
+            />
+            Do you have pets?
+          </label>
+          {formData.other.pets.has_pets && (
+            <textarea
+              placeholder="Please provide details"
+              value={formData.other.pets.details}
+              onChange={(e) => updateNestedFormData('other', 'pets', 'details', e.target.value)}
+              style={{ width: '100%', padding: '5px', marginTop: '5px' }}
+              rows={2}
+            />
+          )}
+        </div>
+        
+        <div style={{ marginBottom: '10px' }}>
+          <label>
+            <input
+              type="checkbox"
+              checked={formData.other.smoke}
+              onChange={(e) => updateFormData('other', 'smoke', e.target.checked)}
+            />
+            Do you smoke?
+          </label>
+        </div>
+        
+        <div>
+          <label>
+            <input
+              type="checkbox"
+              checked={formData.other.coliving.has_coliving}
+              onChange={(e) => updateNestedFormData('other', 'coliving', 'has_coliving', e.target.checked)}
+            />
+            Co-living preferences?
+          </label>
+          {formData.other.coliving.has_coliving && (
+            <textarea
+              placeholder="Please provide details"
+              value={formData.other.coliving.details}
+              onChange={(e) => updateNestedFormData('other', 'coliving', 'details', e.target.value)}
+              style={{ width: '100%', padding: '5px', marginTop: '5px' }}
+              rows={2}
+            />
+          )}
+        </div>
+      </fieldset>
+
+      {/* Occupation Agreement Section */}
+      <fieldset style={{ border: '1px solid #ccc', padding: '15px', borderRadius: '5px' }}>
+        <legend><strong>11. Occupation Agreement</strong></legend>
+        
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <label>
+            <input
+              type="checkbox"
+              checked={formData.occupation_agreement.single_occupancy_agree}
+              onChange={(e) => updateFormData('occupation_agreement', 'single_occupancy_agree', e.target.checked)}
+            />
+            I agree to single occupancy terms
+          </label>
+          
+          <label>
+            <input
+              type="checkbox"
+              checked={formData.occupation_agreement.hmo_terms_agree}
+              onChange={(e) => updateFormData('occupation_agreement', 'hmo_terms_agree', e.target.checked)}
+            />
+            I agree to HMO terms and conditions
+          </label>
+          
+          <label>
+            <input
+              type="checkbox"
+              checked={formData.occupation_agreement.no_unlisted_occupants}
+              onChange={(e) => updateFormData('occupation_agreement', 'no_unlisted_occupants', e.target.checked)}
+            />
+            I will not allow unlisted occupants
+          </label>
+          
+          <label>
+            <input
+              type="checkbox"
+              checked={formData.occupation_agreement.no_smoking}
+              onChange={(e) => updateFormData('occupation_agreement', 'no_smoking', e.target.checked)}
+            />
+            I agree to no smoking policy
+          </label>
+          
+          <label>
+            <input
+              type="checkbox"
+              checked={formData.occupation_agreement.kitchen_cooking_only}
+              onChange={(e) => updateFormData('occupation_agreement', 'kitchen_cooking_only', e.target.checked)}
+            />
+            I agree to use kitchen for cooking only
+          </label>
+        </div>
+      </fieldset>
+
+      {/* Consent and Declaration Section */}
+      <fieldset style={{ border: '1px solid #ccc', padding: '15px', borderRadius: '5px' }}>
+        <legend><strong>12. Consent & Declaration</strong></legend>
+        
+        <div style={{ marginBottom: '15px' }}>
+          <h4>Consent</h4>
+          <div style={{ marginBottom: '10px' }}>
+            <label>
+              <input
+                type="checkbox"
+                checked={formData.consent_and_declaration.consent_given}
+                onChange={(e) => updateFormData('consent_and_declaration', 'consent_given', e.target.checked)}
+              />
+              I consent to the processing of my personal data as outlined in the privacy policy
+            </label>
+          </div>
+          
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px' }}>
+            <div>
+              <label htmlFor="consent_signature">Signature (Type name)</label>
+              <input
+                type="text"
+                id="consent_signature"
+                value={formData.consent_and_declaration.signature}
+                onChange={(e) => updateFormData('consent_and_declaration', 'signature', e.target.value)}
+                style={{ width: '100%', padding: '5px' }}
+              />
+            </div>
+            
+            <div>
+              <label htmlFor="consent_date">Date</label>
+              <input
+                type="date"
+                id="consent_date"
+                value={formData.consent_and_declaration.date}
+                onChange={(e) => updateFormData('consent_and_declaration', 'date', e.target.value)}
+                style={{ width: '100%', padding: '5px' }}
+              />
+            </div>
+            
+            <div>
+              <label htmlFor="consent_print_name">Print Name</label>
+              <input
+                type="text"
+                id="consent_print_name"
+                value={formData.consent_and_declaration.print_name}
+                onChange={(e) => updateFormData('consent_and_declaration', 'print_name', e.target.value)}
+                style={{ width: '100%', padding: '5px' }}
+              />
+            </div>
+          </div>
+        </div>
+        
+        <div>
+          <h4>Declaration</h4>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '10px' }}>
+            <label>
+              <input
+                type="checkbox"
+                checked={formData.consent_and_declaration.declaration.main_home}
+                onChange={(e) => updateNestedFormData('consent_and_declaration', 'declaration', 'main_home', e.target.checked)}
+              />
+              This will be my main home
+            </label>
+            
+            <label>
+              <input
+                type="checkbox"
+                checked={formData.consent_and_declaration.declaration.enquiries_permission}
+                onChange={(e) => updateNestedFormData('consent_and_declaration', 'declaration', 'enquiries_permission', e.target.checked)}
+              />
+              I give permission for enquiries to be made
+            </label>
+            
+            <label>
+              <input
+                type="checkbox"
+                checked={formData.consent_and_declaration.declaration.certify_no_judgements}
+                onChange={(e) => updateNestedFormData('consent_and_declaration', 'declaration', 'certify_no_judgements', e.target.checked)}
+              />
+              I certify no outstanding county court judgements
+            </label>
+            
+            <label>
+              <input
+                type="checkbox"
+                checked={formData.consent_and_declaration.declaration.certify_no_housing_debt}
+                onChange={(e) => updateNestedFormData('consent_and_declaration', 'declaration', 'certify_no_housing_debt', e.target.checked)}
+              />
+              I certify no housing-related debt
+            </label>
+            
+            <label>
+              <input
+                type="checkbox"
+                checked={formData.consent_and_declaration.declaration.certify_no_landlord_debt}
+                onChange={(e) => updateNestedFormData('consent_and_declaration', 'declaration', 'certify_no_landlord_debt', e.target.checked)}
+              />
+              I certify no debt to previous landlords
+            </label>
+            
+            <label>
+              <input
+                type="checkbox"
+                checked={formData.consent_and_declaration.declaration.certify_no_abuse}
+                onChange={(e) => updateNestedFormData('consent_and_declaration', 'declaration', 'certify_no_abuse', e.target.checked)}
+              />
+              I certify no history of property abuse
+            </label>
+          </div>
+          
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px' }}>
+            <div>
+              <label htmlFor="declaration_signature">Declaration Signature (Type name)</label>
+              <input
+                type="text"
+                id="declaration_signature"
+                value={formData.consent_and_declaration.declaration_signature}
+                onChange={(e) => updateFormData('consent_and_declaration', 'declaration_signature', e.target.value)}
+                style={{ width: '100%', padding: '5px' }}
+              />
+            </div>
+            
+            <div>
+              <label htmlFor="declaration_date">Declaration Date</label>
+              <input
+                type="date"
+                id="declaration_date"
+                value={formData.consent_and_declaration.declaration_date}
+                onChange={(e) => updateFormData('consent_and_declaration', 'declaration_date', e.target.value)}
+                style={{ width: '100%', padding: '5px' }}
+              />
+            </div>
+            
+            <div>
+              <label htmlFor="declaration_print_name">Declaration Print Name</label>
+              <input
+                type="text"
+                id="declaration_print_name"
+                value={formData.consent_and_declaration.declaration_print_name}
+                onChange={(e) => updateFormData('consent_and_declaration', 'declaration_print_name', e.target.value)}
+                style={{ width: '100%', padding: '5px' }}
+              />
+            </div>
+          </div>
+        </div>
+      </fieldset>
+
       {/* Continue with other sections... */}
       {/* For brevity, I'll add the remaining sections in the next part */}
       
