@@ -11,16 +11,61 @@ This project will modernize a manual accommodation application form into a secur
 
 ## Stack
 
+- **Frontend:** React with TypeScript, Vite for build tooling
 - **Backend:** Python (FastAPI preferred, Flask/Django acceptable)
-- **Frontend:** React/Vue/Angular or plain HTML/JS
 - **Hosting:** Azure App Service/Functions, Azure Storage
 - **CI/CD:** GitHub Actions
 
-## Getting Started
+## Frontend Setup
 
-1. Clone this repo.
-2. See [docs/requirements.md](docs/requirements.md) for details.
-3. All issues and features are tracked in the Issues tab.
+The frontend is built with React, TypeScript, and Vite for fast development and building.
+
+### Prerequisites
+
+- Node.js 18+ 
+- npm
+
+### Getting Started
+
+1. Clone this repo
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+3. Start the development server:
+   ```bash
+   npm run dev
+   ```
+   The app will be available at [http://localhost:5173](http://localhost:5173)
+
+### Available Scripts
+
+- `npm run dev` - Start development server with hot reload
+- `npm run build` - Build the app for production
+- `npm run preview` - Preview the production build locally
+- `npm run lint` - Run ESLint to check code quality
+
+### Project Structure
+
+```
+src/
+├── App.tsx              # Main app component
+├── index.tsx            # App entry point
+└── ApplicationFormFields.tsx  # Form implementation
+```
+
+### Technologies Used
+
+- **React 18** - UI library with modern hooks
+- **TypeScript** - Type safety and better development experience  
+- **Vite** - Fast build tool and dev server
+- **ESLint** - Code linting and formatting
+- **React Hook Form** - Form handling library
+
+## Backend Setup
+
+See [docs/requirements.md](docs/requirements.md) for backend setup details.
 
 ## Developer Notes
 

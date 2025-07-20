@@ -1,4 +1,3 @@
-import React from 'react'
 import ApplicationFormFields from './ApplicationFormFields'
 
 function App() {
