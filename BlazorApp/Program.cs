@@ -1,4 +1,7 @@
 using BlazorApp.Components;
+using BlazorApp.Data;
+using BlazorApp.Services;
+using Microsoft.EntityFrameworkCore;
 
 namespace BlazorApp;
 
@@ -12,6 +15,58 @@ public class Program
         builder.Services.AddRazorComponents()
             .AddInteractiveServerComponents();
 
+        // Add Entity Framework
+        builder.Services.AddDbContext<ApplicationDbContext>(options =>
+        {
+            if (builder.Environment.IsDevelopment())
+            {
+                options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"));
+            }
+            else
+            {
+                options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
+            }
+        });
+
+        // Add API controllers
+        builder.Services.AddControllers();
+
+        // Configure settings
+        builder.Services.Configure<EmailSettings>(
+            builder.Configuration.GetSection("EmailSettings"));
+        builder.Services.Configure<BlobStorageSettings>(
+            builder.Configuration.GetSection("BlobStorageSettings"));
+        builder.Services.Configure<ApplicationSettings>(
+            builder.Configuration.GetSection("ApplicationSettings"));
+
+        // Register services
+        builder.Services.AddScoped<IFormService, FormService>();
+        builder.Services.AddScoped<IEmailService, EmailService>();
+        builder.Services.AddScoped<IPdfGenerationService, PdfGenerationService>();
+        builder.Services.AddScoped<IBlobStorageService, BlobStorageService>();
+
+        // Register HTTP client for API calls
+        builder.Services.AddHttpClient<IFormApiService, FormApiService>(client =>
+        {
+            var baseAddress = builder.Configuration["ApplicationSettings:ApplicationUrl"] ?? "https://localhost:5001";
+            client.BaseAddress = new Uri(baseAddress);
+        });
+
+        // Add CORS for API endpoints
+        builder.Services.AddCors(options =>
+        {
+            options.AddDefaultPolicy(policy =>
+            {
+                policy.AllowAnyOrigin()
+                      .AllowAnyMethod()
+                      .AllowAnyHeader();
+            });
+        });
+
+        // Add API documentation
+        builder.Services.AddEndpointsApiExplorer();
+        builder.Services.AddSwaggerGen();
+
         var app = builder.Build();
 
         // Configure the HTTP request pipeline.
@@ -21,14 +76,32 @@ public class Program
             // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
             app.UseHsts();
         }
+        else
+        {
+            app.UseSwagger();
+            app.UseSwaggerUI();
+        }
 
         app.UseHttpsRedirection();
-
         app.UseStaticFiles();
+        app.UseRouting();
+
+        app.UseCors();
         app.UseAntiforgery();
 
+        // Map API controllers
+        app.MapControllers();
+
+        // Map Blazor components
         app.MapRazorComponents<App>()
             .AddInteractiveServerRenderMode();
+
+        // Ensure database is created
+        using (var scope = app.Services.CreateScope())
+        {
+            var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            context.Database.EnsureCreated();
+        }
 
         app.Run();
     }
