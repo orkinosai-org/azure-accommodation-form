@@ -1,0 +1,640 @@
+﻿@page "/"
+@rendermode InteractiveServer
+@using BlazorApp.Models
+@using Microsoft.AspNetCore.Components.Forms
+
+<PageTitle>Azure Accommodation Application Form</PageTitle>
+
+<div style="padding: 20px; max-width: 800px; margin: 0 auto;">
+    <h1>Azure Accommodation Application Form</h1>
+
+    <EditForm Model="@formData" OnValidSubmit="@HandleSubmit">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <!-- 1. Tenant Details Section -->
+        <fieldset style="border: 1px solid #ccc; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+            <legend><strong>1. Tenant Details</strong></legend>
+            
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="fullName">Full Name *</label>
+                    <InputText id="fullName" @bind-Value="formData.TenantDetails.FullName" class="form-control" />
+                    <ValidationMessage For="@(() => formData.TenantDetails.FullName)" />
+                </div>
+
+                <div class="form-group">
+                    <label for="dateOfBirth">Date of Birth *</label>
+                    <InputDate id="dateOfBirth" @bind-Value="formData.TenantDetails.DateOfBirth" class="form-control" />
+                    <ValidationMessage For="@(() => formData.TenantDetails.DateOfBirth)" />
+                </div>
+
+                <div class="form-group">
+                    <label for="placeOfBirth">Place of Birth</label>
+                    <InputText id="placeOfBirth" @bind-Value="formData.TenantDetails.PlaceOfBirth" class="form-control" />
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email *</label>
+                    <InputText id="email" @bind-Value="formData.TenantDetails.Email" class="form-control" type="email" />
+                    <ValidationMessage For="@(() => formData.TenantDetails.Email)" />
+                </div>
+
+                <div class="form-group">
+                    <label for="telephone">Telephone *</label>
+                    <InputText id="telephone" @bind-Value="formData.TenantDetails.Telephone" class="form-control" type="tel" />
+                    <ValidationMessage For="@(() => formData.TenantDetails.Telephone)" />
+                </div>
+
+                <div class="form-group">
+                    <label for="employersName">Employer's Name</label>
+                    <InputText id="employersName" @bind-Value="formData.TenantDetails.EmployersName" class="form-control" />
+                </div>
+
+                <div class="form-group">
+                    <label for="gender">Gender</label>
+                    <InputSelect id="gender" @bind-Value="formData.TenantDetails.Gender" class="form-control">
+                        <option value="">Select Gender</option>
+                        <option value="@Gender.Male">Male</option>
+                        <option value="@Gender.Female">Female</option>
+                    </InputSelect>
+                </div>
+
+                <div class="form-group">
+                    <label for="niNumber">NI Number</label>
+                    <InputText id="niNumber" @bind-Value="formData.TenantDetails.NiNumber" class="form-control" />
+                </div>
+
+                <div class="form-group">
+                    <label for="roomOccupancy">Room Occupancy</label>
+                    <InputSelect id="roomOccupancy" @bind-Value="formData.TenantDetails.RoomOccupancy" class="form-control">
+                        <option value="">Select Occupancy</option>
+                        <option value="@RoomOccupancy.JustYou">Just You</option>
+                        <option value="@RoomOccupancy.YouAndSomeoneElse">You and Someone Else</option>
+                    </InputSelect>
+                </div>
+            </div>
+
+            <div class="checkbox-group">
+                <div class="form-check">
+                    <InputCheckbox id="car" @bind-Value="formData.TenantDetails.Car" class="form-check-input" />
+                    <label for="car" class="form-check-label">Do you have a car?</label>
+                </div>
+
+                <div class="form-check">
+                    <InputCheckbox id="bicycle" @bind-Value="formData.TenantDetails.Bicycle" class="form-check-input" />
+                    <label for="bicycle" class="form-check-label">Do you have a bicycle?</label>
+                </div>
+
+                <div class="form-check">
+                    <InputCheckbox id="rightToLive" @bind-Value="formData.TenantDetails.RightToLiveInUk" class="form-check-input" />
+                    <label for="rightToLive" class="form-check-label">Do you have the right to live in the UK?</label>
+                </div>
+            </div>
+
+            <div class="conditional-group">
+                <div class="form-check">
+                    <InputCheckbox id="hasOtherNames" @bind-Value="formData.TenantDetails.OtherNames.HasOtherNames" class="form-check-input" />
+                    <label for="hasOtherNames" class="form-check-label">Have you been known by any other name?</label>
+                </div>
+                @if (formData.TenantDetails.OtherNames.HasOtherNames)
+                {
+                    <InputText @bind-Value="formData.TenantDetails.OtherNames.Details" class="form-control" placeholder="Please specify" />
+                }
+            </div>
+
+            <div class="conditional-group">
+                <div class="form-check">
+                    <InputCheckbox id="hasMedicalCondition" @bind-Value="formData.TenantDetails.MedicalCondition.HasCondition" class="form-check-input" />
+                    <label for="hasMedicalCondition" class="form-check-label">Medical condition other residents need to know?</label>
+                </div>
+                @if (formData.TenantDetails.MedicalCondition.HasCondition)
+                {
+                    <InputTextArea @bind-Value="formData.TenantDetails.MedicalCondition.Details" class="form-control" placeholder="Please specify" rows="3" />
+                }
+            </div>
+        </fieldset>
+
+        <!-- 2. Bank Details Section -->
+        <fieldset style="border: 1px solid #ccc; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+            <legend><strong>2. Bank Details</strong></legend>
+            
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="bankName">Name of Bank</label>
+                    <InputText id="bankName" @bind-Value="formData.BankDetails.BankName" class="form-control" />
+                </div>
+
+                <div class="form-group">
+                    <label for="bankPostcode">Postcode</label>
+                    <InputText id="bankPostcode" @bind-Value="formData.BankDetails.Postcode" class="form-control" />
+                </div>
+
+                <div class="form-group">
+                    <label for="accountNo">Account No</label>
+                    <InputText id="accountNo" @bind-Value="formData.BankDetails.AccountNo" class="form-control" />
+                </div>
+
+                <div class="form-group">
+                    <label for="sortCode">Sort Code</label>
+                    <InputText id="sortCode" @bind-Value="formData.BankDetails.SortCode" class="form-control" />
+                </div>
+            </div>
+        </fieldset>
+
+        <!-- 3. Address History Section -->
+        <fieldset style="border: 1px solid #ccc; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+            <legend><strong>3. Address History (3 years)</strong></legend>
+            
+            @for (int i = 0; i < formData.AddressHistory.Count; i++)
+            {
+                var index = i; // Capture for lambda
+                <div style="margin-bottom: 15px; padding: 10px; border: 1px solid #eee; border-radius: 3px;">
+                    <h4>Address @(index + 1)</h4>
+                    <div class="form-grid">
+                        <div class="form-group" style="grid-column: 1 / -1;">
+                            <label>Address</label>
+                            <InputTextArea @bind-Value="formData.AddressHistory[index].Address" class="form-control" rows="2" />
+                        </div>
+
+                        <div class="form-group">
+                            <label>From</label>
+                            <InputDate @bind-Value="formData.AddressHistory[index].From" class="form-control" />
+                        </div>
+
+                        <div class="form-group">
+                            <label>To</label>
+                            <InputDate @bind-Value="formData.AddressHistory[index].To" class="form-control" />
+                        </div>
+
+                        <div class="form-group">
+                            <label>Landlord/Agent Name</label>
+                            <InputText @bind-Value="formData.AddressHistory[index].LandlordName" class="form-control" />
+                        </div>
+
+                        <div class="form-group">
+                            <label>Landlord Tel</label>
+                            <InputText @bind-Value="formData.AddressHistory[index].LandlordTel" class="form-control" type="tel" />
+                        </div>
+
+                        <div class="form-group" style="grid-column: 1 / -1;">
+                            <label>Landlord Email</label>
+                            <InputText @bind-Value="formData.AddressHistory[index].LandlordEmail" class="form-control" type="email" />
+                        </div>
+                    </div>
+                </div>
+            }
+            
+            <button type="button" @onclick="AddAddressHistoryItem" class="btn btn-secondary">
+                Add Another Address
+            </button>
+        </fieldset>
+
+        <!-- 4. Contacts Section -->
+        <fieldset style="border: 1px solid #ccc; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+            <legend><strong>4. Contacts</strong></legend>
+            
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="nextOfKin">Next of Kin</label>
+                    <InputText id="nextOfKin" @bind-Value="formData.Contacts.NextOfKin" class="form-control" />
+                </div>
+
+                <div class="form-group">
+                    <label for="relationship">Relationship</label>
+                    <InputText id="relationship" @bind-Value="formData.Contacts.Relationship" class="form-control" />
+                </div>
+
+                <div class="form-group">
+                    <label for="contactAddress">Address</label>
+                    <InputTextArea id="contactAddress" @bind-Value="formData.Contacts.Address" class="form-control" rows="2" />
+                </div>
+
+                <div class="form-group">
+                    <label for="contactNumber">Contact Number</label>
+                    <InputText id="contactNumber" @bind-Value="formData.Contacts.ContactNumber" class="form-control" type="tel" />
+                </div>
+            </div>
+        </fieldset>
+
+        <!-- 5. Medical Details Section -->
+        <fieldset style="border: 1px solid #ccc; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+            <legend><strong>5. Medical Details</strong></legend>
+            
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="gpPractice">GP Practice</label>
+                    <InputText id="gpPractice" @bind-Value="formData.MedicalDetails.GpPractice" class="form-control" />
+                </div>
+
+                <div class="form-group">
+                    <label for="doctorName">Doctor's Name</label>
+                    <InputText id="doctorName" @bind-Value="formData.MedicalDetails.DoctorName" class="form-control" />
+                </div>
+
+                <div class="form-group">
+                    <label for="doctorAddress">Doctor's Address</label>
+                    <InputTextArea id="doctorAddress" @bind-Value="formData.MedicalDetails.DoctorAddress" class="form-control" rows="2" />
+                </div>
+
+                <div class="form-group">
+                    <label for="doctorTelephone">Doctor's Telephone No</label>
+                    <InputText id="doctorTelephone" @bind-Value="formData.MedicalDetails.DoctorTelephone" class="form-control" type="tel" />
+                </div>
+            </div>
+        </fieldset>
+
+        <!-- 6. Employment Section -->
+        <fieldset style="border: 1px solid #ccc; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+            <legend><strong>6. Employment</strong></legend>
+            
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="employerName">Name & Address of Employer</label>
+                    <InputTextArea id="employerName" @bind-Value="formData.Employment.EmployerName" class="form-control" rows="2" />
+                </div>
+
+                <div class="form-group">
+                    <label for="jobTitle">Job Title</label>
+                    <InputText id="jobTitle" @bind-Value="formData.Employment.JobTitle" class="form-control" />
+                </div>
+
+                <div class="form-group">
+                    <label for="managerName">Manager's Name</label>
+                    <InputText id="managerName" @bind-Value="formData.Employment.ManagerName" class="form-control" />
+                </div>
+
+                <div class="form-group">
+                    <label for="managerTel">Manager's Tel</label>
+                    <InputText id="managerTel" @bind-Value="formData.Employment.ManagerTel" class="form-control" type="tel" />
+                </div>
+
+                <div class="form-group">
+                    <label for="managerEmail">Manager's Email</label>
+                    <InputText id="managerEmail" @bind-Value="formData.Employment.ManagerEmail" class="form-control" type="email" />
+                </div>
+
+                <div class="form-group">
+                    <label for="dateOfEmployment">Date of Employment</label>
+                    <InputDate id="dateOfEmployment" @bind-Value="formData.Employment.DateOfEmployment" class="form-control" />
+                </div>
+
+                <div class="form-group">
+                    <label for="presentSalary">Present Salary</label>
+                    <InputText id="presentSalary" @bind-Value="formData.Employment.PresentSalary" class="form-control" />
+                </div>
+            </div>
+        </fieldset>
+
+        <!-- 7. Employment Change Section -->
+        <fieldset style="border: 1px solid #ccc; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+            <legend><strong>7. Employment Change</strong></legend>
+            
+            <div class="form-group">
+                <label for="employmentChange">Are circumstances likely to change?</label>
+                <InputTextArea id="employmentChange" @bind-Value="formData.EmploymentChange" class="form-control" rows="3" />
+            </div>
+        </fieldset>
+
+        <!-- 8. Passport Details Section -->
+        <fieldset style="border: 1px solid #ccc; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+            <legend><strong>8. Passport Details</strong></legend>
+            
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="passportNumber">Passport Number</label>
+                    <InputText id="passportNumber" @bind-Value="formData.PassportDetails.PassportNumber" class="form-control" />
+                </div>
+
+                <div class="form-group">
+                    <label for="dateOfIssue">Date of Issue</label>
+                    <InputDate id="dateOfIssue" @bind-Value="formData.PassportDetails.DateOfIssue" class="form-control" />
+                </div>
+
+                <div class="form-group">
+                    <label for="placeOfIssue">Place of Issue</label>
+                    <InputText id="placeOfIssue" @bind-Value="formData.PassportDetails.PlaceOfIssue" class="form-control" />
+                </div>
+            </div>
+        </fieldset>
+
+        <!-- 9. Current Living Arrangement Section -->
+        <fieldset style="border: 1px solid #ccc; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+            <legend><strong>9. Current Living Arrangement</strong></legend>
+            
+            <div class="form-check">
+                <InputCheckbox id="landlordKnows" @bind-Value="formData.CurrentLivingArrangement.LandlordKnows" class="form-check-input" />
+                <label for="landlordKnows" class="form-check-label">Does landlord know you are leaving?</label>
+            </div>
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="noticeEndDate">Notice Run Out Date</label>
+                    <InputDate id="noticeEndDate" @bind-Value="formData.CurrentLivingArrangement.NoticeEndDate" class="form-control" />
+                </div>
+
+                <div class="form-group">
+                    <label for="reasonLeaving">Reason for Leaving</label>
+                    <InputText id="reasonLeaving" @bind-Value="formData.CurrentLivingArrangement.ReasonLeaving" class="form-control" />
+                </div>
+            </div>
+
+            <div class="form-check">
+                <InputCheckbox id="landlordReference" @bind-Value="formData.CurrentLivingArrangement.LandlordReference" class="form-check-input" />
+                <label for="landlordReference" class="form-check-label">Will landlord give reference?</label>
+            </div>
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="landlordContactName">Existing Landlord/Agent Name</label>
+                    <InputText id="landlordContactName" @bind-Value="formData.CurrentLivingArrangement.LandlordContact.Name" class="form-control" />
+                </div>
+
+                <div class="form-group">
+                    <label for="landlordContactTel">Contact Tel</label>
+                    <InputText id="landlordContactTel" @bind-Value="formData.CurrentLivingArrangement.LandlordContact.Tel" class="form-control" type="tel" />
+                </div>
+
+                <div class="form-group">
+                    <label for="landlordContactAddress">Contact Address</label>
+                    <InputTextArea id="landlordContactAddress" @bind-Value="formData.CurrentLivingArrangement.LandlordContact.Address" class="form-control" rows="2" />
+                </div>
+
+                <div class="form-group">
+                    <label for="landlordContactEmail">Contact Email</label>
+                    <InputText id="landlordContactEmail" @bind-Value="formData.CurrentLivingArrangement.LandlordContact.Email" class="form-control" type="email" />
+                </div>
+            </div>
+        </fieldset>
+
+        <!-- 10. Other Details Section -->
+        <fieldset style="border: 1px solid #ccc; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+            <legend><strong>10. Other</strong></legend>
+            
+            <div class="conditional-group">
+                <div class="form-check">
+                    <InputCheckbox id="hasPets" @bind-Value="formData.Other.Pets.HasPets" class="form-check-input" />
+                    <label for="hasPets" class="form-check-label">Do you have pets?</label>
+                </div>
+                @if (formData.Other.Pets.HasPets)
+                {
+                    <InputTextArea @bind-Value="formData.Other.Pets.Details" class="form-control" placeholder="Please provide details" rows="2" />
+                }
+            </div>
+
+            <div class="form-check">
+                <InputCheckbox id="smoke" @bind-Value="formData.Other.Smoke" class="form-check-input" />
+                <label for="smoke" class="form-check-label">Do you smoke?</label>
+            </div>
+
+            <div class="conditional-group">
+                <div class="form-check">
+                    <InputCheckbox id="hasColiving" @bind-Value="formData.Other.Coliving.HasColiving" class="form-check-input" />
+                    <label for="hasColiving" class="form-check-label">Co-living preferences?</label>
+                </div>
+                @if (formData.Other.Coliving.HasColiving)
+                {
+                    <InputTextArea @bind-Value="formData.Other.Coliving.Details" class="form-control" placeholder="Please provide details" rows="2" />
+                }
+            </div>
+        </fieldset>
+
+        <!-- 11. Occupation Agreement Section -->
+        <fieldset style="border: 1px solid #ccc; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+            <legend><strong>11. Occupation Agreement</strong></legend>
+            
+            <div class="checkbox-group">
+                <div class="form-check">
+                    <InputCheckbox id="singleOccupancy" @bind-Value="formData.OccupationAgreement.SingleOccupancyAgree" class="form-check-input" />
+                    <label for="singleOccupancy" class="form-check-label">I agree to single occupancy terms</label>
+                </div>
+
+                <div class="form-check">
+                    <InputCheckbox id="hmoTerms" @bind-Value="formData.OccupationAgreement.HmoTermsAgree" class="form-check-input" />
+                    <label for="hmoTerms" class="form-check-label">I agree to HMO terms and conditions</label>
+                </div>
+
+                <div class="form-check">
+                    <InputCheckbox id="noUnlisted" @bind-Value="formData.OccupationAgreement.NoUnlistedOccupants" class="form-check-input" />
+                    <label for="noUnlisted" class="form-check-label">I will not allow unlisted occupants</label>
+                </div>
+
+                <div class="form-check">
+                    <InputCheckbox id="noSmokingPolicy" @bind-Value="formData.OccupationAgreement.NoSmoking" class="form-check-input" />
+                    <label for="noSmokingPolicy" class="form-check-label">I agree to no smoking policy</label>
+                </div>
+
+                <div class="form-check">
+                    <InputCheckbox id="kitchenOnly" @bind-Value="formData.OccupationAgreement.KitchenCookingOnly" class="form-check-input" />
+                    <label for="kitchenOnly" class="form-check-label">I agree to use kitchen for cooking only</label>
+                </div>
+            </div>
+        </fieldset>
+
+        <!-- 12. Consent & Declaration Section -->
+        <fieldset style="border: 1px solid #ccc; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+            <legend><strong>12. Consent & Declaration</strong></legend>
+            
+            <div style="margin-bottom: 15px;">
+                <h4>Consent</h4>
+                <div class="form-check">
+                    <InputCheckbox id="consentGiven" @bind-Value="formData.ConsentAndDeclaration.ConsentGiven" class="form-check-input" />
+                    <label for="consentGiven" class="form-check-label">I consent to the processing of my personal data as outlined in the privacy policy</label>
+                </div>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="consentSignature">Signature (Type name)</label>
+                        <InputText id="consentSignature" @bind-Value="formData.ConsentAndDeclaration.Signature" class="form-control" />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="consentDate">Date</label>
+                        <InputDate id="consentDate" @bind-Value="formData.ConsentAndDeclaration.Date" class="form-control" />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="consentPrintName">Print Name</label>
+                        <InputText id="consentPrintName" @bind-Value="formData.ConsentAndDeclaration.PrintName" class="form-control" />
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <h4>Declaration</h4>
+                <div class="checkbox-group">
+                    <div class="form-check">
+                        <InputCheckbox id="mainHome" @bind-Value="formData.ConsentAndDeclaration.Declaration.MainHome" class="form-check-input" />
+                        <label for="mainHome" class="form-check-label">This will be my main home</label>
+                    </div>
+
+                    <div class="form-check">
+                        <InputCheckbox id="enquiriesPermission" @bind-Value="formData.ConsentAndDeclaration.Declaration.EnquiriesPermission" class="form-check-input" />
+                        <label for="enquiriesPermission" class="form-check-label">I give permission for enquiries to be made</label>
+                    </div>
+
+                    <div class="form-check">
+                        <InputCheckbox id="noJudgements" @bind-Value="formData.ConsentAndDeclaration.Declaration.CertifyNoJudgements" class="form-check-input" />
+                        <label for="noJudgements" class="form-check-label">I certify no outstanding county court judgements</label>
+                    </div>
+
+                    <div class="form-check">
+                        <InputCheckbox id="noHousingDebt" @bind-Value="formData.ConsentAndDeclaration.Declaration.CertifyNoHousingDebt" class="form-check-input" />
+                        <label for="noHousingDebt" class="form-check-label">I certify no housing-related debt</label>
+                    </div>
+
+                    <div class="form-check">
+                        <InputCheckbox id="noLandlordDebt" @bind-Value="formData.ConsentAndDeclaration.Declaration.CertifyNoLandlordDebt" class="form-check-input" />
+                        <label for="noLandlordDebt" class="form-check-label">I certify no debt to previous landlords</label>
+                    </div>
+
+                    <div class="form-check">
+                        <InputCheckbox id="noAbuse" @bind-Value="formData.ConsentAndDeclaration.Declaration.CertifyNoAbuse" class="form-check-input" />
+                        <label for="noAbuse" class="form-check-label">I certify no history of property abuse</label>
+                    </div>
+                </div>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="declarationSignature">Declaration Signature (Type name)</label>
+                        <InputText id="declarationSignature" @bind-Value="formData.ConsentAndDeclaration.DeclarationSignature" class="form-control" />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="declarationDate">Declaration Date</label>
+                        <InputDate id="declarationDate" @bind-Value="formData.ConsentAndDeclaration.DeclarationDate" class="form-control" />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="declarationPrintName">Declaration Print Name</label>
+                        <InputText id="declarationPrintName" @bind-Value="formData.ConsentAndDeclaration.DeclarationPrintName" class="form-control" />
+                    </div>
+                </div>
+            </div>
+        </fieldset>
+
+        <button type="submit" class="btn btn-success btn-lg">Submit Application</button>
+    </EditForm>
+
+    @if (showSuccess)
+    {
+        <div class="alert alert-success mt-3">
+            <h4>Success!</h4>
+            <p>Form submitted successfully! Check the browser console for form data.</p>
+        </div>
+    }
+</div>
+
+<style>
+    .form-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin-bottom: 10px;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 5px;
+        border: 1px solid #ccc;
+        border-radius: 3px;
+    }
+
+    .checkbox-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin: 10px 0;
+    }
+
+    .form-check {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin: 5px 0;
+    }
+
+    .conditional-group {
+        margin: 10px 0;
+    }
+
+    .conditional-group input[type="text"],
+    .conditional-group textarea {
+        margin-top: 5px;
+    }
+
+    .btn {
+        padding: 8px 16px;
+        border: none;
+        border-radius: 3px;
+        cursor: pointer;
+    }
+
+    .btn-secondary {
+        background-color: #007acc;
+        color: white;
+    }
+
+    .btn-success {
+        background-color: #28a745;
+        color: white;
+    }
+
+    .btn-lg {
+        padding: 12px 24px;
+        font-size: 16px;
+    }
+
+    .alert {
+        padding: 15px;
+        border: 1px solid transparent;
+        border-radius: 4px;
+    }
+
+    .alert-success {
+        color: #155724;
+        background-color: #d4edda;
+        border-color: #c3e6cb;
+    }
+
+    .mt-3 {
+        margin-top: 1rem;
+    }
+
+    label {
+        font-weight: bold;
+        margin-bottom: 5px;
+    }
+
+    .validation-message {
+        color: #dc3545;
+        font-size: 0.875em;
+        margin-top: 5px;
+    }
+</style>
+
+@code {
+    private FormData formData = new();
+    private bool showSuccess = false;
+
+    private void HandleSubmit()
+    {
+        // Log form data to console (similar to React version)
+        Console.WriteLine("Form Data Submitted:");
+        Console.WriteLine(System.Text.Json.JsonSerializer.Serialize(formData, new System.Text.Json.JsonSerializerOptions { WriteIndented = true }));
+        
+        showSuccess = true;
+        StateHasChanged();
+    }
+
+    private void AddAddressHistoryItem()
+    {
+        formData.AddressHistory.Add(new AddressHistoryItem());
+        StateHasChanged();
+    }
+}
