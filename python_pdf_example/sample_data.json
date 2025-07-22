@@ -1,0 +1,48 @@
+{
+  "TenantDetails": {
+    "FullName": "John Smith",
+    "DateOfBirth": "1988-07-12",
+    "Email": "john.smith@example.com",
+    "Telephone": "+44207123456",
+    "PlaceOfBirth": "Birmingham",
+    "EmployersName": "Tech Solutions Ltd",
+    "Gender": "Male",
+    "NiNumber": "AB123456C",
+    "Car": true,
+    "Bicycle": false,
+    "RightToLiveInUk": true,
+    "RoomOccupancy": "Single"
+  },
+  "BankDetails": {
+    "BankName": "Barclays Bank",
+    "Postcode": "E14 5HP",
+    "AccountNo": "12345678",
+    "SortCode": "20-12-34"
+  },
+  "AddressHistory": [
+    {
+      "Address": "10 Downing Street, London SW1A 2AA",
+      "From": "2022-01-01",
+      "To": "2024-01-15",
+      "LandlordName": "Estate Agency Ltd",
+      "LandlordTel": "+44207999888",
+      "LandlordEmail": "info@estateagency.com"
+    }
+  ],
+  "Contacts": {
+    "NextOfKin": "Jane Smith",
+    "Relationship": "Spouse",
+    "Address": "10 Downing Street, London SW1A 2AA",
+    "ContactNumber": "+44207555444"
+  },
+  "Employment": {
+    "EmployerName": "Tech Solutions Ltd",
+    "JobTitle": "Software Developer",
+    "PresentSalary": "£55,000"
+  },
+  "ConsentAndDeclaration": {
+    "ConsentGiven": true,
+    "Signature": "John Smith",
+    "PrintName": "John Smith"
+  }
+}
