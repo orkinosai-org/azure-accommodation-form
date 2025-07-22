@@ -1,6 +1,6 @@
 # Azure Accommodation Application Form
 
-This project will modernize a manual accommodation application form into a secure, user-friendly web application hosted in Azure.
+This project provides a secure, user-friendly web application for accommodation applications, with implementations in both **React** and **Blazor (.NET 8 LTS)**.
 
 ## Project Goals
 
@@ -9,68 +9,142 @@ This project will modernize a manual accommodation application form into a secur
 - Store submissions securely and send confirmations via email.
 - Fit the workflow described in the [docs/requirements.md](docs/requirements.md).
 
-## Stack
+## Available Implementations
 
-- **Frontend:** React with TypeScript, Vite for build tooling
+### 🆕 Blazor Server (.NET 8 LTS) - **Recommended**
+Modern server-side implementation with interactive components.
+
+**Features:**
+- Server-side rendering for better performance and SEO
+- Interactive server components via SignalR
+- Built-in validation with C# models
+- Type-safe development with .NET
+- Ready for Azure App Service deployment
+
+**Setup:**
+```bash
+cd BlazorApp
+dotnet restore
+dotnet build  
+dotnet run
+```
+The app will be available at [http://localhost:5260](http://localhost:5260)
+
+📖 See [BlazorApp/MIGRATION.md](BlazorApp/MIGRATION.md) for migration details and comparison.
+
+### ⚡ React + TypeScript (Legacy)
+Original frontend implementation with Vite build tooling.
+
+**Setup:**
+```bash
+npm install
+npm run dev
+```
+The app will be available at [http://localhost:5173](http://localhost:5173)
+
+## Technology Stacks
+
+### Blazor Implementation
+- **Frontend:** Blazor Server with Interactive Server Components
+- **Backend:** .NET 8, C# models with validation attributes  
+- **Hosting:** Azure App Service
+- **Real-time:** SignalR for interactive features
+
+### React Implementation  
+- **Frontend:** React 18 + TypeScript + Vite
 - **Backend:** Python (FastAPI preferred, Flask/Django acceptable)
 - **Hosting:** Azure App Service/Functions, Azure Storage
 - **CI/CD:** GitHub Actions
 
-## Frontend Setup
+## Form Structure
 
-The frontend is built with React, TypeScript, and Vite for fast development and building.
+Both implementations provide identical functionality:
 
-### Prerequisites
+✅ **12 Form Sections:**
+1. Tenant Details
+2. Bank Details
+3. Address History (3 years)
+4. Contacts  
+5. Medical Details
+6. Employment
+7. Employment Change
+8. Passport Details
+9. Current Living Arrangement
+10. Other Details
+11. Occupation Agreement
+12. Consent & Declaration
 
-- Node.js 18+ 
-- npm
+✅ **Interactive Features:**
+- Conditional field visibility
+- Dynamic address history addition
+- Form validation and submission
+- JSON serialization for backend processing
 
-### Getting Started
+## Available Scripts
 
-1. Clone this repo
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
+### Blazor (.NET 8)
+- `dotnet run` - Start the development server
+- `dotnet build` - Build the application
+- `dotnet test` - Run tests (if any)
+- `dotnet publish` - Build for production deployment
 
-3. Start the development server:
-   ```bash
-   npm run dev
-   ```
-   The app will be available at [http://localhost:5173](http://localhost:5173)
-
-### Available Scripts
-
+### React (Legacy)
 - `npm run dev` - Start development server with hot reload
-- `npm run build` - Build the app for production
+- `npm run build` - Build the app for production  
 - `npm run preview` - Preview the production build locally
 - `npm run lint` - Run ESLint to check code quality
 
-### Project Structure
+## Project Structure
 
 ```
-src/
-├── App.tsx              # Main app component
-├── index.tsx            # App entry point
-└── ApplicationFormFields.tsx  # Form implementation
+/
+├── BlazorApp/                    # .NET 8 Blazor implementation
+│   ├── Components/
+│   │   ├── Pages/Home.razor     # Main form component
+│   │   └── Layout/              # Layout components
+│   ├── Models/FormModels.cs     # C# form models with validation
+│   ├── Program.cs               # Application entry point
+│   └── MIGRATION.md             # Migration documentation
+├── src/                         # React implementation (legacy)
+│   ├── App.tsx                  # Main app component
+│   ├── index.tsx                # App entry point
+│   └── ApplicationFormFields.tsx # Form implementation
+├── docs/                        # Documentation
+│   ├── requirements.md          # Project requirements
+│   └── form_fields.md          # Form structure details
+└── form_schema.json            # JSON schema for form data
 ```
 
-### Technologies Used
+## Backend Integration
 
-- **React 18** - UI library with modern hooks
-- **TypeScript** - Type safety and better development experience  
-- **Vite** - Fast build tool and dev server
-- **ESLint** - Code linting and formatting
-- **React Hook Form** - Form handling library
+The form generates JSON data compatible with both implementations:
 
-## Backend Setup
-
-See [docs/requirements.md](docs/requirements.md) for backend setup details.
+```json
+{
+  "TenantDetails": {
+    "FullName": "...",
+    "Email": "...",
+    // ... other fields
+  },
+  "BankDetails": { ... },
+  "AddressHistory": [ ... ],
+  // ... other sections
+}
+```
 
 ## Developer Notes
 
-- See [docs/form_fields.md](docs/form_fields.md) for the full form structure.
-- The initial form is available for frontend implementation in [form_schema.json](form_schema.json).
+- See [docs/form_fields.md](docs/form_fields.md) for the complete form structure
+- The form schema is defined in [form_schema.json](form_schema.json)
+- For Blazor-specific details, see [BlazorApp/MIGRATION.md](BlazorApp/MIGRATION.md)
+
+## Deployment
+
+### Blazor (Recommended)
+Deploy to Azure App Service with .NET 8 runtime. The application includes SignalR support for interactive features.
+
+### React (Legacy)  
+Deploy frontend to static hosting (Azure Static Web Apps) with separate backend API.
 
 ## Branding
 
@@ -78,7 +152,9 @@ If you have branding assets, place them in the `branding/` folder.
 
 ---
 
-**Agent Instructions:**  
-- Begin by implementing the form described in [docs/form_fields.md](docs/form_fields.md).
-- Follow the requirements in [docs/requirements.md](docs/requirements.md).
-- Use best practices for security, Azure deployment, and PDF handling.
+**Getting Started:**
+1. Choose your preferred implementation (Blazor recommended for new development)
+2. Follow the setup instructions above
+3. Customize the form fields and styling as needed
+4. Integrate with your backend API
+5. Deploy to Azure

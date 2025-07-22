@@ -236,3 +236,7 @@ dist-ssr/
 
 # TypeScript build output
 *.tsbuildinfo
+# Blazor build artifacts
+BlazorApp/bin/
+BlazorApp/obj/
+*.log
