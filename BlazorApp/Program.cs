@@ -17,7 +17,16 @@ public class Program
 
         // Add Entity Framework
         builder.Services.AddDbContext<ApplicationDbContext>(options =>
-            options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+        {
+            if (builder.Environment.IsDevelopment())
+            {
+                options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"));
+            }
+            else
+            {
+                options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
+            }
+        });
 
         // Add API controllers
         builder.Services.AddControllers();

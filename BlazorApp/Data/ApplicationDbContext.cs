@@ -31,7 +31,6 @@ public class ApplicationDbContext : DbContext
                 .IsRequired();
                 
             entity.Property(e => e.FormDataJson)
-                .HasColumnType("nvarchar(max)")
                 .IsRequired();
                 
             entity.Property(e => e.UserEmail)
