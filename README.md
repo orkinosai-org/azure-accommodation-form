@@ -115,6 +115,26 @@ Both implementations provide identical functionality:
 └── form_schema.json            # JSON schema for form data
 ```
 
+## PDF Generation
+
+The application supports PDF generation through multiple approaches:
+
+### 🔥 **Production Implementation** (Recommended)
+- **C# with iTextSharp**: Located in `BlazorApp/Services/PdfGenerationService.cs`
+- Fully integrated with the Blazor application
+- Professional formatting and layout
+- Handles all 12 form sections
+- Production-tested and actively used
+
+### 🐍 **Python Reference Implementation** 
+- **Python with ReportLab/FPDF**: Located in `python_pdf_example/`
+- Alternative approach using popular Python libraries
+- Compatible data format with C# implementation  
+- Includes ReportLab (advanced) and FPDF (simple) backends
+- Can be deployed as microservice or standalone API
+
+See `python_pdf_example/README.md` for Python implementation details.
+
 ## Backend Integration
 
 The form generates JSON data compatible with both implementations:

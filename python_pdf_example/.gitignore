@@ -1,0 +1,27 @@
+# Python PDF Example .gitignore
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+.env
+venv/
+env/
+
+# Generated PDFs and temporary files
+*.pdf
+/tmp/
+/output/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
