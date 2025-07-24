@@ -242,3 +242,5 @@ BlazorApp/obj/
 *.log
 
 .vs/
+BlazorApp/*.db-shm
+BlazorApp/*.db-wal
