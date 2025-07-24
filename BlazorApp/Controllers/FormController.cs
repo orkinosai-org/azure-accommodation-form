@@ -82,6 +82,39 @@ public class FormController : ControllerBase
     }
 
     /// <summary>
+    /// Submit form data directly without email verification (for API usage)
+    /// </summary>
+    [HttpPost("submit-direct")]
+    public async Task<ActionResult<FormSubmissionResponse>> SubmitFormDirect([FromBody] FormData formData)
+    {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+
+        try
+        {
+            var result = await _formService.ProcessFormDirectAsync(formData);
+            
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            
+            return BadRequest(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error in direct form submission");
+            return StatusCode(500, new FormSubmissionResponse
+            {
+                Success = false,
+                Message = "An internal error occurred while processing your submission"
+            });
+        }
+    }
+
+    /// <summary>
     /// Submit the completed form data
     /// </summary>
     [HttpPost("submit")]

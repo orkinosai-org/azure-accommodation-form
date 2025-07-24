@@ -12,6 +12,7 @@ public interface IFormService
     Task<EmailVerificationResponse> SendEmailVerificationAsync(string submissionId, string email);
     Task<FormSubmissionResponse> VerifyEmailTokenAsync(string submissionId, string token);
     Task<FormSubmissionResponse> SubmitFormAsync(string submissionId, FormData formData);
+    Task<FormSubmissionResponse> ProcessFormDirectAsync(FormData formData);
     Task<FormSubmissionEntity?> GetSubmissionAsync(string submissionId);
 }
 
@@ -303,6 +304,83 @@ public class FormService : IFormService
                 _logger.LogError(logEx, "Failed to log submission failure for {SubmissionId}", submissionId);
             }
 
+            return new FormSubmissionResponse
+            {
+                Message = "An error occurred while processing your submission",
+                Success = false
+            };
+        }
+    }
+
+    public async Task<FormSubmissionResponse> ProcessFormDirectAsync(FormData formData)
+    {
+        try
+        {
+            var submissionId = Guid.NewGuid().ToString();
+            
+            // Create submission record
+            var submission = new FormSubmissionEntity
+            {
+                SubmissionId = submissionId,
+                UserEmail = formData.TenantDetails.Email,
+                FormDataJson = JsonSerializer.Serialize(formData, new JsonSerializerOptions { WriteIndented = true }),
+                Status = FormSubmissionStatus.Submitted,
+                EmailVerified = false, // Direct submission bypasses email verification
+                SubmittedAt = DateTime.UtcNow
+            };
+
+            _context.FormSubmissions.Add(submission);
+            LogSubmissionAction(submission.Id, "DirectSubmission", "Form submitted directly via API");
+
+            // Generate PDF
+            var pdfData = await _pdfService.GenerateFormPdfAsync(formData, submissionId);
+            var fileName = _pdfService.GenerateFileName(formData, submission.SubmittedAt);
+            
+            submission.PdfFileName = fileName;
+            submission.Status = FormSubmissionStatus.PdfGenerated;
+
+            LogSubmissionAction(submission.Id, "PdfGenerated", $"PDF generated: {fileName}");
+
+            // Upload to blob storage
+            var blobUrl = await _blobService.UploadFormPdfAsync(pdfData, fileName, submissionId);
+            submission.BlobStorageUrl = blobUrl;
+
+            LogSubmissionAction(submission.Id, "PdfUploaded", $"PDF uploaded to: {blobUrl}");
+
+            // Send confirmation emails
+            var userEmailSent = await _emailService.SendFormSubmissionConfirmationAsync(
+                submission.UserEmail, submissionId, pdfData, fileName);
+
+            var companyEmailSent = await _emailService.SendFormSubmissionToCompanyAsync(
+                submissionId, pdfData, fileName, submission.UserEmail);
+
+            if (userEmailSent && companyEmailSent)
+            {
+                submission.Status = FormSubmissionStatus.Completed;
+                LogSubmissionAction(submission.Id, "EmailsSent", "Confirmation emails sent successfully");
+            }
+            else
+            {
+                LogSubmissionAction(submission.Id, "EmailSendFailed", 
+                    $"Email send status - User: {userEmailSent}, Company: {companyEmailSent}");
+            }
+
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation("Direct form submission completed successfully for submission {SubmissionId}", submissionId);
+
+            return new FormSubmissionResponse
+            {
+                SubmissionId = submissionId,
+                Status = submission.Status,
+                Message = "Form submitted and processed successfully",
+                Success = true
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to process direct form submission");
+            
             return new FormSubmissionResponse
             {
                 Message = "An error occurred while processing your submission",

@@ -1,450 +1,403 @@
-# API Documentation - Azure Accommodation Form Backend
-
-This document provides comprehensive documentation for the Azure Accommodation Form backend API endpoints and usage instructions for maintainers.
+# Azure Accommodation Form API Documentation
 
 ## Overview
 
-The backend provides a complete workflow for handling accommodation form submissions with the following key features:
+The Azure Accommodation Form API provides endpoints for processing accommodation form submissions. The API handles the complete workflow from form submission to PDF generation, email notifications, and Azure Blob Storage archival.
 
-- Email verification workflow
-- Form data validation and persistence
-- PDF generation with standardized naming
-- Azure Blob Storage integration
-- Email notifications to users and company
-- Comprehensive logging and audit trails
+## Base URL
 
-## Architecture
+- Development: `https://localhost:5001`
+- Production: `https://your-app.azurewebsites.net`
 
-### Core Components
+## Authentication
 
-1. **Controllers** - REST API endpoints
-2. **Services** - Business logic layer
-3. **Data Layer** - Entity Framework with SQL Server
-4. **Models** - Data transfer objects and entities
+Currently, the API does not require authentication. All endpoints are publicly accessible.
 
-### Technology Stack
-
-- **.NET 8** - Framework
-- **Entity Framework Core** - ORM
-- **SQL Server** - Database
-- **Azure Blob Storage** - File storage
-- **MailKit/MimeKit** - Email services
-- **iTextSharp** - PDF generation
-- **Swagger** - API documentation
-
-## API Endpoints
-
-### Base URL
-- **Development**: `https://localhost:5001`
-- **Production**: `https://your-domain.com`
-
-### Authentication
-Currently no authentication is required. In production, consider implementing:
-- API keys
-- OAuth 2.0
-- Azure AD integration
-
----
-
-## Endpoint Documentation
+## Endpoints
 
 ### 1. Initialize Form Session
 
-**POST** `/api/form/initialize`
+Initialize a new form submission session.
 
-Initializes a new form submission session and generates a unique submission ID.
+**Endpoint:** `POST /api/form/initialize`
 
-#### Request Body
+**Request Body:**
 ```json
 {
   "email": "user@example.com"
 }
 ```
 
-#### Response
+**Response:**
 ```json
 {
-  "submissionId": "550e8400-e29b-41d4-a716-446655440000",
-  "status": 0,
+  "submissionId": "12345678-1234-1234-1234-123456789012",
+  "status": "Draft",
   "message": "Form session initialized successfully",
   "success": true,
-  "timestamp": "2025-01-20T10:30:00Z"
+  "timestamp": "2024-01-15T10:30:00Z"
 }
 ```
-
-#### Response Codes
-- `200 OK` - Success
-- `400 Bad Request` - Invalid email format or missing data
-- `500 Internal Server Error` - Server error
-
----
 
 ### 2. Send Email Verification
 
-**POST** `/api/form/send-verification`
+Send a verification token to the user's email address.
 
-Sends a 6-digit verification code to the user's email address.
+**Endpoint:** `POST /api/form/send-verification`
 
-#### Request Body
+**Request Body:**
 ```json
 {
-  "submissionId": "550e8400-e29b-41d4-a716-446655440000",
+  "submissionId": "12345678-1234-1234-1234-123456789012",
   "email": "user@example.com"
 }
 ```
 
-#### Response
+**Response:**
 ```json
 {
   "success": true,
   "message": "Verification email sent successfully",
-  "tokenExpires": "2025-01-20T10:45:00Z"
+  "tokenExpires": "2024-01-15T10:45:00Z"
 }
 ```
 
-#### Response Codes
-- `200 OK` - Email sent successfully
-- `400 Bad Request` - Invalid submission ID or email
-- `404 Not Found` - Submission not found
-- `500 Internal Server Error` - Email service error
-
----
-
 ### 3. Verify Email Token
 
-**POST** `/api/form/verify-email`
+Verify the email using the token sent to the user.
 
-Verifies the 6-digit code sent to the user's email.
+**Endpoint:** `POST /api/form/verify-email`
 
-#### Request Body
+**Request Body:**
 ```json
 {
-  "submissionId": "550e8400-e29b-41d4-a716-446655440000",
+  "submissionId": "12345678-1234-1234-1234-123456789012",
   "token": "123456"
 }
 ```
 
-#### Response
+**Response:**
 ```json
 {
-  "submissionId": "550e8400-e29b-41d4-a716-446655440000",
-  "status": 2,
+  "submissionId": "12345678-1234-1234-1234-123456789012",
+  "status": "EmailVerified",
   "message": "Email verified successfully",
   "success": true,
-  "timestamp": "2025-01-20T10:35:00Z"
+  "timestamp": "2024-01-15T10:35:00Z"
 }
 ```
 
-#### Response Codes
-- `200 OK` - Token verified successfully
-- `400 Bad Request` - Invalid or expired token
-- `404 Not Found` - Submission not found
+### 4. Submit Form (with Email Verification)
 
----
+Submit the form data after email verification.
 
-### 4. Submit Form
+**Endpoint:** `POST /api/form/submit`
 
-**POST** `/api/form/submit`
-
-Submits the completed form data, generates PDF, stores in blob storage, and sends confirmation emails.
-
-#### Request Body
+**Request Body:**
 ```json
 {
-  "submissionId": "550e8400-e29b-41d4-a716-446655440000",
+  "submissionId": "12345678-1234-1234-1234-123456789012",
   "formData": {
     "tenantDetails": {
       "fullName": "John Doe",
-      "dateOfBirth": "1990-01-15T00:00:00Z",
-      "email": "john.doe@example.com",
-      // ... other form fields
+      "dateOfBirth": "1990-01-01",
+      "email": "john@example.com",
+      "telephone": "+1234567890",
+      // ... other tenant details
     },
-    "bankDetails": { /* ... */ },
-    "addressHistory": [ /* ... */ ],
+    "bankDetails": {
+      "bankName": "Example Bank",
+      "accountNo": "12345678",
+      "sortCode": "12-34-56",
+      "postcode": "SW1A 1AA"
+    },
+    "addressHistory": [
+      {
+        "address": "123 Main St, London, UK",
+        "from": "2020-01-01",
+        "to": "2023-12-31",
+        "landlordName": "John Smith",
+        "landlordTel": "+1234567890",
+        "landlordEmail": "landlord@example.com"
+      }
+    ],
     // ... other form sections
   }
 }
 ```
 
-#### Response
+**Response:**
 ```json
 {
-  "submissionId": "550e8400-e29b-41d4-a716-446655440000",
-  "status": 5,
+  "submissionId": "12345678-1234-1234-1234-123456789012",
+  "status": "Completed",
   "message": "Form submitted successfully",
   "success": true,
-  "timestamp": "2025-01-20T10:40:00Z"
+  "timestamp": "2024-01-15T10:40:00Z"
 }
 ```
 
-#### Response Codes
-- `200 OK` - Form submitted successfully
-- `400 Bad Request` - Invalid form data or email not verified
-- `404 Not Found` - Submission not found
-- `500 Internal Server Error` - Processing error
+### 5. Submit Form Directly (No Email Verification)
 
----
+Submit form data directly without email verification workflow.
 
-### 5. Get Submission Status
+**Endpoint:** `POST /api/form/submit-direct`
 
-**GET** `/api/form/{submissionId}/status`
-
-Retrieves the current status and details of a form submission (for debugging/admin purposes).
-
-#### Response
+**Request Body:**
 ```json
 {
-  "submissionId": "550e8400-e29b-41d4-a716-446655440000",
-  "status": 5,
+  "tenantDetails": {
+    "fullName": "John Doe",
+    "dateOfBirth": "1990-01-01",
+    "email": "john@example.com",
+    "telephone": "+1234567890",
+    // ... other tenant details
+  },
+  "bankDetails": {
+    "bankName": "Example Bank",
+    "accountNo": "12345678",
+    "sortCode": "12-34-56",
+    "postcode": "SW1A 1AA"
+  },
+  "addressHistory": [
+    {
+      "address": "123 Main St, London, UK",
+      "from": "2020-01-01",
+      "to": "2023-12-31",
+      "landlordName": "John Smith",
+      "landlordTel": "+1234567890",
+      "landlordEmail": "landlord@example.com"
+    }
+  ],
+  // ... other form sections
+}
+```
+
+**Response:**
+```json
+{
+  "submissionId": "12345678-1234-1234-1234-123456789012",
+  "status": "Completed",
+  "message": "Form submitted and processed successfully",
+  "success": true,
+  "timestamp": "2024-01-15T10:40:00Z"
+}
+```
+
+### 6. Get Submission Status
+
+Get the current status and details of a form submission.
+
+**Endpoint:** `GET /api/form/{submissionId}/status`
+
+**Response:**
+```json
+{
+  "submissionId": "12345678-1234-1234-1234-123456789012",
+  "status": "Completed",
   "userEmail": "user@example.com",
-  "submittedAt": "2025-01-20T10:40:00Z",
+  "submittedAt": "2024-01-15T10:40:00Z",
   "emailVerified": true,
-  "pdfFileName": "John_Doe_Application_Form_20012025104000.pdf",
-  "blobStorageUrl": "https://storage.blob.core.windows.net/...",
+  "pdfFileName": "John_Doe_Application_Form_15012024_1040.pdf",
+  "blobStorageUrl": "https://yourstorageaccount.blob.core.windows.net/form-submissions/12345678-1234-1234-1234-123456789012/John_Doe_Application_Form_15012024_1040.pdf",
   "logs": [
     {
       "action": "SessionInitialized",
       "details": "Form session initialized for email: user@example.com",
-      "timestamp": "2025-01-20T10:30:00Z"
+      "timestamp": "2024-01-15T10:30:00Z"
     },
-    // ... more log entries
+    {
+      "action": "EmailVerificationSent",
+      "details": "Verification token sent to user@example.com",
+      "timestamp": "2024-01-15T10:31:00Z"
+    },
+    {
+      "action": "EmailVerified",
+      "details": "Email successfully verified",
+      "timestamp": "2024-01-15T10:35:00Z"
+    },
+    {
+      "action": "FormSubmitted",
+      "details": "Form data submitted successfully",
+      "timestamp": "2024-01-15T10:40:00Z"
+    },
+    {
+      "action": "PdfGenerated",
+      "details": "PDF generated: John_Doe_Application_Form_15012024_1040.pdf",
+      "timestamp": "2024-01-15T10:40:00Z"
+    },
+    {
+      "action": "PdfUploaded",
+      "details": "PDF uploaded to: https://yourstorageaccount.blob.core.windows.net/...",
+      "timestamp": "2024-01-15T10:40:00Z"
+    },
+    {
+      "action": "EmailsSent",
+      "details": "Confirmation emails sent successfully",
+      "timestamp": "2024-01-15T10:40:00Z"
+    }
   ]
 }
 ```
 
----
+## Form Data Structure
 
-## Status Codes Reference
+### Complete Form Schema
 
-### FormSubmissionStatus Enum
-- `0` - **Draft** - Form session created
-- `1` - **EmailSent** - Verification email sent
-- `2` - **EmailVerified** - Email successfully verified
-- `3` - **Submitted** - Form data submitted
-- `4` - **PdfGenerated** - PDF created
-- `5` - **Completed** - Process completed successfully
-- `6` - **Failed** - Process failed
+The form data follows this structure:
 
----
-
-## Configuration
-
-### Required Configuration Sections
-
-#### appsettings.json
 ```json
 {
-  "ConnectionStrings": {
-    "DefaultConnection": "Server=...;Database=...;Trusted_Connection=true;"
+  "tenantDetails": {
+    "fullName": "string (required)",
+    "dateOfBirth": "string (YYYY-MM-DD)",
+    "placeOfBirth": "string",
+    "email": "string (required, email format)",
+    "telephone": "string (required, phone format)",
+    "employersName": "string",
+    "gender": "Male | Female",
+    "niNumber": "string",
+    "car": "boolean",
+    "bicycle": "boolean",
+    "rightToLiveInUk": "boolean",
+    "otherNames": {
+      "hasOtherNames": "boolean",
+      "details": "string"
+    },
+    "roomOccupancy": "JustYou | YouAndSomeoneElse",
+    "medicalCondition": {
+      "hasCondition": "boolean",
+      "details": "string"
+    }
   },
-  "EmailSettings": {
-    "SmtpServer": "smtp.gmail.com",
-    "SmtpPort": 587,
-    "SmtpUsername": "your-email@domain.com",
-    "SmtpPassword": "your-app-password",
-    "UseSsl": true,
-    "FromEmail": "noreply@yourdomain.com",
-    "FromName": "Azure Accommodation Form",
-    "CompanyEmail": "company@yourdomain.com"
+  "bankDetails": {
+    "bankName": "string",
+    "postcode": "string",
+    "accountNo": "string",
+    "sortCode": "string"
   },
-  "BlobStorageSettings": {
-    "ConnectionString": "DefaultEndpointsProtocol=https;AccountName=...",
-    "ContainerName": "form-submissions"
+  "addressHistory": [
+    {
+      "address": "string",
+      "from": "string (YYYY-MM-DD)",
+      "to": "string (YYYY-MM-DD)",
+      "landlordName": "string",
+      "landlordTel": "string (phone format)",
+      "landlordEmail": "string (email format)"
+    }
+  ],
+  "contacts": {
+    "nextOfKin": "string",
+    "relationship": "string",
+    "address": "string",
+    "contactNumber": "string (phone format)"
   },
-  "ApplicationSettings": {
-    "ApplicationName": "Azure Accommodation Form",
-    "ApplicationUrl": "https://yourdomain.com",
-    "TokenExpirationMinutes": 15,
-    "TokenLength": 6
+  "medicalDetails": {
+    "gpPractice": "string",
+    "doctorName": "string",
+    "doctorAddress": "string",
+    "doctorTelephone": "string (phone format)"
+  },
+  "employment": {
+    "employerName": "string",
+    "employerAddress": "string",
+    "jobTitle": "string",
+    "managerName": "string",
+    "managerTel": "string (phone format)",
+    "managerEmail": "string (email format)",
+    "dateOfEmployment": "string (YYYY-MM-DD)",
+    "presentSalary": "string"
+  },
+  "employmentChange": "string",
+  "passportDetails": {
+    "passportNumber": "string",
+    "dateOfIssue": "string (YYYY-MM-DD)",
+    "placeOfIssue": "string"
+  },
+  "currentLivingArrangement": {
+    "landlordKnows": "boolean",
+    "noticeEndDate": "string (YYYY-MM-DD)",
+    "reasonLeaving": "string",
+    "landlordReference": "boolean",
+    "landlordContact": {
+      "name": "string",
+      "address": "string",
+      "tel": "string (phone format)",
+      "email": "string (email format)"
+    }
+  },
+  "other": {
+    "pets": {
+      "hasPets": "boolean",
+      "details": "string"
+    },
+    "smoke": "boolean",
+    "coliving": {
+      "hasColiving": "boolean",
+      "details": "string"
+    }
+  },
+  "occupationAgreement": {
+    "singleOccupancyAgree": "boolean",
+    "hmoTermsAgree": "boolean",
+    "noUnlistedOccupants": "boolean",
+    "noSmoking": "boolean",
+    "kitchenCookingOnly": "boolean"
+  },
+  "consentAndDeclaration": {
+    "consentGiven": "boolean",
+    "signature": "string",
+    "date": "string (YYYY-MM-DD)",
+    "printName": "string",
+    "declaration": {
+      "mainHome": "boolean",
+      "enquiriesPermission": "boolean",
+      "certifyNoJudgements": "boolean",
+      "certifyNoHousingDebt": "boolean",
+      "certifyNoLandlordDebt": "boolean",
+      "certifyNoAbuse": "boolean"
+    },
+    "declarationSignature": "string",
+    "declarationDate": "string (YYYY-MM-DD)",
+    "declarationPrintName": "string"
   }
 }
 ```
 
----
+## Status Codes
 
-## Deployment Instructions
+- `Draft` - Form session initialized
+- `EmailSent` - Email verification sent
+- `EmailVerified` - Email verified successfully
+- `Submitted` - Form data submitted
+- `PdfGenerated` - PDF generated from form data
+- `Completed` - Processing completed successfully
+- `Failed` - Processing failed
 
-### Prerequisites
-1. .NET 8 Runtime
-2. SQL Server database
-3. Azure Storage Account
-4. SMTP server access (Gmail, SendGrid, etc.)
+## Error Responses
 
-### Steps
-1. **Database Setup**
-   ```bash
-   dotnet ef database update
-   ```
+All endpoints return standard HTTP status codes:
 
-2. **Configuration**
-   - Update connection strings
-   - Configure email settings
-   - Set blob storage credentials
+- `200 OK` - Success
+- `400 Bad Request` - Invalid request data
+- `404 Not Found` - Resource not found
+- `500 Internal Server Error` - Server error
 
-3. **Build and Deploy**
-   ```bash
-   dotnet publish -c Release
-   ```
-
-4. **Azure App Service (Recommended)**
-   - Deploy using Azure DevOps or GitHub Actions
-   - Configure environment variables
-   - Enable Application Insights
-
----
-
-## Monitoring and Logging
-
-### Application Insights (Recommended)
-- Configure in Azure App Service
-- Monitor API performance
-- Track errors and exceptions
-
-### Built-in Logging
-- All operations are logged with structured logging
-- Log levels: Information, Warning, Error
-- Includes submission IDs for traceability
-
-### Health Checks
-Consider implementing:
-- Database connectivity
-- Blob storage access
-- Email service availability
-
----
-
-## Security Considerations
-
-### Current Implementation
-- HTTPS enforcement
-- Email verification workflow
-- Input validation
-- SQL injection protection (EF Core)
-
-### Production Recommendations
-1. **API Authentication**
-   - Implement API keys or OAuth 2.0
-   - Rate limiting
-
-2. **Data Protection**
-   - Encrypt sensitive form data
-   - Implement data retention policies
-
-3. **Network Security**
-   - Use Azure Private Endpoints
-   - Configure firewall rules
-
----
-
-## Error Handling
-
-### Standard Error Response Format
+Error response format:
 ```json
 {
   "success": false,
   "message": "Error description",
-  "timestamp": "2025-01-20T10:30:00Z"
+  "timestamp": "2024-01-15T10:30:00Z"
 }
 ```
 
-### Common Error Scenarios
-1. **Invalid Email Format**
-   - Status: 400
-   - Message: Email validation failed
+## Configuration Requirements
 
-2. **Expired Verification Token**
-   - Status: 400
-   - Message: Verification token has expired
+Before using the API, ensure the following are configured:
 
-3. **Email Service Failure**
-   - Status: 500
-   - Message: Failed to send verification email
+1. **SMTP Settings** - For sending emails
+2. **Azure Blob Storage** - For PDF storage
+3. **Database Connection** - For submission tracking
 
-4. **Storage Service Failure**
-   - Status: 500
-   - Message: Failed to upload form data
-
----
-
-## Development and Testing
-
-### Local Development
-1. Use LocalDB for development database
-2. Configure development SMTP (MailHog recommended)
-3. Use Azure Storage Emulator
-
-### Testing Endpoints
-- **Swagger UI**: Available at `/swagger` in development
-- **PostMan Collection**: Can be generated from Swagger
-- **Unit Tests**: Located in `Tests/` directory (if added)
-
-### Sample cURL Commands
-
-```bash
-# Initialize form
-curl -X POST "https://localhost:5001/api/form/initialize" \
-  -H "Content-Type: application/json" \
-  -d '{"email": "test@example.com"}'
-
-# Send verification
-curl -X POST "https://localhost:5001/api/form/send-verification" \
-  -H "Content-Type: application/json" \
-  -d '{"submissionId": "YOUR_ID", "email": "test@example.com"}'
-
-# Verify email
-curl -X POST "https://localhost:5001/api/form/verify-email" \
-  -H "Content-Type: application/json" \
-  -d '{"submissionId": "YOUR_ID", "token": "123456"}'
-```
-
----
-
-## Maintenance
-
-### Regular Tasks
-1. **Database Maintenance**
-   - Monitor database size
-   - Archive old submissions
-   - Optimize indexes
-
-2. **Storage Cleanup**
-   - Implement blob lifecycle policies
-   - Archive old PDF files
-
-3. **Monitoring**
-   - Review error logs
-   - Monitor email delivery rates
-   - Check storage usage
-
-### Troubleshooting
-
-#### Email Not Sending
-1. Check SMTP configuration
-2. Verify credentials
-3. Check firewall settings
-4. Review email service logs
-
-#### PDF Generation Fails
-1. Check file permissions
-2. Verify iTextSharp dependencies
-3. Monitor memory usage
-
-#### Database Connection Issues
-1. Check connection string
-2. Verify network connectivity
-3. Review SQL Server logs
-
----
-
-## Support
-
-For technical support or questions:
-1. Review this documentation
-2. Check application logs
-3. Contact the development team
-4. Create GitHub issues for bugs
-
----
-
-*Last Updated: January 2025*
-*Version: 1.0*
+See the main README.md for detailed configuration instructions.
