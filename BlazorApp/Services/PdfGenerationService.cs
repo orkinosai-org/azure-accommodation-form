@@ -1,7 +1,7 @@
-using iTextSharp.text;
-using iTextSharp.text.pdf;
+using QuestPDF.Fluent;
+using QuestPDF.Helpers;
+using QuestPDF.Infrastructure;
 using BlazorApp.Models;
-using System.Text;
 
 namespace BlazorApp.Services;
 
@@ -18,6 +18,9 @@ public class PdfGenerationService : IPdfGenerationService
     public PdfGenerationService(ILogger<PdfGenerationService> logger)
     {
         _logger = logger;
+        
+        // Initialize QuestPDF with Community License
+        QuestPDF.Settings.License = LicenseType.Community;
     }
 
     public async Task<byte[]> GenerateFormPdfAsync(FormData formData, string submissionId)
@@ -26,177 +29,203 @@ public class PdfGenerationService : IPdfGenerationService
         {
             try
             {
-                using var memoryStream = new MemoryStream();
-                var document = new Document(PageSize.A4, 50, 50, 25, 25);
-                var writer = PdfWriter.GetInstance(document, memoryStream);
-                
-                document.Open();
-                
-                // Add title
-                var titleFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 16, new BaseColor(0, 0, 0));
-                var headerFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 12, new BaseColor(0, 0, 0));
-                var normalFont = FontFactory.GetFont(FontFactory.HELVETICA, 10, new BaseColor(0, 0, 0));
-                var smallFont = FontFactory.GetFont(FontFactory.HELVETICA, 8, new BaseColor(128, 128, 128));
-                
-                document.Add(new Paragraph("Azure Accommodation Application Form", titleFont));
-                document.Add(new Paragraph($"Submission ID: {submissionId}", smallFont));
-                document.Add(new Paragraph($"Generated: {DateTime.UtcNow:yyyy-MM-dd HH:mm} UTC", smallFont));
-                document.Add(new Paragraph(" ")); // Empty line
-                
-                // Section 1: Tenant Details
-                AddSection(document, "1. Tenant Details", headerFont, normalFont);
-                AddField(document, "Full Name", formData.TenantDetails.FullName, normalFont);
-                AddField(document, "Date of Birth", formData.TenantDetails.DateOfBirth?.ToString("yyyy-MM-dd") ?? "", normalFont);
-                AddField(document, "Place of Birth", formData.TenantDetails.PlaceOfBirth, normalFont);
-                AddField(document, "Email", formData.TenantDetails.Email, normalFont);
-                AddField(document, "Telephone", formData.TenantDetails.Telephone, normalFont);
-                AddField(document, "Employer's Name", formData.TenantDetails.EmployersName, normalFont);
-                AddField(document, "Gender", formData.TenantDetails.Gender?.ToString() ?? "", normalFont);
-                AddField(document, "NI Number", formData.TenantDetails.NiNumber, normalFont);
-                AddField(document, "Car", formData.TenantDetails.Car ? "Yes" : "No", normalFont);
-                AddField(document, "Bicycle", formData.TenantDetails.Bicycle ? "Yes" : "No", normalFont);
-                AddField(document, "Right to Live in UK", formData.TenantDetails.RightToLiveInUk ? "Yes" : "No", normalFont);
-                AddField(document, "Room Occupancy", formData.TenantDetails.RoomOccupancy?.ToString() ?? "", normalFont);
-                
-                if (formData.TenantDetails.OtherNames.HasOtherNames)
+                var document = Document.Create(container =>
                 {
-                    AddField(document, "Other Names", formData.TenantDetails.OtherNames.Details, normalFont);
-                }
-                
-                if (formData.TenantDetails.MedicalCondition.HasCondition)
-                {
-                    AddField(document, "Medical Condition", formData.TenantDetails.MedicalCondition.Details, normalFont);
-                }
-                
-                document.Add(new Paragraph(" "));
-                
-                // Section 2: Bank Details
-                AddSection(document, "2. Bank Details", headerFont, normalFont);
-                AddField(document, "Bank Name", formData.BankDetails.BankName, normalFont);
-                AddField(document, "Postcode", formData.BankDetails.Postcode, normalFont);
-                AddField(document, "Account No", formData.BankDetails.AccountNo, normalFont);
-                AddField(document, "Sort Code", formData.BankDetails.SortCode, normalFont);
-                
-                document.Add(new Paragraph(" "));
-                
-                // Section 3: Address History
-                AddSection(document, "3. Address History", headerFont, normalFont);
-                for (int i = 0; i < formData.AddressHistory.Count; i++)
-                {
-                    var address = formData.AddressHistory[i];
-                    AddField(document, $"Address {i + 1}", address.Address, normalFont);
-                    AddField(document, "From", address.From?.ToString("yyyy-MM-dd") ?? "", normalFont);
-                    AddField(document, "To", address.To?.ToString("yyyy-MM-dd") ?? "", normalFont);
-                    AddField(document, "Landlord Name", address.LandlordName, normalFont);
-                    AddField(document, "Landlord Tel", address.LandlordTel, normalFont);
-                    AddField(document, "Landlord Email", address.LandlordEmail, normalFont);
-                    document.Add(new Paragraph(" "));
-                }
-                
-                // Section 4: Contacts
-                AddSection(document, "4. Contacts", headerFont, normalFont);
-                AddField(document, "Next of Kin", formData.Contacts.NextOfKin, normalFont);
-                AddField(document, "Relationship", formData.Contacts.Relationship, normalFont);
-                AddField(document, "Address", formData.Contacts.Address, normalFont);
-                AddField(document, "Contact Number", formData.Contacts.ContactNumber, normalFont);
-                
-                document.Add(new Paragraph(" "));
-                
-                // Section 5: Medical Details
-                AddSection(document, "5. Medical Details", headerFont, normalFont);
-                AddField(document, "GP Practice", formData.MedicalDetails.GpPractice, normalFont);
-                AddField(document, "Doctor's Name", formData.MedicalDetails.DoctorName, normalFont);
-                AddField(document, "Doctor's Address", formData.MedicalDetails.DoctorAddress, normalFont);
-                AddField(document, "Doctor's Telephone", formData.MedicalDetails.DoctorTelephone, normalFont);
-                
-                document.Add(new Paragraph(" "));
-                
-                // Section 6: Employment
-                AddSection(document, "6. Employment", headerFont, normalFont);
-                AddField(document, "Employer Name", formData.Employment.EmployerName, normalFont);
-                AddField(document, "Employer Address", formData.Employment.EmployerAddress, normalFont);
-                AddField(document, "Job Title", formData.Employment.JobTitle, normalFont);
-                AddField(document, "Manager's Name", formData.Employment.ManagerName, normalFont);
-                AddField(document, "Manager's Tel", formData.Employment.ManagerTel, normalFont);
-                AddField(document, "Manager's Email", formData.Employment.ManagerEmail, normalFont);
-                AddField(document, "Date of Employment", formData.Employment.DateOfEmployment?.ToString("yyyy-MM-dd") ?? "", normalFont);
-                AddField(document, "Present Salary", formData.Employment.PresentSalary, normalFont);
-                
-                document.Add(new Paragraph(" "));
-                
-                // Section 7: Employment Change
-                AddSection(document, "7. Employment Change", headerFont, normalFont);
-                AddField(document, "Are circumstances likely to change?", formData.EmploymentChange, normalFont);
-                
-                document.Add(new Paragraph(" "));
-                
-                // Section 8: Passport Details
-                AddSection(document, "8. Passport Details", headerFont, normalFont);
-                AddField(document, "Passport Number", formData.PassportDetails.PassportNumber, normalFont);
-                AddField(document, "Date of Issue", formData.PassportDetails.DateOfIssue?.ToString("yyyy-MM-dd") ?? "", normalFont);
-                AddField(document, "Place of Issue", formData.PassportDetails.PlaceOfIssue, normalFont);
-                
-                document.Add(new Paragraph(" "));
-                
-                // Section 9: Current Living Arrangement
-                AddSection(document, "9. Current Living Arrangement", headerFont, normalFont);
-                AddField(document, "Landlord Knows", formData.CurrentLivingArrangement.LandlordKnows ? "Yes" : "No", normalFont);
-                AddField(document, "Notice End Date", formData.CurrentLivingArrangement.NoticeEndDate?.ToString("yyyy-MM-dd") ?? "", normalFont);
-                AddField(document, "Reason for Leaving", formData.CurrentLivingArrangement.ReasonLeaving, normalFont);
-                AddField(document, "Landlord Reference", formData.CurrentLivingArrangement.LandlordReference ? "Yes" : "No", normalFont);
-                AddField(document, "Landlord Contact Name", formData.CurrentLivingArrangement.LandlordContact.Name, normalFont);
-                AddField(document, "Landlord Contact Tel", formData.CurrentLivingArrangement.LandlordContact.Tel, normalFont);
-                AddField(document, "Landlord Contact Address", formData.CurrentLivingArrangement.LandlordContact.Address, normalFont);
-                AddField(document, "Landlord Contact Email", formData.CurrentLivingArrangement.LandlordContact.Email, normalFont);
-                
-                document.Add(new Paragraph(" "));
-                
-                // Section 10: Other
-                AddSection(document, "10. Other Details", headerFont, normalFont);
-                if (formData.Other.Pets.HasPets)
-                {
-                    AddField(document, "Pets", formData.Other.Pets.Details, normalFont);
-                }
-                AddField(document, "Smoke", formData.Other.Smoke ? "Yes" : "No", normalFont);
-                if (formData.Other.Coliving.HasColiving)
-                {
-                    AddField(document, "Co-living", formData.Other.Coliving.Details, normalFont);
-                }
-                
-                document.Add(new Paragraph(" "));
-                
-                // Section 11: Occupation Agreement
-                AddSection(document, "11. Occupation Agreement", headerFont, normalFont);
-                AddField(document, "Single Occupancy Agree", formData.OccupationAgreement.SingleOccupancyAgree ? "Yes" : "No", normalFont);
-                AddField(document, "HMO Terms Agree", formData.OccupationAgreement.HmoTermsAgree ? "Yes" : "No", normalFont);
-                AddField(document, "No Unlisted Occupants", formData.OccupationAgreement.NoUnlistedOccupants ? "Yes" : "No", normalFont);
-                AddField(document, "No Smoking", formData.OccupationAgreement.NoSmoking ? "Yes" : "No", normalFont);
-                AddField(document, "Kitchen Cooking Only", formData.OccupationAgreement.KitchenCookingOnly ? "Yes" : "No", normalFont);
-                
-                document.Add(new Paragraph(" "));
-                
-                // Section 12: Consent & Declaration
-                AddSection(document, "12. Consent & Declaration", headerFont, normalFont);
-                AddField(document, "Consent Given", formData.ConsentAndDeclaration.ConsentGiven ? "Yes" : "No", normalFont);
-                AddField(document, "Signature", formData.ConsentAndDeclaration.Signature, normalFont);
-                AddField(document, "Date", formData.ConsentAndDeclaration.Date?.ToString("yyyy-MM-dd") ?? "", normalFont);
-                AddField(document, "Print Name", formData.ConsentAndDeclaration.PrintName, normalFont);
-                
-                // Declaration fields
-                AddField(document, "Main Home", formData.ConsentAndDeclaration.Declaration.MainHome ? "Yes" : "No", normalFont);
-                AddField(document, "Enquiries Permission", formData.ConsentAndDeclaration.Declaration.EnquiriesPermission ? "Yes" : "No", normalFont);
-                AddField(document, "No Judgements", formData.ConsentAndDeclaration.Declaration.CertifyNoJudgements ? "Yes" : "No", normalFont);
-                AddField(document, "No Housing Debt", formData.ConsentAndDeclaration.Declaration.CertifyNoHousingDebt ? "Yes" : "No", normalFont);
-                AddField(document, "No Landlord Debt", formData.ConsentAndDeclaration.Declaration.CertifyNoLandlordDebt ? "Yes" : "No", normalFont);
-                AddField(document, "No Abuse", formData.ConsentAndDeclaration.Declaration.CertifyNoAbuse ? "Yes" : "No", normalFont);
-                
-                AddField(document, "Declaration Signature", formData.ConsentAndDeclaration.DeclarationSignature, normalFont);
-                AddField(document, "Declaration Date", formData.ConsentAndDeclaration.DeclarationDate?.ToString("yyyy-MM-dd") ?? "", normalFont);
-                AddField(document, "Declaration Print Name", formData.ConsentAndDeclaration.DeclarationPrintName, normalFont);
-                
-                document.Close();
-                
-                return memoryStream.ToArray();
+                    container.Page(page =>
+                    {
+                        page.Size(PageSizes.A4);
+                        page.Margin(2, Unit.Centimetre);
+                        page.DefaultTextStyle(x => x.FontSize(10));
+
+                        page.Header()
+                            .AlignCenter()
+                            .Text("Azure Accommodation Application Form")
+                            .FontSize(18)
+                            .Bold();
+
+                        page.Content()
+                            .PaddingVertical(1, Unit.Centimetre)
+                            .Column(column =>
+                            {
+                                // Document metadata
+                                column.Item().Row(row =>
+                                {
+                                    row.RelativeItem().Text($"Submission ID: {submissionId}").FontSize(8).Italic();
+                                    row.RelativeItem().AlignRight().Text($"Generated: {DateTime.UtcNow:yyyy-MM-dd HH:mm} UTC").FontSize(8).Italic();
+                                });
+
+                                column.Item().PaddingVertical(5, Unit.Millimetre);
+
+                                // Section 1: Tenant Details
+                                AddSection(column, "1. Tenant Details");
+                                AddField(column, "Full Name", formData.TenantDetails.FullName);
+                                AddField(column, "Date of Birth", formData.TenantDetails.DateOfBirth?.ToString("yyyy-MM-dd") ?? "");
+                                AddField(column, "Place of Birth", formData.TenantDetails.PlaceOfBirth);
+                                AddField(column, "Email", formData.TenantDetails.Email);
+                                AddField(column, "Telephone", formData.TenantDetails.Telephone);
+                                AddField(column, "Employer's Name", formData.TenantDetails.EmployersName);
+                                AddField(column, "Gender", formData.TenantDetails.Gender?.ToString() ?? "");
+                                AddField(column, "NI Number", formData.TenantDetails.NiNumber);
+                                AddField(column, "Car", formData.TenantDetails.Car ? "Yes" : "No");
+                                AddField(column, "Bicycle", formData.TenantDetails.Bicycle ? "Yes" : "No");
+                                AddField(column, "Right to Live in UK", formData.TenantDetails.RightToLiveInUk ? "Yes" : "No");
+                                AddField(column, "Room Occupancy", formData.TenantDetails.RoomOccupancy?.ToString() ?? "");
+
+                                if (formData.TenantDetails.OtherNames.HasOtherNames)
+                                {
+                                    AddField(column, "Other Names", formData.TenantDetails.OtherNames.Details);
+                                }
+
+                                if (formData.TenantDetails.MedicalCondition.HasCondition)
+                                {
+                                    AddField(column, "Medical Condition", formData.TenantDetails.MedicalCondition.Details);
+                                }
+
+                                column.Item().PaddingVertical(5, Unit.Millimetre);
+
+                                // Section 2: Bank Details
+                                AddSection(column, "2. Bank Details");
+                                AddField(column, "Bank Name", formData.BankDetails.BankName);
+                                AddField(column, "Postcode", formData.BankDetails.Postcode);
+                                AddField(column, "Account No", formData.BankDetails.AccountNo);
+                                AddField(column, "Sort Code", formData.BankDetails.SortCode);
+
+                                column.Item().PaddingVertical(5, Unit.Millimetre);
+
+                                // Section 3: Address History
+                                AddSection(column, "3. Address History");
+                                for (int i = 0; i < formData.AddressHistory.Count; i++)
+                                {
+                                    var address = formData.AddressHistory[i];
+                                    AddField(column, $"Address {i + 1}", address.Address);
+                                    AddField(column, "From", address.From?.ToString("yyyy-MM-dd") ?? "");
+                                    AddField(column, "To", address.To?.ToString("yyyy-MM-dd") ?? "");
+                                    AddField(column, "Landlord Name", address.LandlordName);
+                                    AddField(column, "Landlord Tel", address.LandlordTel);
+                                    AddField(column, "Landlord Email", address.LandlordEmail);
+                                    if (i < formData.AddressHistory.Count - 1)
+                                    {
+                                        column.Item().PaddingVertical(3, Unit.Millimetre);
+                                    }
+                                }
+
+                                column.Item().PaddingVertical(5, Unit.Millimetre);
+
+                                // Section 4: Contacts
+                                AddSection(column, "4. Contacts");
+                                AddField(column, "Next of Kin", formData.Contacts.NextOfKin);
+                                AddField(column, "Relationship", formData.Contacts.Relationship);
+                                AddField(column, "Address", formData.Contacts.Address);
+                                AddField(column, "Contact Number", formData.Contacts.ContactNumber);
+
+                                column.Item().PaddingVertical(5, Unit.Millimetre);
+
+                                // Section 5: Medical Details
+                                AddSection(column, "5. Medical Details");
+                                AddField(column, "GP Practice", formData.MedicalDetails.GpPractice);
+                                AddField(column, "Doctor's Name", formData.MedicalDetails.DoctorName);
+                                AddField(column, "Doctor's Address", formData.MedicalDetails.DoctorAddress);
+                                AddField(column, "Doctor's Telephone", formData.MedicalDetails.DoctorTelephone);
+
+                                column.Item().PaddingVertical(5, Unit.Millimetre);
+
+                                // Section 6: Employment
+                                AddSection(column, "6. Employment");
+                                AddField(column, "Employer Name", formData.Employment.EmployerName);
+                                AddField(column, "Employer Address", formData.Employment.EmployerAddress);
+                                AddField(column, "Job Title", formData.Employment.JobTitle);
+                                AddField(column, "Manager's Name", formData.Employment.ManagerName);
+                                AddField(column, "Manager's Tel", formData.Employment.ManagerTel);
+                                AddField(column, "Manager's Email", formData.Employment.ManagerEmail);
+                                AddField(column, "Date of Employment", formData.Employment.DateOfEmployment?.ToString("yyyy-MM-dd") ?? "");
+                                AddField(column, "Present Salary", formData.Employment.PresentSalary);
+
+                                column.Item().PaddingVertical(5, Unit.Millimetre);
+
+                                // Section 7: Employment Change
+                                AddSection(column, "7. Employment Change");
+                                AddField(column, "Are circumstances likely to change?", formData.EmploymentChange);
+
+                                column.Item().PaddingVertical(5, Unit.Millimetre);
+
+                                // Section 8: Passport Details
+                                AddSection(column, "8. Passport Details");
+                                AddField(column, "Passport Number", formData.PassportDetails.PassportNumber);
+                                AddField(column, "Date of Issue", formData.PassportDetails.DateOfIssue?.ToString("yyyy-MM-dd") ?? "");
+                                AddField(column, "Place of Issue", formData.PassportDetails.PlaceOfIssue);
+
+                                column.Item().PaddingVertical(5, Unit.Millimetre);
+
+                                // Section 9: Current Living Arrangement
+                                AddSection(column, "9. Current Living Arrangement");
+                                AddField(column, "Landlord Knows", formData.CurrentLivingArrangement.LandlordKnows ? "Yes" : "No");
+                                AddField(column, "Notice End Date", formData.CurrentLivingArrangement.NoticeEndDate?.ToString("yyyy-MM-dd") ?? "");
+                                AddField(column, "Reason for Leaving", formData.CurrentLivingArrangement.ReasonLeaving);
+                                AddField(column, "Landlord Reference", formData.CurrentLivingArrangement.LandlordReference ? "Yes" : "No");
+                                AddField(column, "Landlord Contact Name", formData.CurrentLivingArrangement.LandlordContact.Name);
+                                AddField(column, "Landlord Contact Tel", formData.CurrentLivingArrangement.LandlordContact.Tel);
+                                AddField(column, "Landlord Contact Address", formData.CurrentLivingArrangement.LandlordContact.Address);
+                                AddField(column, "Landlord Contact Email", formData.CurrentLivingArrangement.LandlordContact.Email);
+
+                                column.Item().PaddingVertical(5, Unit.Millimetre);
+
+                                // Section 10: Other
+                                AddSection(column, "10. Other Details");
+                                if (formData.Other.Pets.HasPets)
+                                {
+                                    AddField(column, "Pets", formData.Other.Pets.Details);
+                                }
+                                AddField(column, "Smoke", formData.Other.Smoke ? "Yes" : "No");
+                                if (formData.Other.Coliving.HasColiving)
+                                {
+                                    AddField(column, "Co-living", formData.Other.Coliving.Details);
+                                }
+
+                                column.Item().PaddingVertical(5, Unit.Millimetre);
+
+                                // Section 11: Occupation Agreement
+                                AddSection(column, "11. Occupation Agreement");
+                                AddField(column, "Single Occupancy Agree", formData.OccupationAgreement.SingleOccupancyAgree ? "Yes" : "No");
+                                AddField(column, "HMO Terms Agree", formData.OccupationAgreement.HmoTermsAgree ? "Yes" : "No");
+                                AddField(column, "No Unlisted Occupants", formData.OccupationAgreement.NoUnlistedOccupants ? "Yes" : "No");
+                                AddField(column, "No Smoking", formData.OccupationAgreement.NoSmoking ? "Yes" : "No");
+                                AddField(column, "Kitchen Cooking Only", formData.OccupationAgreement.KitchenCookingOnly ? "Yes" : "No");
+
+                                column.Item().PaddingVertical(5, Unit.Millimetre);
+
+                                // Section 12: Consent & Declaration
+                                AddSection(column, "12. Consent & Declaration");
+                                AddField(column, "Consent Given", formData.ConsentAndDeclaration.ConsentGiven ? "Yes" : "No");
+                                AddField(column, "Signature", formData.ConsentAndDeclaration.Signature);
+                                AddField(column, "Date", formData.ConsentAndDeclaration.Date?.ToString("yyyy-MM-dd") ?? "");
+                                AddField(column, "Print Name", formData.ConsentAndDeclaration.PrintName);
+
+                                // Declaration fields
+                                AddField(column, "Main Home", formData.ConsentAndDeclaration.Declaration.MainHome ? "Yes" : "No");
+                                AddField(column, "Enquiries Permission", formData.ConsentAndDeclaration.Declaration.EnquiriesPermission ? "Yes" : "No");
+                                AddField(column, "No Judgements", formData.ConsentAndDeclaration.Declaration.CertifyNoJudgements ? "Yes" : "No");
+                                AddField(column, "No Housing Debt", formData.ConsentAndDeclaration.Declaration.CertifyNoHousingDebt ? "Yes" : "No");
+                                AddField(column, "No Landlord Debt", formData.ConsentAndDeclaration.Declaration.CertifyNoLandlordDebt ? "Yes" : "No");
+                                AddField(column, "No Abuse", formData.ConsentAndDeclaration.Declaration.CertifyNoAbuse ? "Yes" : "No");
+
+                                AddField(column, "Declaration Signature", formData.ConsentAndDeclaration.DeclarationSignature);
+                                AddField(column, "Declaration Date", formData.ConsentAndDeclaration.DeclarationDate?.ToString("yyyy-MM-dd") ?? "");
+                                AddField(column, "Declaration Print Name", formData.ConsentAndDeclaration.DeclarationPrintName);
+                            });
+
+                        page.Footer()
+                            .AlignCenter()
+                            .Text(x =>
+                            {
+                                x.Span("Page ");
+                                x.CurrentPageNumber();
+                                x.Span(" of ");
+                                x.TotalPages();
+                            });
+                    });
+                });
+
+                return document.GeneratePdf();
             }
             catch (Exception ex)
             {
@@ -215,24 +244,28 @@ public class PdfGenerationService : IPdfGenerationService
         return $"{firstName}_{lastName}_Application_Form_{timestamp}.pdf";
     }
 
-    private void AddSection(Document document, string title, Font headerFont, Font normalFont)
+    private void AddSection(ColumnDescriptor column, string title)
     {
-        document.Add(new Paragraph(title, headerFont));
-        document.Add(new Paragraph(" "));
+        column.Item().Text(title).FontSize(12).Bold();
+        column.Item().PaddingVertical(2, Unit.Millimetre);
     }
 
-    private void AddField(Document document, string label, string value, Font font)
+    private void AddField(ColumnDescriptor column, string label, string value)
     {
         if (!string.IsNullOrWhiteSpace(value))
         {
-            document.Add(new Paragraph($"{label}: {value}", font));
+            column.Item().Row(row =>
+            {
+                row.ConstantItem(120).Text($"{label}:").Bold();
+                row.RelativeItem().Text(value);
+            });
         }
     }
 
     private string SanitizeFileName(string fileName)
     {
         var invalidChars = Path.GetInvalidFileNameChars();
-        var sanitized = new StringBuilder();
+        var sanitized = new System.Text.StringBuilder();
         
         foreach (char c in fileName)
         {

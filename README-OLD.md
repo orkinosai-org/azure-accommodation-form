@@ -12,17 +12,13 @@ This project provides a secure, user-friendly web application for accommodation 
 ## Available Implementations
 
 ### 🆕 Blazor Server (.NET 8 LTS) - **Recommended**
-Modern server-side implementation with interactive components and **full backend API**.
+Modern server-side implementation with interactive components.
 
 **Features:**
 - Server-side rendering for better performance and SEO
 - Interactive server components via SignalR
 - Built-in validation with C# models
 - Type-safe development with .NET
-- **Complete backend API for form processing**
-- **PDF generation using QuestPDF**
-- **SMTP email integration with MailKit**
-- **Azure Blob Storage integration**
 - Ready for Azure App Service deployment
 
 **Setup:**
@@ -46,103 +42,11 @@ npm run dev
 ```
 The app will be available at [http://localhost:5173](http://localhost:5173)
 
-## Backend API
-
-The Blazor implementation includes a complete backend API that processes form submissions by:
-
-1. **Receiving form data** via RESTful API endpoints
-2. **Generating PDF** from submitted form data using QuestPDF
-3. **Sending PDF via SMTP email** to both the user and admin
-4. **Saving PDF to Azure Blob Storage** for archival
-5. **Logging all operations** with comprehensive error handling
-
-### API Endpoints
-
-- `POST /api/form/initialize` - Initialize a new form session
-- `POST /api/form/send-verification` - Send email verification token
-- `POST /api/form/verify-email` - Verify email using token
-- `POST /api/form/submit` - Submit form (requires email verification)
-- `POST /api/form/submit-direct` - Submit form directly (no email verification required)
-- `GET /api/form/{submissionId}/status` - Get submission status
-
-### Configuration
-
-The backend can be configured via `appsettings.json` or environment variables:
-
-#### SMTP Settings
-```json
-{
-  "EmailSettings": {
-    "SmtpServer": "smtp.gmail.com",
-    "SmtpPort": 587,
-    "SmtpUsername": "your-email@gmail.com",
-    "SmtpPassword": "your-app-password",
-    "UseSsl": true,
-    "FromEmail": "noreply@yourdomain.com",
-    "FromName": "Azure Accommodation Form",
-    "CompanyEmail": "admin@yourdomain.com"
-  }
-}
-```
-
-#### Azure Blob Storage Settings
-```json
-{
-  "BlobStorageSettings": {
-    "ConnectionString": "DefaultEndpointsProtocol=https;AccountName=youraccount;AccountKey=yourkey;EndpointSuffix=core.windows.net",
-    "ContainerName": "form-submissions"
-  }
-}
-```
-
-#### Environment Variables
-All settings can be overridden using environment variables:
-- `EmailSettings__SmtpServer`
-- `EmailSettings__SmtpUsername`
-- `EmailSettings__SmtpPassword`
-- `EmailSettings__CompanyEmail`
-- `BlobStorageSettings__ConnectionString`
-- `BlobStorageSettings__ContainerName`
-
-### Usage Example
-
-**Direct Form Submission:**
-```bash
-curl -X POST https://your-app.azurewebsites.net/api/form/submit-direct \
-  -H "Content-Type: application/json" \
-  -d '{
-    "tenantDetails": {
-      "fullName": "John Doe",
-      "email": "john@example.com",
-      "telephone": "+1234567890",
-      "dateOfBirth": "1990-01-01"
-    },
-    "bankDetails": { ... },
-    "addressHistory": [ ... ],
-    ...
-  }'
-```
-
-**Response:**
-```json
-{
-  "submissionId": "12345678-1234-1234-1234-123456789012",
-  "status": "Completed",
-  "message": "Form submitted and processed successfully",
-  "success": true,
-  "timestamp": "2024-01-15T10:30:00Z"
-}
-```
-
 ## Technology Stacks
 
 ### Blazor Implementation
 - **Frontend:** Blazor Server with Interactive Server Components
 - **Backend:** .NET 8, C# models with validation attributes  
-- **PDF Generation:** QuestPDF
-- **Email:** MailKit/MimeKit for SMTP
-- **Storage:** Azure Blob Storage
-- **Database:** Entity Framework Core (SQLite dev, SQL Server prod)
 - **Hosting:** Azure App Service
 - **Real-time:** SignalR for interactive features
 
@@ -193,23 +97,13 @@ Both implementations provide identical functionality:
 ## Project Structure
 
 ```
-./
+/
 ├── BlazorApp/                    # .NET 8 Blazor implementation
 │   ├── Components/
 │   │   ├── Pages/Home.razor     # Main form component
 │   │   └── Layout/              # Layout components
-│   ├── Controllers/
-│   │   └── FormController.cs    # API endpoints
-│   ├── Services/
-│   │   ├── FormService.cs       # Form processing logic
-│   │   ├── PdfGenerationService.cs # QuestPDF integration
-│   │   ├── EmailService.cs      # SMTP email service
-│   │   └── BlobStorageService.cs # Azure Blob Storage
 │   ├── Models/FormModels.cs     # C# form models with validation
-│   ├── Data/ApplicationDbContext.cs # Entity Framework context
 │   ├── Program.cs               # Application entry point
-│   ├── appsettings.json         # Development configuration
-│   ├── appsettings.Example.json # Production configuration example
 │   └── MIGRATION.md             # Migration documentation
 ├── src/                         # React implementation (legacy)
 │   ├── App.tsx                  # Main app component
@@ -243,30 +137,14 @@ The form generates JSON data compatible with both implementations:
 - See [docs/form_fields.md](docs/form_fields.md) for the complete form structure
 - The form schema is defined in [form_schema.json](form_schema.json)
 - For Blazor-specific details, see [BlazorApp/MIGRATION.md](BlazorApp/MIGRATION.md)
-- **No database dependency for form data** - submissions are stored as JSON and archived as PDFs in Azure Blob Storage
-- Entity Framework is used only for tracking submission status and logs
 
 ## Deployment
 
 ### Blazor (Recommended)
 Deploy to Azure App Service with .NET 8 runtime. The application includes SignalR support for interactive features.
 
-**Required Configuration:**
-1. Set up Azure Blob Storage account
-2. Configure SMTP email settings (Gmail, Outlook, or custom SMTP)
-3. Set environment variables for production secrets
-4. Update `appsettings.json` or use Azure App Service configuration
-
 ### React (Legacy)  
 Deploy frontend to static hosting (Azure Static Web Apps) with separate backend API.
-
-## Security & Privacy
-
-- **No sensitive data stored in database** - only submission metadata and logs
-- **PDF files encrypted in transit and at rest** in Azure Blob Storage
-- **Email verification** ensures form submissions are from valid email addresses
-- **Comprehensive logging** for audit trails
-- **Configuration via environment variables** for secure secret management
 
 ## Branding
 
@@ -277,6 +155,6 @@ If you have branding assets, place them in the `branding/` folder.
 **Getting Started:**
 1. Choose your preferred implementation (Blazor recommended for new development)
 2. Follow the setup instructions above
-3. Configure SMTP and Azure Blob Storage settings in `appsettings.json`
-4. Customize the form fields and styling as needed
+3. Customize the form fields and styling as needed
+4. Integrate with your backend API
 5. Deploy to Azure
