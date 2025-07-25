@@ -244,3 +244,29 @@ BlazorApp/obj/
 .vs/
 BlazorApp/*.db-shm
 BlazorApp/*.db-wal
+# Visual Studio cache files
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+.vs/
+bin/
+obj/
+# User-specific files
+*.csproj.user
+
+# Publish profiles
+Properties/PublishProfiles/*.pubxml
+BlazorApp/.config/dotnet-tools.json
+BlazorApp/BlazorApp.csproj.user
+BlazorApp/Properties/PublishProfiles/AForm - FTP.pubxml
+BlazorApp/Properties/PublishProfiles/AForm - ReadOnly - FTP.pubxml
+BlazorApp/BlazorApp.csproj.user
+BlazorApp/Properties/PublishProfiles/AForm - Web Deploy.pubxml
+BlazorApp/Properties/PublishProfiles/AForm - Zip Deploy.pubxml
+BlazorApp/BlazorApp.csproj.user
+BlazorApp/Properties/ServiceDependencies/AForm - Web Deploy/profile.arm.json
+BlazorApp/BlazorApp.csproj.user
+*.user
+BlazorApp/BlazorApp.csproj.user
+BlazorApp/BlazorApp.csproj.user
