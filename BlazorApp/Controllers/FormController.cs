@@ -94,7 +94,8 @@ public class FormController : ControllerBase
 
         try
         {
-            var result = await _formService.ProcessFormDirectAsync(formData);
+            var clientIp = GetClientIpAddress();
+            var result = await _formService.ProcessFormDirectAsync(formData, clientIp);
             
             if (result.Success)
             {
@@ -125,7 +126,8 @@ public class FormController : ControllerBase
             return BadRequest(ModelState);
         }
 
-        var result = await _formService.SubmitFormAsync(request.SubmissionId, request.FormData);
+        var clientIp = GetClientIpAddress();
+        var result = await _formService.SubmitFormAsync(request.SubmissionId, request.FormData, clientIp);
         
         if (result.Success)
         {
@@ -171,6 +173,46 @@ public class FormController : ControllerBase
         };
 
         return Ok(response);
+    }
+
+    /// <summary>
+    /// Get the client IP address from the HTTP context
+    /// </summary>
+    private string GetClientIpAddress()
+    {
+        // Check for forwarded IP address first (for load balancers/proxies)
+        if (Request.Headers.ContainsKey("X-Forwarded-For"))
+        {
+            var forwardedIps = Request.Headers["X-Forwarded-For"].ToString().Split(',');
+            if (forwardedIps.Length > 0 && !string.IsNullOrWhiteSpace(forwardedIps[0]))
+            {
+                return forwardedIps[0].Trim();
+            }
+        }
+
+        // Check for real IP header (some load balancers use this)
+        if (Request.Headers.ContainsKey("X-Real-IP"))
+        {
+            var realIp = Request.Headers["X-Real-IP"].ToString();
+            if (!string.IsNullOrWhiteSpace(realIp))
+            {
+                return realIp.Trim();
+            }
+        }
+
+        // Fall back to remote IP address
+        var remoteIpAddress = HttpContext.Connection.RemoteIpAddress;
+        if (remoteIpAddress != null)
+        {
+            // Handle IPv4 mapped to IPv6
+            if (remoteIpAddress.IsIPv4MappedToIPv6)
+            {
+                return remoteIpAddress.MapToIPv4().ToString();
+            }
+            return remoteIpAddress.ToString();
+        }
+
+        return "Unknown";
     }
 }
 

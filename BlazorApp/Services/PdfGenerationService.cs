@@ -7,7 +7,7 @@ namespace BlazorApp.Services;
 
 public interface IPdfGenerationService
 {
-    Task<byte[]> GenerateFormPdfAsync(FormData formData, string submissionId);
+    Task<byte[]> GenerateFormPdfAsync(FormData formData, string submissionId, DateTime submissionTime, string clientIpAddress);
     string GenerateFileName(FormData formData, DateTime submissionTime);
 }
 
@@ -23,7 +23,7 @@ public class PdfGenerationService : IPdfGenerationService
         QuestPDF.Settings.License = LicenseType.Community;
     }
 
-    public async Task<byte[]> GenerateFormPdfAsync(FormData formData, string submissionId)
+    public async Task<byte[]> GenerateFormPdfAsync(FormData formData, string submissionId, DateTime submissionTime, string clientIpAddress)
     {
         return await Task.Run(() =>
         {
@@ -211,6 +211,17 @@ public class PdfGenerationService : IPdfGenerationService
                                 AddField(column, "Declaration Signature", formData.ConsentAndDeclaration.DeclarationSignature);
                                 AddField(column, "Declaration Date", formData.ConsentAndDeclaration.DeclarationDate?.ToString("yyyy-MM-dd") ?? "");
                                 AddField(column, "Declaration Print Name", formData.ConsentAndDeclaration.DeclarationPrintName);
+
+                                column.Item().PaddingVertical(10, Unit.Millimetre);
+
+                                // Audit Trail Section
+                                AddSection(column, "Audit Trail");
+                                column.Item().BorderColor(Colors.Grey.Medium).BorderLeft(2, Unit.Point).PaddingLeft(10, Unit.Point).Column(auditColumn =>
+                                {
+                                    AddField(auditColumn, "Form Submitted", submissionTime.ToString("yyyy-MM-dd HH:mm:ss") + " UTC");
+                                    AddField(auditColumn, "Client IP Address", clientIpAddress);
+                                    AddField(auditColumn, "PDF Generated", DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss") + " UTC");
+                                });
                             });
 
                         page.Footer()
@@ -229,7 +240,7 @@ public class PdfGenerationService : IPdfGenerationService
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to generate PDF for submission {SubmissionId}", submissionId);
+                _logger.LogError(ex, "Failed to generate PDF for submission {SubmissionId} from IP {ClientIp}", submissionId, clientIpAddress);
                 throw;
             }
         });

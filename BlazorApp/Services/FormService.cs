@@ -11,8 +11,8 @@ public interface IFormService
     Task<FormSubmissionResponse> InitializeFormSessionAsync(string email);
     Task<EmailVerificationResponse> SendEmailVerificationAsync(string submissionId, string email);
     Task<FormSubmissionResponse> VerifyEmailTokenAsync(string submissionId, string token);
-    Task<FormSubmissionResponse> SubmitFormAsync(string submissionId, FormData formData);
-    Task<FormSubmissionResponse> ProcessFormDirectAsync(FormData formData);
+    Task<FormSubmissionResponse> SubmitFormAsync(string submissionId, FormData formData, string clientIpAddress);
+    Task<FormSubmissionResponse> ProcessFormDirectAsync(FormData formData, string clientIpAddress);
     Task<FormSubmissionEntity?> GetSubmissionAsync(string submissionId);
 }
 
@@ -206,7 +206,7 @@ public class FormService : IFormService
         }
     }
 
-    public async Task<FormSubmissionResponse> SubmitFormAsync(string submissionId, FormData formData)
+    public async Task<FormSubmissionResponse> SubmitFormAsync(string submissionId, FormData formData, string clientIpAddress)
     {
         try
         {
@@ -231,15 +231,16 @@ public class FormService : IFormService
                 };
             }
 
-            // Store form data
+            // Store form data and client IP
             submission.FormDataJson = JsonSerializer.Serialize(formData, new JsonSerializerOptions { WriteIndented = true });
+            submission.ClientIpAddress = clientIpAddress;
             submission.Status = FormSubmissionStatus.Submitted;
             submission.SubmittedAt = DateTime.UtcNow;
 
-            LogSubmissionAction(submission.Id, "FormSubmitted", "Form data submitted successfully");
+            LogSubmissionAction(submission.Id, "FormSubmitted", $"Form data submitted successfully from IP: {clientIpAddress}");
 
-            // Generate PDF
-            var pdfData = await _pdfService.GenerateFormPdfAsync(formData, submissionId);
+            // Generate PDF with audit trail information
+            var pdfData = await _pdfService.GenerateFormPdfAsync(formData, submissionId, submission.SubmittedAt, clientIpAddress);
             var fileName = _pdfService.GenerateFileName(formData, submission.SubmittedAt);
             
             submission.PdfFileName = fileName;
@@ -312,11 +313,12 @@ public class FormService : IFormService
         }
     }
 
-    public async Task<FormSubmissionResponse> ProcessFormDirectAsync(FormData formData)
+    public async Task<FormSubmissionResponse> ProcessFormDirectAsync(FormData formData, string clientIpAddress)
     {
         try
         {
             var submissionId = Guid.NewGuid().ToString();
+            var submissionTime = DateTime.UtcNow;
             
             // Create submission record
             var submission = new FormSubmissionEntity
@@ -324,17 +326,18 @@ public class FormService : IFormService
                 SubmissionId = submissionId,
                 UserEmail = formData.TenantDetails.Email,
                 FormDataJson = JsonSerializer.Serialize(formData, new JsonSerializerOptions { WriteIndented = true }),
+                ClientIpAddress = clientIpAddress,
                 Status = FormSubmissionStatus.Submitted,
                 EmailVerified = false, // Direct submission bypasses email verification
-                SubmittedAt = DateTime.UtcNow
+                SubmittedAt = submissionTime
             };
 
             _context.FormSubmissions.Add(submission);
-            LogSubmissionAction(submission.Id, "DirectSubmission", "Form submitted directly via API");
+            LogSubmissionAction(submission.Id, "DirectSubmission", $"Form submitted directly via API from IP: {clientIpAddress}");
 
-            // Generate PDF
-            var pdfData = await _pdfService.GenerateFormPdfAsync(formData, submissionId);
-            var fileName = _pdfService.GenerateFileName(formData, submission.SubmittedAt);
+            // Generate PDF with audit trail information
+            var pdfData = await _pdfService.GenerateFormPdfAsync(formData, submissionId, submissionTime, clientIpAddress);
+            var fileName = _pdfService.GenerateFileName(formData, submissionTime);
             
             submission.PdfFileName = fileName;
             submission.Status = FormSubmissionStatus.PdfGenerated;
