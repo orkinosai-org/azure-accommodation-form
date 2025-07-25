@@ -11,6 +11,16 @@ public class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
+        // Configure logging to disable Azure diagnostics dependencies
+        builder.Logging.ClearProviders();
+        builder.Logging.AddConsole();
+        builder.Logging.AddDebug();
+        
+        // Disable Azure App Service diagnostics trace listeners that require DIAGNOSTICS_AZUREBLOBCONTAINERSASURL
+        // This prevents startup failures when Azure App Service diagnostics are enabled but not properly configured
+        builder.Logging.AddFilter("Microsoft.Extensions.Logging.AzureAppServices.Internal.AzureBlobLoggerProvider", LogLevel.None);
+        builder.Logging.AddFilter("Microsoft.Extensions.Logging.AzureAppServices", LogLevel.None);
+
         // Add services to the container.
         builder.Services.AddRazorComponents()
             .AddInteractiveServerComponents();

@@ -236,11 +236,21 @@ dist-ssr/
 
 # TypeScript build output
 *.tsbuildinfo
-# Blazor build artifacts
-BlazorApp/bin/
-BlazorApp/obj/
+# .NET build artifacts
+**/bin/
+**/obj/
 *.log
 
+# Visual Studio
 .vs/
+*.user
+*.suo
+*.sln.cache
+
+# Database files
 BlazorApp/*.db-shm
 BlazorApp/*.db-wal
+
+# Test output directories
+**/TestResults/
+**/test-results/
