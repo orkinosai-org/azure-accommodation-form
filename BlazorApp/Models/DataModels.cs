@@ -26,6 +26,8 @@ public class FormSubmissionEntity
     
     public string BlobStorageUrl { get; set; } = string.Empty;
     
+    public string ClientIpAddress { get; set; } = string.Empty;
+    
     public FormSubmissionStatus Status { get; set; } = FormSubmissionStatus.Draft;
     
     // Email verification tracking
