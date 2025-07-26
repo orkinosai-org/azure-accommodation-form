@@ -29,9 +29,30 @@ public class BlobStorageService : IBlobStorageService
     {
         try
         {
+            // DEBUG: Log blob storage configuration (production: remove this section)
+            Console.WriteLine("=== BLOB STORAGE DEBUG INFO ===");
+            Console.WriteLine($"Container Name: {_settings.ContainerName}");
+            
+            // Mask connection string secrets
+            var maskedConnectionString = MaskConnectionString(_settings.ConnectionString);
+            Console.WriteLine($"Connection String: {maskedConnectionString}");
+
+            _logger.LogInformation("DEBUG - Blob storage configuration: Container={ContainerName}, ConnectionString={MaskedConnectionString}",
+                _settings.ContainerName, maskedConnectionString);
+
             var containerClient = await GetContainerClientAsync();
             var blobName = $"{submissionId}/{fileName}";
             var blobClient = containerClient.GetBlobClient(blobName);
+
+            // DEBUG: Log blob upload details (production: remove this section)
+            Console.WriteLine("=== BLOB UPLOAD DEBUG ===");
+            Console.WriteLine($"Blob Name: {blobName}");
+            Console.WriteLine($"File Size: {pdfData.Length} bytes");
+            Console.WriteLine($"Submission ID: {submissionId}");
+            Console.WriteLine($"Target URI: {blobClient.Uri}");
+
+            _logger.LogInformation("DEBUG - Blob upload: BlobName={BlobName}, FileSize={FileSize}, SubmissionId={SubmissionId}",
+                blobName, pdfData.Length, submissionId);
 
             using var stream = new MemoryStream(pdfData);
             
@@ -51,12 +72,22 @@ public class BlobStorageService : IBlobStorageService
 
             await blobClient.UploadAsync(stream, options);
 
+            // DEBUG: Log successful upload (production: remove this section)
+            Console.WriteLine("=== BLOB UPLOADED SUCCESSFULLY ===");
+            Console.WriteLine($"Blob URL: {blobClient.Uri}");
+
             _logger.LogInformation("Successfully uploaded PDF {FileName} for submission {SubmissionId}", fileName, submissionId);
+            _logger.LogInformation("DEBUG - Blob uploaded successfully to: {BlobUrl}", blobClient.Uri);
             
             return blobClient.Uri.ToString();
         }
         catch (Exception ex)
         {
+            // DEBUG: Enhanced error logging (production: keep but remove DEBUG prefix)
+            Console.WriteLine($"=== BLOB UPLOAD FAILED ===");
+            Console.WriteLine($"Error: {ex.Message}");
+            Console.WriteLine($"Stack trace: {ex.StackTrace}");
+            
             _logger.LogError(ex, "Failed to upload PDF {FileName} for submission {SubmissionId}", fileName, submissionId);
             throw;
         }
@@ -97,5 +128,25 @@ public class BlobStorageService : IBlobStorageService
         var containerClient = _blobServiceClient.GetBlobContainerClient(_settings.ContainerName);
         await containerClient.CreateIfNotExistsAsync(PublicAccessType.None);
         return containerClient;
+    }
+
+    // DEBUG: Helper method to mask sensitive information in connection string (production: remove this method)
+    private string MaskConnectionString(string connectionString)
+    {
+        if (string.IsNullOrEmpty(connectionString))
+            return "***NOT SET***";
+
+        // Look for AccountKey and SharedAccessSignature patterns and mask them
+        var masked = connectionString;
+        
+        // Mask AccountKey
+        var accountKeyPattern = @"AccountKey=[^;]+";
+        masked = System.Text.RegularExpressions.Regex.Replace(masked, accountKeyPattern, "AccountKey=***MASKED***");
+        
+        // Mask SharedAccessSignature
+        var sasPattern = @"SharedAccessSignature=[^;]+";
+        masked = System.Text.RegularExpressions.Regex.Replace(masked, sasPattern, "SharedAccessSignature=***MASKED***");
+        
+        return masked;
     }
 }

@@ -270,3 +270,6 @@ BlazorApp/BlazorApp.csproj.user
 *.user
 BlazorApp/BlazorApp.csproj.user
 BlazorApp/BlazorApp.csproj.user
+
+# Debug PDF files (for local debugging only)
+KitDocuments_Debug/

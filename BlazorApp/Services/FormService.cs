@@ -240,6 +240,11 @@ public class FormService : IFormService
             LogSubmissionAction(submission.Id, "FormSubmitted", $"Form data submitted successfully from IP: {clientIpAddress}");
 
             // Generate PDF with audit trail information
+            // DEBUG: Enhanced PDF generation logging (production: remove DEBUG prefix)
+            Console.WriteLine("=== FORM SUBMISSION: PDF GENERATION ===");
+            Console.WriteLine($"Starting PDF generation for submission {submissionId}");
+            _logger.LogInformation("DEBUG - Starting PDF generation for submission {SubmissionId}", submissionId);
+            
             var pdfData = await _pdfService.GenerateFormPdfAsync(formData, submissionId, submission.SubmittedAt, clientIpAddress);
             var fileName = _pdfService.GenerateFileName(formData, submission.SubmittedAt);
             
@@ -249,15 +254,26 @@ public class FormService : IFormService
             LogSubmissionAction(submission.Id, "PdfGenerated", $"PDF generated: {fileName}");
 
             // Upload to blob storage
+            // DEBUG: Enhanced blob upload logging (production: remove DEBUG prefix)
+            Console.WriteLine("=== FORM SUBMISSION: BLOB UPLOAD ===");
+            Console.WriteLine($"Starting blob upload for submission {submissionId}, file: {fileName}");
+            _logger.LogInformation("DEBUG - Starting blob upload for submission {SubmissionId}, file {FileName}", submissionId, fileName);
+            
             var blobUrl = await _blobService.UploadFormPdfAsync(pdfData, fileName, submissionId);
             submission.BlobStorageUrl = blobUrl;
 
             LogSubmissionAction(submission.Id, "PdfUploaded", $"PDF uploaded to: {blobUrl}");
 
             // Send confirmation emails
+            // DEBUG: Enhanced email sending logging (production: remove DEBUG prefix)
+            Console.WriteLine("=== FORM SUBMISSION: EMAIL SENDING ===");
+            Console.WriteLine($"Starting email send for submission {submissionId} to user: {submission.UserEmail}");
+            _logger.LogInformation("DEBUG - Starting email send for submission {SubmissionId} to user {UserEmail}", submissionId, submission.UserEmail);
+            
             var userEmailSent = await _emailService.SendFormSubmissionConfirmationAsync(
                 submission.UserEmail, submissionId, pdfData, fileName);
 
+            Console.WriteLine($"Sending company notification email for submission {submissionId}");
             var companyEmailSent = await _emailService.SendFormSubmissionToCompanyAsync(
                 submissionId, pdfData, fileName, submission.UserEmail);
 
@@ -336,6 +352,11 @@ public class FormService : IFormService
             LogSubmissionAction(submission.Id, "DirectSubmission", $"Form submitted directly via API from IP: {clientIpAddress}");
 
             // Generate PDF with audit trail information
+            // DEBUG: Enhanced PDF generation logging for direct submission (production: remove DEBUG prefix)
+            Console.WriteLine("=== DIRECT FORM SUBMISSION: PDF GENERATION ===");
+            Console.WriteLine($"Starting PDF generation for direct submission {submissionId}");
+            _logger.LogInformation("DEBUG - Starting PDF generation for direct submission {SubmissionId}", submissionId);
+            
             var pdfData = await _pdfService.GenerateFormPdfAsync(formData, submissionId, submissionTime, clientIpAddress);
             var fileName = _pdfService.GenerateFileName(formData, submissionTime);
             
@@ -345,15 +366,26 @@ public class FormService : IFormService
             LogSubmissionAction(submission.Id, "PdfGenerated", $"PDF generated: {fileName}");
 
             // Upload to blob storage
+            // DEBUG: Enhanced blob upload logging for direct submission (production: remove DEBUG prefix)
+            Console.WriteLine("=== DIRECT FORM SUBMISSION: BLOB UPLOAD ===");
+            Console.WriteLine($"Starting blob upload for direct submission {submissionId}, file: {fileName}");
+            _logger.LogInformation("DEBUG - Starting blob upload for direct submission {SubmissionId}, file {FileName}", submissionId, fileName);
+            
             var blobUrl = await _blobService.UploadFormPdfAsync(pdfData, fileName, submissionId);
             submission.BlobStorageUrl = blobUrl;
 
             LogSubmissionAction(submission.Id, "PdfUploaded", $"PDF uploaded to: {blobUrl}");
 
             // Send confirmation emails
+            // DEBUG: Enhanced email sending logging for direct submission (production: remove DEBUG prefix)
+            Console.WriteLine("=== DIRECT FORM SUBMISSION: EMAIL SENDING ===");
+            Console.WriteLine($"Starting email send for direct submission {submissionId} to user: {submission.UserEmail}");
+            _logger.LogInformation("DEBUG - Starting email send for direct submission {SubmissionId} to user {UserEmail}", submissionId, submission.UserEmail);
+            
             var userEmailSent = await _emailService.SendFormSubmissionConfirmationAsync(
                 submission.UserEmail, submissionId, pdfData, fileName);
 
+            Console.WriteLine($"Sending company notification email for direct submission {submissionId}");
             var companyEmailSent = await _emailService.SendFormSubmissionToCompanyAsync(
                 submissionId, pdfData, fileName, submission.UserEmail);
 

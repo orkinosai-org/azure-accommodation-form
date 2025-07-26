@@ -29,6 +29,17 @@ public class PdfGenerationService : IPdfGenerationService
         {
             try
             {
+                // DEBUG: Log PDF generation start (production: remove this section)
+                Console.WriteLine("=== PDF GENERATION DEBUG ===");
+                Console.WriteLine($"Submission ID: {submissionId}");
+                Console.WriteLine($"Submission Time: {submissionTime:yyyy-MM-dd HH:mm:ss} UTC");
+                Console.WriteLine($"Client IP: {clientIpAddress}");
+                Console.WriteLine($"Tenant Name: {formData.TenantDetails.FullName}");
+                Console.WriteLine($"Tenant Email: {formData.TenantDetails.Email}");
+
+                _logger.LogInformation("DEBUG - PDF generation started for submission {SubmissionId}, client IP {ClientIp}",
+                    submissionId, clientIpAddress);
+
                 var document = Document.Create(container =>
                 {
                     container.Page(page =>
@@ -236,10 +247,27 @@ public class PdfGenerationService : IPdfGenerationService
                     });
                 });
 
-                return document.GeneratePdf();
+                var pdfBytes = document.GeneratePdf();
+
+                // DEBUG: Save PDF locally for debugging (production: remove this section)
+                SavePdfLocally(pdfBytes, submissionId, submissionTime);
+
+                // DEBUG: Log PDF generation completion (production: remove this section)
+                Console.WriteLine($"=== PDF GENERATED SUCCESSFULLY ===");
+                Console.WriteLine($"PDF Size: {pdfBytes.Length} bytes");
+
+                _logger.LogInformation("DEBUG - PDF generated successfully for submission {SubmissionId}, size {PdfSize} bytes",
+                    submissionId, pdfBytes.Length);
+
+                return pdfBytes;
             }
             catch (Exception ex)
             {
+                // DEBUG: Enhanced error logging (production: keep but remove DEBUG prefix)
+                Console.WriteLine($"=== PDF GENERATION FAILED ===");
+                Console.WriteLine($"Error: {ex.Message}");
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                
                 _logger.LogError(ex, "Failed to generate PDF for submission {SubmissionId} from IP {ClientIp}", submissionId, clientIpAddress);
                 throw;
             }
@@ -287,5 +315,47 @@ public class PdfGenerationService : IPdfGenerationService
         }
         
         return sanitized.ToString();
+    }
+
+    // DEBUG: Save PDF locally for debugging purposes (production: remove this method)
+    private void SavePdfLocally(byte[] pdfBytes, string submissionId, DateTime submissionTime)
+    {
+        try
+        {
+            // Get the project root directory (assuming we're running from BlazorApp/bin/Debug/net8.0/)
+            var currentDirectory = Directory.GetCurrentDirectory();
+            var projectRoot = currentDirectory;
+            
+            // Navigate up to find the project root if we're in bin directory
+            if (currentDirectory.Contains("bin"))
+            {
+                var binIndex = currentDirectory.IndexOf("bin");
+                projectRoot = currentDirectory.Substring(0, binIndex);
+            }
+            
+            // Create debug directory at project root
+            var debugDir = Path.Combine(projectRoot, "KitDocuments_Debug");
+            Directory.CreateDirectory(debugDir);
+            
+            // Create filename with submission ID and timestamp
+            var timestamp = submissionTime.ToString("yyyyMMdd_HHmmss");
+            var fileName = $"{submissionId}_{timestamp}_debug.pdf";
+            var filePath = Path.Combine(debugDir, fileName);
+            
+            // Save the PDF file
+            File.WriteAllBytes(filePath, pdfBytes);
+            
+            Console.WriteLine($"=== PDF SAVED LOCALLY ===");
+            Console.WriteLine($"Debug PDF saved to: {filePath}");
+            
+            _logger.LogInformation("DEBUG - PDF saved locally to: {FilePath}", filePath);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"=== PDF LOCAL SAVE FAILED ===");
+            Console.WriteLine($"Error: {ex.Message}");
+            
+            _logger.LogWarning(ex, "DEBUG - Failed to save PDF locally for submission {SubmissionId}", submissionId);
+        }
     }
 }
