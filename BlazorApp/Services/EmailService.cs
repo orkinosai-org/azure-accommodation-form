@@ -2,6 +2,7 @@ using MailKit.Net.Smtp;
 using MailKit.Security;
 using Microsoft.Extensions.Options;
 using MimeKit;
+using System.Linq;
 
 namespace BlazorApp.Services;
 
@@ -196,6 +197,36 @@ Regards,
     {
         try
         {
+            // DEBUG: Log email configuration (production: remove this section)
+            Console.WriteLine("=== EMAIL DEBUG INFO ===");
+            Console.WriteLine($"SMTP Server: {_emailSettings.SmtpServer}");
+            Console.WriteLine($"SMTP Port: {_emailSettings.SmtpPort}");
+            Console.WriteLine($"Use SSL: {_emailSettings.UseSsl}");
+            Console.WriteLine($"Username: {_emailSettings.SmtpUsername}");
+            Console.WriteLine($"Password: {(!string.IsNullOrEmpty(_emailSettings.SmtpPassword) ? "***CONFIGURED***" : "***NOT SET***")}");
+            Console.WriteLine($"From Email: {_emailSettings.FromEmail}");
+            Console.WriteLine($"From Name: {_emailSettings.FromName}");
+            Console.WriteLine($"Company Email: {_emailSettings.CompanyEmail}");
+
+            _logger.LogInformation("DEBUG - Email configuration: Server={SmtpServer}, Port={SmtpPort}, SSL={UseSsl}, Username={Username}, FromEmail={FromEmail}",
+                _emailSettings.SmtpServer, _emailSettings.SmtpPort, _emailSettings.UseSsl, _emailSettings.SmtpUsername, _emailSettings.FromEmail);
+
+            // DEBUG: Log email message details (production: remove this section)
+            Console.WriteLine("=== EMAIL MESSAGE DEBUG ===");
+            Console.WriteLine($"Subject: {message.Subject}");
+            Console.WriteLine($"From: {string.Join(", ", message.From)}");
+            Console.WriteLine($"To: {string.Join(", ", message.To)}");
+            Console.WriteLine($"Attachment count: {message.Attachments.Count()}");
+            
+            var attachmentNames = message.Attachments.Select(a => a.ContentDisposition?.FileName ?? "unnamed").ToList();
+            if (attachmentNames.Any())
+            {
+                Console.WriteLine($"Attachment names: {string.Join(", ", attachmentNames)}");
+            }
+
+            _logger.LogInformation("DEBUG - Email message: Subject={Subject}, From={From}, To={To}, AttachmentCount={AttachmentCount}",
+                message.Subject, string.Join(", ", message.From), string.Join(", ", message.To), message.Attachments.Count());
+
             using var client = new SmtpClient();
             
             await client.ConnectAsync(_emailSettings.SmtpServer, _emailSettings.SmtpPort, 
@@ -209,10 +240,19 @@ Regards,
             await client.SendAsync(message);
             await client.DisconnectAsync(true);
 
+            // DEBUG: Log successful send (production: remove this section)
+            Console.WriteLine("=== EMAIL SENT SUCCESSFULLY ===");
+            _logger.LogInformation("DEBUG - Email sent successfully to {Recipients}", string.Join(", ", message.To));
+
             return true;
         }
         catch (Exception ex)
         {
+            // DEBUG: Enhanced error logging (production: keep but remove DEBUG prefix)
+            Console.WriteLine($"=== EMAIL SEND FAILED ===");
+            Console.WriteLine($"Error: {ex.Message}");
+            Console.WriteLine($"Stack trace: {ex.StackTrace}");
+            
             _logger.LogError(ex, "Failed to send email via SMTP");
             return false;
         }
