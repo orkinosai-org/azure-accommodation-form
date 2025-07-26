@@ -129,6 +129,8 @@ The application includes comprehensive logging:
 - Blob storage operations
 - API request/response logging
 
+**Azure Diagnostics Independence**: The application is configured to work independently of Azure App Service diagnostics features. This ensures the application can start successfully even when Azure diagnostics logging is enabled in the portal but not properly configured (e.g., missing `DIAGNOSTICS_AZUREBLOBCONTAINERSASURL` environment variable).
+
 ### View Application Logs
 ```bash
 # In development
