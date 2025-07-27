@@ -68,6 +68,10 @@ public class StartupWithoutAzureDiagnosticsTest
             Console.WriteLine("✓ Logging configured properly without Azure providers");
             Console.WriteLine("✓ Application builds and disposes cleanly");
 
+            // Run the debug console helper test
+            Console.WriteLine("\n" + new string('=', 50));
+            await DebugConsoleHelperTest.TestDebugConsoleHelper();
+
         }
         catch (Exception ex)
         {

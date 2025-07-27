@@ -1,9 +1,11 @@
 using Microsoft.Extensions.Logging;
+using Microsoft.JSInterop;
 using BlazorApp.Services;
 using BlazorApp.Models;
 using System;
 using System.IO;
 using System.Threading.Tasks;
+using Moq;
 
 namespace Tests;
 
@@ -16,12 +18,17 @@ public class AuditTrailTest
     {
         try
         {
-            // Create a mock logger
+            // Create a mock logger and debug console
             var loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
             var logger = loggerFactory.CreateLogger<PdfGenerationService>();
             
+            // Create mock debug console helper
+            var mockJsRuntime = new Mock<IJSRuntime>();
+            var mockDebugLogger = new Mock<ILogger<DebugConsoleHelper>>();
+            var debugConsole = new DebugConsoleHelper(mockJsRuntime.Object, mockDebugLogger.Object);
+            
             // Create the PDF generation service
-            var pdfService = new PdfGenerationService(logger);
+            var pdfService = new PdfGenerationService(logger, debugConsole);
             
             // Create test form data
             var formData = new FormData
