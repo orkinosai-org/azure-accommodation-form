@@ -9,6 +9,8 @@ public class Program
 {
     public static void Main(string[] args)
     {
+        Console.WriteLine("--------- PROGRAM MAIN HIT ---------");
+
         var builder = WebApplication.CreateBuilder(args);
 
         // Configure logging to disable Azure diagnostics dependencies
