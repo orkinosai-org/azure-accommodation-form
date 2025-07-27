@@ -14,10 +14,12 @@ public interface IPdfGenerationService
 public class PdfGenerationService : IPdfGenerationService
 {
     private readonly ILogger<PdfGenerationService> _logger;
+    private readonly IDebugConsoleHelper _debugConsole;
 
-    public PdfGenerationService(ILogger<PdfGenerationService> logger)
+    public PdfGenerationService(ILogger<PdfGenerationService> logger, IDebugConsoleHelper debugConsole)
     {
         _logger = logger;
+        _debugConsole = debugConsole;
         
         // Initialize QuestPDF with Community License
         QuestPDF.Settings.License = LicenseType.Community;
@@ -25,10 +27,19 @@ public class PdfGenerationService : IPdfGenerationService
 
     public async Task<byte[]> GenerateFormPdfAsync(FormData formData, string submissionId, DateTime submissionTime, string clientIpAddress)
     {
-        return await Task.Run(() =>
+        return await Task.Run(async () =>
         {
             try
             {
+                // DEBUG: Log PDF generation start to browser console (production: remove this section)
+                await _debugConsole.LogGroupAsync("PDF GENERATION DEBUG");
+                await _debugConsole.LogAsync($"Submission ID: {submissionId}");
+                await _debugConsole.LogAsync($"Submission Time: {submissionTime:yyyy-MM-dd HH:mm:ss} UTC");
+                await _debugConsole.LogAsync($"Client IP: {clientIpAddress}");
+                await _debugConsole.LogAsync($"Tenant Name: {formData.TenantDetails.FullName}");
+                await _debugConsole.LogAsync($"Tenant Email: {formData.TenantDetails.Email}");
+                await _debugConsole.LogGroupEndAsync();
+
                 // DEBUG: Log PDF generation start (production: remove this section)
                 Console.WriteLine("=== PDF GENERATION DEBUG ===");
                 Console.WriteLine($"Submission ID: {submissionId}");
@@ -250,7 +261,11 @@ public class PdfGenerationService : IPdfGenerationService
                 var pdfBytes = document.GeneratePdf();
 
                 // DEBUG: Save PDF locally for debugging (production: remove this section)
-                SavePdfLocally(pdfBytes, submissionId, submissionTime);
+                await SavePdfLocallyAsync(pdfBytes, submissionId, submissionTime);
+
+                // DEBUG: Log PDF generation completion to browser console (production: remove this section)
+                await _debugConsole.LogInfoAsync("PDF GENERATED SUCCESSFULLY");
+                await _debugConsole.LogAsync($"PDF Size: {pdfBytes.Length} bytes");
 
                 // DEBUG: Log PDF generation completion (production: remove this section)
                 Console.WriteLine($"=== PDF GENERATED SUCCESSFULLY ===");
@@ -263,6 +278,10 @@ public class PdfGenerationService : IPdfGenerationService
             }
             catch (Exception ex)
             {
+                // DEBUG: Enhanced error logging to browser console (production: keep but remove DEBUG prefix)
+                await _debugConsole.LogErrorAsync("PDF GENERATION FAILED");
+                await _debugConsole.LogErrorAsync($"Error: {ex.Message}");
+
                 // DEBUG: Enhanced error logging (production: keep but remove DEBUG prefix)
                 Console.WriteLine($"=== PDF GENERATION FAILED ===");
                 Console.WriteLine($"Error: {ex.Message}");
@@ -318,7 +337,7 @@ public class PdfGenerationService : IPdfGenerationService
     }
 
     // DEBUG: Save PDF locally for debugging purposes (production: remove this method)
-    private void SavePdfLocally(byte[] pdfBytes, string submissionId, DateTime submissionTime)
+    private async Task SavePdfLocallyAsync(byte[] pdfBytes, string submissionId, DateTime submissionTime)
     {
         try
         {
@@ -343,7 +362,11 @@ public class PdfGenerationService : IPdfGenerationService
             var filePath = Path.Combine(debugDir, fileName);
             
             // Save the PDF file
-            File.WriteAllBytes(filePath, pdfBytes);
+            await File.WriteAllBytesAsync(filePath, pdfBytes);
+            
+            // DEBUG: Log local save to browser console (production: remove this section)
+            await _debugConsole.LogInfoAsync("PDF SAVED LOCALLY");
+            await _debugConsole.LogAsync($"Debug PDF saved to: {filePath}");
             
             Console.WriteLine($"=== PDF SAVED LOCALLY ===");
             Console.WriteLine($"Debug PDF saved to: {filePath}");
@@ -352,6 +375,10 @@ public class PdfGenerationService : IPdfGenerationService
         }
         catch (Exception ex)
         {
+            // DEBUG: Enhanced error logging to browser console (production: keep but remove DEBUG prefix)
+            await _debugConsole.LogErrorAsync("PDF LOCAL SAVE FAILED");
+            await _debugConsole.LogErrorAsync($"Error: {ex.Message}");
+
             Console.WriteLine($"=== PDF LOCAL SAVE FAILED ===");
             Console.WriteLine($"Error: {ex.Message}");
             

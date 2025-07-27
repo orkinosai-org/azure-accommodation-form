@@ -203,3 +203,5 @@
 /home/runner/work/azure-accommodation-form/azure-accommodation-form/Tests/obj/Debug/net8.0/Tests.pdb
 /home/runner/work/azure-accommodation-form/azure-accommodation-form/Tests/obj/Debug/net8.0/Tests.genruntimeconfig.cache
 /home/runner/work/azure-accommodation-form/azure-accommodation-form/Tests/obj/Debug/net8.0/ref/Tests.dll
+/home/runner/work/azure-accommodation-form/azure-accommodation-form/Tests/bin/Debug/net8.0/Castle.Core.dll
+/home/runner/work/azure-accommodation-form/azure-accommodation-form/Tests/bin/Debug/net8.0/Moq.dll

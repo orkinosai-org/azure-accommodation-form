@@ -54,6 +54,7 @@ public class Program
         builder.Services.AddScoped<IEmailService, EmailService>();
         builder.Services.AddScoped<IPdfGenerationService, PdfGenerationService>();
         builder.Services.AddScoped<IBlobStorageService, BlobStorageService>();
+        builder.Services.AddScoped<IDebugConsoleHelper, DebugConsoleHelper>();
 
         // Register HTTP client for API calls
         builder.Services.AddHttpClient<IFormApiService, FormApiService>(client =>

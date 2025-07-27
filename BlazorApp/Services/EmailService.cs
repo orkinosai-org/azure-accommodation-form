@@ -18,15 +18,18 @@ public class EmailService : IEmailService
     private readonly EmailSettings _emailSettings;
     private readonly ApplicationSettings _appSettings;
     private readonly ILogger<EmailService> _logger;
+    private readonly IDebugConsoleHelper _debugConsole;
 
     public EmailService(
         IOptions<EmailSettings> emailSettings,
         IOptions<ApplicationSettings> appSettings,
-        ILogger<EmailService> logger)
+        ILogger<EmailService> logger,
+        IDebugConsoleHelper debugConsole)
     {
         _emailSettings = emailSettings.Value;
         _appSettings = appSettings.Value;
         _logger = logger;
+        _debugConsole = debugConsole;
     }
 
     public async Task<bool> SendEmailVerificationTokenAsync(string email, string token, string submissionId)
@@ -197,6 +200,18 @@ Regards,
     {
         try
         {
+            // DEBUG: Log email configuration to browser console (production: remove this section)
+            await _debugConsole.LogGroupAsync("EMAIL DEBUG INFO");
+            await _debugConsole.LogAsync($"SMTP Server: {_emailSettings.SmtpServer}");
+            await _debugConsole.LogAsync($"SMTP Port: {_emailSettings.SmtpPort}");
+            await _debugConsole.LogAsync($"Use SSL: {_emailSettings.UseSsl}");
+            await _debugConsole.LogAsync($"Username: {_emailSettings.SmtpUsername}");
+            await _debugConsole.LogAsync($"Password: {(!string.IsNullOrEmpty(_emailSettings.SmtpPassword) ? "***CONFIGURED***" : "***NOT SET***")}");
+            await _debugConsole.LogAsync($"From Email: {_emailSettings.FromEmail}");
+            await _debugConsole.LogAsync($"From Name: {_emailSettings.FromName}");
+            await _debugConsole.LogAsync($"Company Email: {_emailSettings.CompanyEmail}");
+            await _debugConsole.LogGroupEndAsync();
+
             // DEBUG: Log email configuration (production: remove this section)
             Console.WriteLine("=== EMAIL DEBUG INFO ===");
             Console.WriteLine($"SMTP Server: {_emailSettings.SmtpServer}");
@@ -211,6 +226,20 @@ Regards,
             _logger.LogInformation("DEBUG - Email configuration: Server={SmtpServer}, Port={SmtpPort}, SSL={UseSsl}, Username={Username}, FromEmail={FromEmail}",
                 _emailSettings.SmtpServer, _emailSettings.SmtpPort, _emailSettings.UseSsl, _emailSettings.SmtpUsername, _emailSettings.FromEmail);
 
+            // DEBUG: Log email message details to browser console (production: remove this section)
+            await _debugConsole.LogGroupAsync("EMAIL MESSAGE DEBUG");
+            await _debugConsole.LogAsync($"Subject: {message.Subject}");
+            await _debugConsole.LogAsync($"From: {string.Join(", ", message.From)}");
+            await _debugConsole.LogAsync($"To: {string.Join(", ", message.To)}");
+            await _debugConsole.LogAsync($"Attachment count: {message.Attachments.Count()}");
+            
+            var attachmentNames = message.Attachments.Select(a => a.ContentDisposition?.FileName ?? "unnamed").ToList();
+            if (attachmentNames.Any())
+            {
+                await _debugConsole.LogAsync($"Attachment names: {string.Join(", ", attachmentNames)}");
+            }
+            await _debugConsole.LogGroupEndAsync();
+
             // DEBUG: Log email message details (production: remove this section)
             Console.WriteLine("=== EMAIL MESSAGE DEBUG ===");
             Console.WriteLine($"Subject: {message.Subject}");
@@ -218,7 +247,6 @@ Regards,
             Console.WriteLine($"To: {string.Join(", ", message.To)}");
             Console.WriteLine($"Attachment count: {message.Attachments.Count()}");
             
-            var attachmentNames = message.Attachments.Select(a => a.ContentDisposition?.FileName ?? "unnamed").ToList();
             if (attachmentNames.Any())
             {
                 Console.WriteLine($"Attachment names: {string.Join(", ", attachmentNames)}");
@@ -240,6 +268,10 @@ Regards,
             await client.SendAsync(message);
             await client.DisconnectAsync(true);
 
+            // DEBUG: Log successful send to browser console (production: remove this section)
+            await _debugConsole.LogInfoAsync("EMAIL SENT SUCCESSFULLY");
+            await _debugConsole.LogAsync($"Email sent successfully to {string.Join(", ", message.To)}");
+
             // DEBUG: Log successful send (production: remove this section)
             Console.WriteLine("=== EMAIL SENT SUCCESSFULLY ===");
             _logger.LogInformation("DEBUG - Email sent successfully to {Recipients}", string.Join(", ", message.To));
@@ -248,6 +280,10 @@ Regards,
         }
         catch (Exception ex)
         {
+            // DEBUG: Enhanced error logging to browser console (production: keep but remove DEBUG prefix)
+            await _debugConsole.LogErrorAsync("EMAIL SEND FAILED");
+            await _debugConsole.LogErrorAsync($"Error: {ex.Message}");
+            
             // DEBUG: Enhanced error logging (production: keep but remove DEBUG prefix)
             Console.WriteLine($"=== EMAIL SEND FAILED ===");
             Console.WriteLine($"Error: {ex.Message}");

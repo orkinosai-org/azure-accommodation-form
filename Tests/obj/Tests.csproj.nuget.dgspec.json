@@ -144,6 +144,10 @@
               "target": "Package",
               "version": "[8.0.0, )"
             },
+            "Moq": {
+              "target": "Package",
+              "version": "[4.20.70, )"
+            },
             "QuestPDF": {
               "target": "Package",
               "version": "[2024.12.0, )"
