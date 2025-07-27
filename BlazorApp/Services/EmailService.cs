@@ -251,6 +251,36 @@ Regards,
             {
                 Console.WriteLine($"Attachment names: {string.Join(", ", attachmentNames)}");
             }
+            
+            // DEBUG: Log email body content (production: remove this section)
+            if (message.Body is MimeKit.Multipart multipart)
+            {
+                foreach (var part in multipart)
+                {
+                    if (part is MimeKit.TextPart textPart)
+                    {
+                        if (textPart.IsHtml)
+                        {
+                            Console.WriteLine($"Body (HTML): {textPart.Text}");
+                        }
+                        else
+                        {
+                            Console.WriteLine($"Body (Text): {textPart.Text}");
+                        }
+                    }
+                }
+            }
+            else if (message.Body is MimeKit.TextPart singlePart)
+            {
+                if (singlePart.IsHtml)
+                {
+                    Console.WriteLine($"Body (HTML): {singlePart.Text}");
+                }
+                else
+                {
+                    Console.WriteLine($"Body (Text): {singlePart.Text}");
+                }
+            }
 
             _logger.LogInformation("DEBUG - Email message: Subject={Subject}, From={From}, To={To}, AttachmentCount={AttachmentCount}",
                 message.Subject, string.Join(", ", message.From), string.Join(", ", message.To), message.Attachments.Count());
