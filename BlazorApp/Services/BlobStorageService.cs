@@ -125,6 +125,27 @@ public class BlobStorageService : IBlobStorageService
             var uri = new Uri(blobUrl);
             var blobName = uri.AbsolutePath.TrimStart('/').Substring(_settings.ContainerName.Length + 1);
             
+            // Mask connection string secrets
+            var maskedConnectionString = MaskConnectionString(_settings.ConnectionString);
+
+            // DEBUG: Log blob deletion details to browser console (production: remove this section)
+            await _debugConsole.LogGroupAsync("BLOB DELETE DEBUG");
+            await _debugConsole.LogAsync($"Container Name: {_settings.ContainerName}");
+            await _debugConsole.LogAsync($"Connection String: {maskedConnectionString}");
+            await _debugConsole.LogAsync($"Blob URL: {blobUrl}");
+            await _debugConsole.LogAsync($"Blob Name: {blobName}");
+            await _debugConsole.LogGroupEndAsync();
+
+            // DEBUG: Log blob deletion details (production: remove this section)
+            Console.WriteLine("=== BLOB DELETE DEBUG ===");
+            Console.WriteLine($"Container Name: {_settings.ContainerName}");
+            Console.WriteLine($"Connection String: {maskedConnectionString}");
+            Console.WriteLine($"Blob URL: {blobUrl}");
+            Console.WriteLine($"Blob Name: {blobName}");
+
+            _logger.LogInformation("DEBUG - Blob deletion: ContainerName={ContainerName}, BlobName={BlobName}, BlobUrl={BlobUrl}",
+                _settings.ContainerName, blobName, blobUrl);
+            
             var containerClient = await GetContainerClientAsync();
             var blobClient = containerClient.GetBlobClient(blobName);
 
@@ -132,10 +153,27 @@ public class BlobStorageService : IBlobStorageService
             
             if (response.Value)
             {
+                // DEBUG: Log successful deletion to browser console (production: remove this section)
+                await _debugConsole.LogInfoAsync("BLOB DELETED SUCCESSFULLY");
+                await _debugConsole.LogAsync($"Deleted blob: {blobUrl}");
+
+                // DEBUG: Log successful deletion (production: remove this section)
+                Console.WriteLine("=== BLOB DELETED SUCCESSFULLY ===");
+                Console.WriteLine($"Deleted blob: {blobUrl}");
+
                 _logger.LogInformation("Successfully deleted PDF blob: {BlobUrl}", blobUrl);
+                _logger.LogInformation("DEBUG - Blob deleted successfully: {BlobUrl}", blobUrl);
             }
             else
             {
+                // DEBUG: Log blob not found to browser console (production: remove this section)
+                await _debugConsole.LogWarningAsync("BLOB NOT FOUND FOR DELETION");
+                await _debugConsole.LogAsync($"Blob not found: {blobUrl}");
+
+                // DEBUG: Log blob not found (production: remove this section)
+                Console.WriteLine("=== BLOB NOT FOUND FOR DELETION ===");
+                Console.WriteLine($"Blob not found: {blobUrl}");
+
                 _logger.LogWarning("Blob not found for deletion: {BlobUrl}", blobUrl);
             }
             
@@ -143,6 +181,15 @@ public class BlobStorageService : IBlobStorageService
         }
         catch (Exception ex)
         {
+            // DEBUG: Enhanced error logging to browser console (production: keep but remove DEBUG prefix)
+            await _debugConsole.LogErrorAsync("BLOB DELETE FAILED");
+            await _debugConsole.LogErrorAsync($"Error: {ex.Message}");
+
+            // DEBUG: Enhanced error logging (production: keep but remove DEBUG prefix)
+            Console.WriteLine($"=== BLOB DELETE FAILED ===");
+            Console.WriteLine($"Error: {ex.Message}");
+            Console.WriteLine($"Stack trace: {ex.StackTrace}");
+
             _logger.LogError(ex, "Failed to delete PDF blob: {BlobUrl}", blobUrl);
             return false;
         }
