@@ -17,7 +17,7 @@
             <h2>Step 1: Email Verification</h2>
             <p>Please enter your email address to begin the application process.</p>
             
-            <EditForm Model="@emailModel" OnValidSubmit="@InitializeForm">
+            <EditForm Model="@emailModel" OnValidSubmit="@InitializeForm" FormName="EmailEntry">
                 <DataAnnotationsValidator />
                 <ValidationSummary />
                 
@@ -54,7 +54,7 @@
             <p>We've sent a verification code to <strong>@emailModel.Email</strong></p>
             <p>Please enter the 6-digit code below:</p>
             
-            <EditForm Model="@verificationModel" OnValidSubmit="@VerifyEmail">
+            <EditForm Model="@verificationModel" OnValidSubmit="@VerifyEmail" FormName="EmailVerification">
                 <DataAnnotationsValidator />
                 <ValidationSummary />
                 
@@ -98,7 +98,7 @@
                 <span>✅ Email Verified</span> → <span class="current-step">📝 Complete Form</span> → <span>📄 Submit</span>
             </div>
             
-            <EditForm Model="@formData" OnValidSubmit="@HandleSubmit">
+            <EditForm Model="@formData" EditContext="@editContext" OnSubmit="@HandleSubmit" FormName="ApplicationForm">
                 <DataAnnotationsValidator />
                 <ValidationSummary />
 
@@ -387,6 +387,7 @@
     private FormData formData = new();
     private EmailEntryModel emailModel = new();
     private EmailVerificationModel verificationModel = new();
+    private EditContext editContext = default!;
     
     private FormStep currentStep = FormStep.EmailEntry;
     private bool isProcessing = false;
@@ -402,6 +403,11 @@
         EmailEntry,
         EmailVerification,
         FormFilling
+    }
+
+    protected override void OnInitialized()
+    {
+        editContext = new EditContext(formData);
     }
 
     private async Task InitializeForm()
@@ -517,8 +523,14 @@
         }
     }
 
-    private async Task HandleSubmit()
+    private async Task HandleSubmit(EditContext context)
     {
+        if (!context.Validate())
+        {
+            // Validation errors will be automatically displayed
+            return;
+        }
+
         isProcessing = true;
         statusMessage = string.Empty;
         StateHasChanged();
