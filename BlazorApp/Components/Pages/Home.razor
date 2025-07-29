@@ -2,13 +2,14 @@
 @rendermode InteractiveServer
 @using BlazorApp.Models
 @using Microsoft.AspNetCore.Components.Forms
+@using System.ComponentModel.DataAnnotations
 
 <PageTitle>Azure Accommodation Application Form</PageTitle>
 
 <div style="padding: 20px; max-width: 800px; margin: 0 auto;">
     <h1>Azure Accommodation Application Form</h1>
 
-    <EditForm Model="@formData" OnValidSubmit="@HandleSubmit">
+    <EditForm EditContext="@editContext" OnSubmit="@HandleSubmit">
         <DataAnnotationsValidator />
         <ValidationSummary />
 
@@ -620,11 +621,61 @@
 
 @code {
     private FormData formData = new();
+    private EditContext editContext = default!;
+    private ValidationMessageStore validationMessageStore = default!;
     private bool showSuccess = false;
 
-    private void HandleSubmit()
+    protected override void OnInitialized()
     {
-        // Log form data to console (similar to React version)
+        editContext = new EditContext(formData);
+        validationMessageStore = new ValidationMessageStore(editContext);
+    }
+
+    private async Task HandleSubmit(EditContext context)
+    {
+        // Clear any previous validation messages
+        validationMessageStore.Clear();
+
+        // Manual validation for required fields
+        bool isValid = true;
+
+        // Validate required fields
+        if (string.IsNullOrWhiteSpace(formData.TenantDetails.FullName))
+        {
+            validationMessageStore.Add(() => formData.TenantDetails.FullName, "The Full Name field is required.");
+            isValid = false;
+        }
+
+        if (formData.TenantDetails.DateOfBirth == null)
+        {
+            validationMessageStore.Add(() => formData.TenantDetails.DateOfBirth, "The Date of Birth field is required.");
+            isValid = false;
+        }
+
+        if (string.IsNullOrWhiteSpace(formData.TenantDetails.Email))
+        {
+            validationMessageStore.Add(() => formData.TenantDetails.Email, "The Email field is required.");
+            isValid = false;
+        }
+
+        if (string.IsNullOrWhiteSpace(formData.TenantDetails.Telephone))
+        {
+            validationMessageStore.Add(() => formData.TenantDetails.Telephone, "The Telephone field is required.");
+            isValid = false;
+        }
+
+        // Notify validation state changed to update the UI
+        context.NotifyValidationStateChanged();
+
+        if (!isValid)
+        {
+            // Validation failed, errors are now displayed by ValidationSummary and ValidationMessage components
+            showSuccess = false;
+            StateHasChanged();
+            return;
+        }
+
+        // Validation passed - log form data to console (similar to React version)
         Console.WriteLine("Form Data Submitted:");
         Console.WriteLine(System.Text.Json.JsonSerializer.Serialize(formData, new System.Text.Json.JsonSerializerOptions { WriteIndented = true }));
         
