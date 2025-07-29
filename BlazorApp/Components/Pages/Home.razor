@@ -622,67 +622,65 @@
 @code {
     private FormData formData = new();
     private EditContext editContext = default!;
+    private ValidationMessageStore validationMessageStore = default!;
     private bool showSuccess = false;
 
     protected override void OnInitialized()
     {
         editContext = new EditContext(formData);
+        validationMessageStore = new ValidationMessageStore(editContext);
     }
 
     private async Task HandleSubmit(EditContext context)
     {
-        Console.WriteLine("HandleSubmit called");
-        
-        // Simple test with a basic model
-        var testModel = new TestModel { Name = "" };
-        var testValidationResults = new List<ValidationResult>();
-        var testValidationContext = new ValidationContext(testModel, serviceProvider: null, items: null);
-        var isTestValid = Validator.TryValidateObject(testModel, testValidationContext, testValidationResults, validateAllProperties: true);
-        
-        Console.WriteLine($"Test model validation (empty name): {isTestValid}");
-        Console.WriteLine($"Test validation errors: {testValidationResults.Count}");
-        foreach (var error in testValidationResults)
+        // Clear any previous validation messages
+        validationMessageStore.Clear();
+
+        // Manual validation for required fields
+        bool isValid = true;
+
+        // Validate required fields
+        if (string.IsNullOrWhiteSpace(formData.TenantDetails.FullName))
         {
-            Console.WriteLine($"Test error: {error.ErrorMessage}");
+            validationMessageStore.Add(() => formData.TenantDetails.FullName, "The Full Name field is required.");
+            isValid = false;
         }
-        
-        // Test validation directly on the model
-        var validationResults = new List<ValidationResult>();
-        var validationContext = new ValidationContext(formData, serviceProvider: null, items: null);
-        var isDirectlyValid = Validator.TryValidateObject(formData, validationContext, validationResults, validateAllProperties: true);
-        
-        Console.WriteLine($"Direct validation result: {isDirectlyValid}");
-        Console.WriteLine($"Validation errors count: {validationResults.Count}");
-        foreach (var error in validationResults)
+
+        if (formData.TenantDetails.DateOfBirth == null)
         {
-            Console.WriteLine($"Validation error: {error.ErrorMessage}");
+            validationMessageStore.Add(() => formData.TenantDetails.DateOfBirth, "The Date of Birth field is required.");
+            isValid = false;
         }
-        
-        var isValid = context.Validate();
-        Console.WriteLine($"EditContext validation result: {isValid}");
-        
+
+        if (string.IsNullOrWhiteSpace(formData.TenantDetails.Email))
+        {
+            validationMessageStore.Add(() => formData.TenantDetails.Email, "The Email field is required.");
+            isValid = false;
+        }
+
+        if (string.IsNullOrWhiteSpace(formData.TenantDetails.Telephone))
+        {
+            validationMessageStore.Add(() => formData.TenantDetails.Telephone, "The Telephone field is required.");
+            isValid = false;
+        }
+
+        // Notify validation state changed to update the UI
+        context.NotifyValidationStateChanged();
+
         if (!isValid)
         {
-            // Validation failed, errors will be automatically displayed
-            Console.WriteLine("Validation failed - not showing success");
+            // Validation failed, errors are now displayed by ValidationSummary and ValidationMessage components
             showSuccess = false;
             StateHasChanged();
             return;
         }
 
         // Validation passed - log form data to console (similar to React version)
-        Console.WriteLine("Validation passed - showing success");
         Console.WriteLine("Form Data Submitted:");
         Console.WriteLine(System.Text.Json.JsonSerializer.Serialize(formData, new System.Text.Json.JsonSerializerOptions { WriteIndented = true }));
         
         showSuccess = true;
         StateHasChanged();
-    }
-
-    public class TestModel
-    {
-        [Required]
-        public string Name { get; set; } = string.Empty;
     }
 
     private void AddAddressHistoryItem()
