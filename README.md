@@ -1,6 +1,6 @@
 # Azure Accommodation Application Form
 
-This project provides a secure, user-friendly web application for accommodation applications, with implementations in both **React** and **Blazor (.NET 8 LTS)**.
+This project provides a secure, user-friendly web application for accommodation applications, built with **Blazor (.NET 8 LTS)**.
 
 ## Project Goals
 
@@ -9,9 +9,9 @@ This project provides a secure, user-friendly web application for accommodation 
 - Store submissions securely and send confirmations via email.
 - Fit the workflow described in the [docs/requirements.md](docs/requirements.md).
 
-## Available Implementations
+## Implementation
 
-### 🆕 Blazor Server (.NET 8 LTS) - **Recommended**
+### Blazor Server (.NET 8 LTS)
 Modern server-side implementation with interactive components and **full backend API**.
 
 **Features:**
@@ -34,17 +34,7 @@ dotnet run
 ```
 The app will be available at [http://localhost:5260](http://localhost:5260)
 
-📖 See [BlazorApp/MIGRATION.md](BlazorApp/MIGRATION.md) for migration details and comparison.
-
-### ⚡ React + TypeScript (Legacy)
-Original frontend implementation with Vite build tooling.
-
-**Setup:**
-```bash
-npm install
-npm run dev
-```
-The app will be available at [http://localhost:5173](http://localhost:5173)
+📖 See [BlazorApp/MIGRATION.md](BlazorApp/MIGRATION.md) for implementation details.
 
 ## Backend API
 
@@ -134,7 +124,7 @@ curl -X POST https://your-app.azurewebsites.net/api/form/submit-direct \
 }
 ```
 
-## Technology Stacks
+## Technology Stack
 
 ### Blazor Implementation
 - **Frontend:** Blazor Server with Interactive Server Components
@@ -146,15 +136,9 @@ curl -X POST https://your-app.azurewebsites.net/api/form/submit-direct \
 - **Hosting:** Azure App Service
 - **Real-time:** SignalR for interactive features
 
-### React Implementation  
-- **Frontend:** React 18 + TypeScript + Vite
-- **Backend:** Python (FastAPI preferred, Flask/Django acceptable)
-- **Hosting:** Azure App Service/Functions, Azure Storage
-- **CI/CD:** GitHub Actions
-
 ## Form Structure
 
-Both implementations provide identical functionality:
+The application provides identical functionality across all sections:
 
 ✅ **12 Form Sections:**
 1. Tenant Details
@@ -184,12 +168,6 @@ Both implementations provide identical functionality:
 - `dotnet test` - Run tests (if any)
 - `dotnet publish` - Build for production deployment
 
-### React (Legacy)
-- `npm run dev` - Start development server with hot reload
-- `npm run build` - Build the app for production  
-- `npm run preview` - Preview the production build locally
-- `npm run lint` - Run ESLint to check code quality
-
 ## Project Structure
 
 ```
@@ -211,10 +189,6 @@ Both implementations provide identical functionality:
 │   ├── appsettings.json         # Development configuration
 │   ├── appsettings.Example.json # Production configuration example
 │   └── MIGRATION.md             # Migration documentation
-├── src/                         # React implementation (legacy)
-│   ├── App.tsx                  # Main app component
-│   ├── index.tsx                # App entry point
-│   └── ApplicationFormFields.tsx # Form implementation
 ├── docs/                        # Documentation
 │   ├── requirements.md          # Project requirements
 │   └── form_fields.md          # Form structure details
@@ -223,7 +197,7 @@ Both implementations provide identical functionality:
 
 ## Backend Integration
 
-The form generates JSON data compatible with both implementations:
+The form generates JSON data that is processed by the Blazor backend:
 
 ```json
 {
@@ -248,7 +222,6 @@ The form generates JSON data compatible with both implementations:
 
 ## Deployment
 
-### Blazor (Recommended)
 Deploy to Azure App Service with .NET 8 runtime. The application includes SignalR support for interactive features.
 
 **Required Configuration:**
@@ -256,9 +229,6 @@ Deploy to Azure App Service with .NET 8 runtime. The application includes Signal
 2. Configure SMTP email settings (Gmail, Outlook, or custom SMTP)
 3. Set environment variables for production secrets
 4. Update `appsettings.json` or use Azure App Service configuration
-
-### React (Legacy)  
-Deploy frontend to static hosting (Azure Static Web Apps) with separate backend API.
 
 ## Security & Privacy
 
@@ -275,8 +245,7 @@ If you have branding assets, place them in the `branding/` folder.
 ---
 
 **Getting Started:**
-1. Choose your preferred implementation (Blazor recommended for new development)
-2. Follow the setup instructions above
-3. Configure SMTP and Azure Blob Storage settings in `appsettings.json`
-4. Customize the form fields and styling as needed
-5. Deploy to Azure
+1. Follow the setup instructions above
+2. Configure SMTP and Azure Blob Storage settings in `appsettings.json`
+3. Customize the form fields and styling as needed
+4. Deploy to Azure
