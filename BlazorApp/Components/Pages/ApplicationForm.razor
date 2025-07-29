@@ -98,7 +98,7 @@
                 <span>✅ Email Verified</span> → <span class="current-step">📝 Complete Form</span> → <span>📄 Submit</span>
             </div>
             
-            <EditForm Model="@formData" EditContext="@editContext" OnSubmit="@HandleSubmit" FormName="ApplicationForm">
+            <EditForm Model="@formData" EditContext="@editContext" OnValidSubmit="@HandleSubmit" FormName="ApplicationForm">
                 <DataAnnotationsValidator />
                 <ValidationSummary />
 
@@ -525,6 +525,7 @@
 
     private async Task HandleSubmit(EditContext context)
     {
+        Console.WriteLine("HandleSubmit fired");
         if (!context.Validate())
         {
             // Validation errors will be automatically displayed
