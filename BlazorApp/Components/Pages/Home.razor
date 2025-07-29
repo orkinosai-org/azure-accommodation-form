@@ -2,13 +2,14 @@
 @rendermode InteractiveServer
 @using BlazorApp.Models
 @using Microsoft.AspNetCore.Components.Forms
+@using System.ComponentModel.DataAnnotations
 
 <PageTitle>Azure Accommodation Application Form</PageTitle>
 
 <div style="padding: 20px; max-width: 800px; margin: 0 auto;">
     <h1>Azure Accommodation Application Form</h1>
 
-    <EditForm Model="@formData" OnValidSubmit="@HandleSubmit">
+    <EditForm EditContext="@editContext" OnSubmit="@HandleSubmit">
         <DataAnnotationsValidator />
         <ValidationSummary />
 
@@ -620,16 +621,68 @@
 
 @code {
     private FormData formData = new();
+    private EditContext editContext = default!;
     private bool showSuccess = false;
 
-    private void HandleSubmit()
+    protected override void OnInitialized()
     {
-        // Log form data to console (similar to React version)
+        editContext = new EditContext(formData);
+    }
+
+    private async Task HandleSubmit(EditContext context)
+    {
+        Console.WriteLine("HandleSubmit called");
+        
+        // Simple test with a basic model
+        var testModel = new TestModel { Name = "" };
+        var testValidationResults = new List<ValidationResult>();
+        var testValidationContext = new ValidationContext(testModel, serviceProvider: null, items: null);
+        var isTestValid = Validator.TryValidateObject(testModel, testValidationContext, testValidationResults, validateAllProperties: true);
+        
+        Console.WriteLine($"Test model validation (empty name): {isTestValid}");
+        Console.WriteLine($"Test validation errors: {testValidationResults.Count}");
+        foreach (var error in testValidationResults)
+        {
+            Console.WriteLine($"Test error: {error.ErrorMessage}");
+        }
+        
+        // Test validation directly on the model
+        var validationResults = new List<ValidationResult>();
+        var validationContext = new ValidationContext(formData, serviceProvider: null, items: null);
+        var isDirectlyValid = Validator.TryValidateObject(formData, validationContext, validationResults, validateAllProperties: true);
+        
+        Console.WriteLine($"Direct validation result: {isDirectlyValid}");
+        Console.WriteLine($"Validation errors count: {validationResults.Count}");
+        foreach (var error in validationResults)
+        {
+            Console.WriteLine($"Validation error: {error.ErrorMessage}");
+        }
+        
+        var isValid = context.Validate();
+        Console.WriteLine($"EditContext validation result: {isValid}");
+        
+        if (!isValid)
+        {
+            // Validation failed, errors will be automatically displayed
+            Console.WriteLine("Validation failed - not showing success");
+            showSuccess = false;
+            StateHasChanged();
+            return;
+        }
+
+        // Validation passed - log form data to console (similar to React version)
+        Console.WriteLine("Validation passed - showing success");
         Console.WriteLine("Form Data Submitted:");
         Console.WriteLine(System.Text.Json.JsonSerializer.Serialize(formData, new System.Text.Json.JsonSerializerOptions { WriteIndented = true }));
         
         showSuccess = true;
         StateHasChanged();
+    }
+
+    public class TestModel
+    {
+        [Required]
+        public string Name { get; set; } = string.Empty;
     }
 
     private void AddAddressHistoryItem()
