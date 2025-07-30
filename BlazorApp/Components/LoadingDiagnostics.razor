@@ -1,0 +1,52 @@
+@if (showDiagnostics)
+{
+    <div class="loading-diagnostics">
+        <h4>Loading Diagnostics</h4>
+        <p><strong>Current URL:</strong> @NavigationManager.Uri</p>
+        <p><strong>Base URL:</strong> @NavigationManager.BaseUri</p>
+        <p><strong>Time:</strong> @DateTime.Now.ToString("HH:mm:ss")</p>
+        <p><strong>User Agent:</strong> @userAgent</p>
+        <button @onclick="ToggleDiagnostics" class="btn btn-sm btn-secondary">Hide Diagnostics</button>
+    </div>
+}
+else
+{
+    <button @onclick="ToggleDiagnostics" class="btn btn-sm btn-outline-secondary">Show Loading Diagnostics</button>
+}
+
+<style>
+    .loading-diagnostics {
+        background-color: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 0.375rem;
+        padding: 1rem;
+        margin: 1rem 0;
+        font-family: monospace;
+        font-size: 0.875rem;
+    }
+</style>
+
+@code {
+    private bool showDiagnostics = false;
+    private string userAgent = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            userAgent = await JSRuntime.InvokeAsync<string>("eval", "navigator.userAgent");
+        }
+        catch
+        {
+            userAgent = "Unable to retrieve";
+        }
+    }
+
+    private void ToggleDiagnostics()
+    {
+        showDiagnostics = !showDiagnostics;
+    }
+}
+
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
