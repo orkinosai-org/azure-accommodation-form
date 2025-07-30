@@ -45,6 +45,19 @@
             <ValidationMessage For="@(() => accommodationRequest.CheckOutDate)" class="text-danger" />
         </div>
 
+        <div class="form-group mb-3">
+            <label for="fileUpload" class="form-label">Upload Image/Document *</label>
+            <InputFile id="fileUpload" OnChange="@HandleFileUpload" class="form-control" accept="image/*,.pdf,.doc,.docx" />
+            <ValidationMessage For="@(() => accommodationRequest.UploadedFileName)" class="text-danger" />
+            @if (!string.IsNullOrEmpty(accommodationRequest.UploadedFileName))
+            {
+                <div class="mt-2">
+                    <small class="text-success">✓ File uploaded: @accommodationRequest.UploadedFileName</small>
+                </div>
+            }
+            <small class="form-text text-muted">Please upload an image or document (Max 5MB). Supported formats: JPG, PNG, GIF, PDF, DOC, DOCX</small>
+        </div>
+
         <button type="submit" class="btn btn-primary" disabled="@isSubmitting">
             @if (isSubmitting)
             {
@@ -73,18 +86,23 @@
 
         try
         {
-            // Validate check-out date is after check-in date
-            if (accommodationRequest.CheckOutDate <= accommodationRequest.CheckInDate)
+            // Enhanced validation
+            if (!ValidateForm())
             {
-                errorMessage = "Check-out date must be after check-in date.";
                 return;
             }
 
             // Simulate form submission delay
-            await Task.Delay(1000);
+            await Task.Delay(1500);
 
-            // For this demo, we'll just show a success message
-            successMessage = $"Accommodation request submitted successfully for {accommodationRequest.Name}! We'll contact you at {accommodationRequest.Email} soon.";
+            // Enhanced success message with more details
+            successMessage = $"🎉 Accommodation request submitted successfully!\n" +
+                           $"Name: {accommodationRequest.Name}\n" +
+                           $"Email: {accommodationRequest.Email}\n" +
+                           $"Check-in: {accommodationRequest.CheckInDate:MMM dd, yyyy}\n" +
+                           $"Check-out: {accommodationRequest.CheckOutDate:MMM dd, yyyy}\n" +
+                           $"File: {accommodationRequest.UploadedFileName}\n" +
+                           $"We'll contact you soon with confirmation details.";
             
             // Reset form
             accommodationRequest = new AccommodationRequest();
@@ -96,6 +114,68 @@
         finally
         {
             isSubmitting = false;
+        }
+    }
+
+    private bool ValidateForm()
+    {
+        var errors = new List<string>();
+
+        // Check if check-out date is after check-in date
+        if (accommodationRequest.CheckOutDate <= accommodationRequest.CheckInDate)
+        {
+            errors.Add("Check-out date must be after check-in date.");
+        }
+
+        // Check if dates are in the future
+        if (accommodationRequest.CheckInDate < DateTime.Today)
+        {
+            errors.Add("Check-in date cannot be in the past.");
+        }
+
+        // Check file upload
+        if (string.IsNullOrEmpty(accommodationRequest.UploadedFileName))
+        {
+            errors.Add("Please upload an image or document.");
+        }
+
+        if (errors.Any())
+        {
+            errorMessage = string.Join(" ", errors);
+            return false;
+        }
+
+        return true;
+    }
+
+    private async Task HandleFileUpload(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        if (file != null)
+        {
+            // Validate file size (max 5MB)
+            if (file.Size > 5 * 1024 * 1024)
+            {
+                errorMessage = "File size must be less than 5MB.";
+                accommodationRequest.UploadedFileName = string.Empty;
+                return;
+            }
+
+            // Validate file type
+            var allowedTypes = new[] { "image/jpeg", "image/png", "image/gif", "application/pdf", 
+                                     "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document" };
+            if (!allowedTypes.Contains(file.ContentType))
+            {
+                errorMessage = "Please upload an image file (JPG, PNG, GIF) or document (PDF, DOC, DOCX).";
+                accommodationRequest.UploadedFileName = string.Empty;
+                return;
+            }
+
+            // In a real application, you would save the file to storage
+            // For now, just store the filename
+            accommodationRequest.UploadedFileName = file.Name;
+            errorMessage = string.Empty;
+            StateHasChanged();
         }
     }
 
@@ -122,6 +202,9 @@
         [Required(ErrorMessage = "Check-out date is required")]
         [DataType(DataType.Date)]
         public DateTime CheckOutDate { get; set; } = DateTime.Today.AddDays(2);
+
+        [Required(ErrorMessage = "Please upload an image or document")]
+        public string? UploadedFileName { get; set; }
     }
 }
 
@@ -226,6 +309,28 @@
 
     .me-2 {
         margin-right: 0.5rem;
+    }
+
+    .mt-2 {
+        margin-top: 0.5rem;
+    }
+
+    .text-success {
+        color: #28a745;
+    }
+
+    .text-muted {
+        color: #6c757d;
+    }
+
+    .form-text {
+        margin-top: 0.25rem;
+        font-size: 0.875rem;
+    }
+
+    /* Success message formatting */
+    .alert-success {
+        white-space: pre-line;
     }
 
     @@keyframes spinner-border {
