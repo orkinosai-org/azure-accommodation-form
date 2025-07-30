@@ -1,0 +1,13 @@
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Home";
+}
+
+<h1>ASP.NET Core MVC with Blazor WebAssembly</h1>
+
+<p>This page demonstrates the integration of Blazor WebAssembly components in an ASP.NET Core MVC application.</p>
+
+<h2>Counter Component</h2>
+<div id="counter-component">
+    <component type="typeof(BlazorApp.Client.Components.Pages.Counter)" render-mode="WebAssembly" />
+</div>
