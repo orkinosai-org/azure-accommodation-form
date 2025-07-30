@@ -111,7 +111,7 @@ public class Program
         app.UseCors();
         app.UseAntiforgery();
 
-        // Map MVC controllers with default route
+        // Map MVC controllers with default route (highest priority)
         app.MapControllerRoute(
             name: "default",
             pattern: "{controller=Home}/{action=Index}/{id?}");
@@ -119,13 +119,11 @@ public class Program
         // Map API controllers
         app.MapControllers();
         
-        // Map Razor Components
-        app.MapRazorComponents<App>()
-            .AddInteractiveServerRenderMode()
-            .AddInteractiveWebAssemblyRenderMode()
-            .AddAdditionalAssemblies(typeof(BlazorApp.Client._Imports).Assembly);
+        // Map Server-side Blazor Components for specific routes
+        app.MapRazorComponents<ServerApp>()
+            .AddInteractiveServerRenderMode();
         
-        // Fallback to serve WASM files for all other requests
+        // Map WASM fallback for all other unmatched requests (lowest priority)
         app.MapFallbackToFile("index.html");
 
         // Ensure database is created
