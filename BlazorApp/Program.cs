@@ -25,6 +25,7 @@ public class Program
 
         // Add services to the container.
         builder.Services.AddRazorComponents()
+            .AddInteractiveServerComponents()
             .AddInteractiveWebAssemblyComponents();
 
         // Add Entity Framework
@@ -117,6 +118,12 @@ public class Program
             
         // Map API controllers
         app.MapControllers();
+        
+        // Map Razor Components
+        app.MapRazorComponents<App>()
+            .AddInteractiveServerRenderMode()
+            .AddInteractiveWebAssemblyRenderMode()
+            .AddAdditionalAssemblies(typeof(BlazorApp.Client._Imports).Assembly);
         
         // Fallback to serve WASM files for all other requests
         app.MapFallbackToFile("index.html");
