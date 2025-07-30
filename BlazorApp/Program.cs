@@ -25,7 +25,7 @@ public class Program
 
         // Add services to the container.
         builder.Services.AddRazorComponents()
-            .AddInteractiveServerComponents();
+            .AddInteractiveWebAssemblyComponents();
 
         // Add Entity Framework
         builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -42,6 +42,9 @@ public class Program
 
         // Add API controllers
         builder.Services.AddControllers();
+        
+        // Add MVC services
+        builder.Services.AddControllersWithViews();
 
         // Configure settings
         builder.Services.Configure<EmailSettings>(
@@ -93,21 +96,30 @@ public class Program
         {
             app.UseSwagger();
             app.UseSwaggerUI();
+            app.UseWebAssemblyDebugging();
         }
 
         app.UseHttpsRedirection();
         app.UseStaticFiles();
+        
+        // Serve WASM static files
+        app.UseBlazorFrameworkFiles();
+        
         app.UseRouting();
 
         app.UseCors();
         app.UseAntiforgery();
 
+        // Map MVC controllers with default route
+        app.MapControllerRoute(
+            name: "default",
+            pattern: "{controller=Home}/{action=Index}/{id?}");
+            
         // Map API controllers
         app.MapControllers();
-
-        // Map Blazor components
-        app.MapRazorComponents<App>()
-            .AddInteractiveServerRenderMode();
+        
+        // Fallback to serve WASM files for all other requests
+        app.MapFallbackToFile("index.html");
 
         // Ensure database is created
         using (var scope = app.Services.CreateScope())
