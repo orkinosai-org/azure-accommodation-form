@@ -1,7 +1,7 @@
 {
   "version": 2,
-  "dgSpecHash": "oGvaLe02OuSJlEZfKWRacEYVFUjPXrLn1IgqGErtD0n6R3VDRjGtNGNOuPwI+dQrJ3YayPhXhGNvP6QcxecJFg==",
-  "success": false,
+  "dgSpecHash": "rhr0YMEyt7HH8KQIEcXN7A2B1aSoEdM7Dc3vf+8/vsjOyKPdPY6G61v0ewxpsLUXkc7zKBoNqBaaxFH9vAEXWA==",
+  "success": true,
   "projectFilePath": "/home/runner/work/azure-accommodation-form/azure-accommodation-form/Tests/Tests.csproj",
   "expectedPackageFiles": [
     "/home/runner/.nuget/packages/azure.core/1.36.0/azure.core.1.36.0.nupkg.sha512",
@@ -53,10 +53,10 @@
     "/home/runner/.nuget/packages/microsoft.extensions.fileproviders.abstractions/8.0.0/microsoft.extensions.fileproviders.abstractions.8.0.0.nupkg.sha512",
     "/home/runner/.nuget/packages/microsoft.extensions.fileproviders.physical/8.0.0/microsoft.extensions.fileproviders.physical.8.0.0.nupkg.sha512",
     "/home/runner/.nuget/packages/microsoft.extensions.filesystemglobbing/8.0.0/microsoft.extensions.filesystemglobbing.8.0.0.nupkg.sha512",
-    "/home/runner/.nuget/packages/microsoft.extensions.logging/8.0.0/microsoft.extensions.logging.8.0.0.nupkg.sha512",
+    "/home/runner/.nuget/packages/microsoft.extensions.logging/8.0.1/microsoft.extensions.logging.8.0.1.nupkg.sha512",
     "/home/runner/.nuget/packages/microsoft.extensions.logging.abstractions/8.0.3/microsoft.extensions.logging.abstractions.8.0.3.nupkg.sha512",
-    "/home/runner/.nuget/packages/microsoft.extensions.logging.configuration/8.0.0/microsoft.extensions.logging.configuration.8.0.0.nupkg.sha512",
-    "/home/runner/.nuget/packages/microsoft.extensions.logging.console/8.0.0/microsoft.extensions.logging.console.8.0.0.nupkg.sha512",
+    "/home/runner/.nuget/packages/microsoft.extensions.logging.configuration/8.0.1/microsoft.extensions.logging.configuration.8.0.1.nupkg.sha512",
+    "/home/runner/.nuget/packages/microsoft.extensions.logging.console/8.0.1/microsoft.extensions.logging.console.8.0.1.nupkg.sha512",
     "/home/runner/.nuget/packages/microsoft.extensions.options/8.0.2/microsoft.extensions.options.8.0.2.nupkg.sha512",
     "/home/runner/.nuget/packages/microsoft.extensions.options.configurationextensions/8.0.0/microsoft.extensions.options.configurationextensions.8.0.0.nupkg.sha512",
     "/home/runner/.nuget/packages/microsoft.extensions.primitives/8.0.0/microsoft.extensions.primitives.8.0.0.nupkg.sha512",
@@ -124,15 +124,5 @@
     "/home/runner/.nuget/packages/system.threading.tasks.extensions/4.5.4/system.threading.tasks.extensions.4.5.4.nupkg.sha512",
     "/home/runner/.nuget/packages/system.windows.extensions/6.0.0/system.windows.extensions.6.0.0.nupkg.sha512"
   ],
-  "logs": [
-    {
-      "code": "NU1605",
-      "level": "Error",
-      "message": "Warning As Error: Detected package downgrade: Microsoft.Extensions.Logging from 8.0.1 to 8.0.0. Reference the package directly from the project to select a different version. \n Tests -> BlazorApp -> BlazorApp.Client -> Microsoft.AspNetCore.Components.WebAssembly 8.0.18 -> Microsoft.Extensions.Logging (>= 8.0.1) \n Tests -> Microsoft.Extensions.Logging (>= 8.0.0)",
-      "libraryId": "Microsoft.Extensions.Logging",
-      "targetGraphs": [
-        "net8.0"
-      ]
-    }
-  ]
+  "logs": []
 }
