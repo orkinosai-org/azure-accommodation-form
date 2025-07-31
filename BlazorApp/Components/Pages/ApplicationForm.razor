@@ -1165,12 +1165,12 @@
 
     private bool IsEmailValid()
     {
-        return !string.IsNullOrWhiteSpace(emailModel.Email) && IsValidEmail(emailModel.Email);
+        return !string.IsNullOrWhiteSpace(emailModel.Email);
     }
 
     private bool IsConfirmEmailValid()
     {
-        return !string.IsNullOrWhiteSpace(emailModel.ConfirmEmail) && IsValidEmail(emailModel.ConfirmEmail);
+        return !string.IsNullOrWhiteSpace(emailModel.ConfirmEmail);
     }
 
     private bool IsCaptchaValid()
