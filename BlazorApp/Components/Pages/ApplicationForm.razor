@@ -4,6 +4,7 @@
 @using Microsoft.AspNetCore.Components.Forms
 @using System.ComponentModel.DataAnnotations
 @inject IFormApiService FormApiService
+@inject IJSRuntime JSRuntime
 
 <PageTitle>Azure Accommodation Application Form</PageTitle>
 
@@ -29,8 +30,19 @@
                 
                 <div class="form-group">
                     <label for="confirmEmail">Confirm Email Address *</label>
-                    <InputText id="confirmEmail" @bind-Value="emailModel.ConfirmEmail" class="form-control" type="email" placeholder="Confirm your email" />
+                    <InputText id="confirmEmail" @bind-Value="emailModel.ConfirmEmail" class="form-control" type="email" placeholder="Confirm your email" @oncontextmenu:preventDefault="true" />
                     <ValidationMessage For="@(() => emailModel.ConfirmEmail)" />
+                </div>
+                
+                <div class="form-group">
+                    <label for="captcha">Security Verification *</label>
+                    <div class="captcha-container">
+                        <div class="captcha-question">
+                            <strong>@captchaQuestion</strong>
+                        </div>
+                        <InputNumber id="captcha" @bind-Value="emailModel.CaptchaAnswer" class="form-control" placeholder="Enter answer" />
+                        <ValidationMessage For="@(() => emailModel.CaptchaAnswer)" />
+                    </div>
                 </div>
                 
                 <button type="submit" class="btn btn-primary" disabled="@isProcessing">
@@ -211,7 +223,7 @@
                     
                     <div class="form-grid">
                         <div class="form-group">
-                            <label for="bankName">Bank Name</label>
+                            <label for="bankName">Name of Bank</label>
                             <InputText id="bankName" @bind-Value="formData.BankDetails.BankName" class="form-control" />
                         </div>
 
@@ -346,19 +358,14 @@
                     <legend><strong>6. Employment</strong></legend>
                     
                     <div class="form-grid">
-                        <div class="form-group">
-                            <label for="employerName">Employer Name</label>
-                            <InputText id="employerName" @bind-Value="formData.Employment.EmployerName" class="form-control" />
+                        <div class="form-group" style="grid-column: span 2;">
+                            <label for="employerNameAddress">Name & Address of Employer</label>
+                            <InputTextArea id="employerNameAddress" @bind-Value="formData.Employment.EmployerNameAddress" class="form-control" rows="3" />
                         </div>
 
                         <div class="form-group">
                             <label for="jobTitle">Job Title</label>
                             <InputText id="jobTitle" @bind-Value="formData.Employment.JobTitle" class="form-control" />
-                        </div>
-
-                        <div class="form-group" style="grid-column: span 2;">
-                            <label for="employerAddress">Employer Address</label>
-                            <InputText id="employerAddress" @bind-Value="formData.Employment.EmployerAddress" class="form-control" />
                         </div>
 
                         <div class="form-group">
@@ -728,6 +735,20 @@
         margin-top: 5px;
     }
 
+    .captcha-container {
+        margin: 10px 0;
+        padding: 15px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        background-color: #f9f9f9;
+    }
+
+    .captcha-question {
+        margin-bottom: 10px;
+        font-size: 16px;
+        color: #333;
+    }
+
     .btn {
         padding: 8px 16px;
         border: none;
@@ -795,6 +816,26 @@
     }
 </style>
 
+<script>
+    window.disablePaste = (element) => {
+        element.addEventListener('paste', function(e) {
+            e.preventDefault();
+            return false;
+        });
+        element.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+            return false;
+        });
+    };
+    
+    window.initializeConfirmEmailField = () => {
+        const confirmEmailField = document.getElementById('confirmEmail');
+        if (confirmEmailField) {
+            window.disablePaste(confirmEmailField);
+        }
+    };
+</script>
+
 @code {
     private FormData formData = new();
     private EmailEntryModel emailModel = new();
@@ -809,6 +850,10 @@
     private string currentSubmissionId = string.Empty;
     private int resendCooldown = 0;
     private System.Threading.Timer? resendTimer;
+    
+    // CAPTCHA functionality
+    private string captchaQuestion = string.Empty;
+    private int captchaAnswer = 0;
 
     public enum FormStep
     {
@@ -820,6 +865,23 @@
     protected override void OnInitialized()
     {
         editContext = new EditContext(formData);
+        GenerateNewCaptcha();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && currentStep == FormStep.EmailEntry)
+        {
+            await Task.Delay(100); // Small delay to ensure DOM is ready
+            try
+            {
+                await JSRuntime.InvokeVoidAsync("initializeConfirmEmailField");
+            }
+            catch
+            {
+                // Ignore JavaScript errors in case the method isn't available
+            }
+        }
     }
 
     private async Task InitializeForm()
@@ -827,6 +889,14 @@
         if (emailModel.Email != emailModel.ConfirmEmail)
         {
             ShowError("Email addresses do not match.");
+            return;
+        }
+
+        // Validate CAPTCHA
+        if (emailModel.CaptchaAnswer != captchaAnswer)
+        {
+            ShowError("Security verification failed. Please try again.");
+            GenerateNewCaptcha(); // Generate new CAPTCHA on failure
             return;
         }
 
@@ -1025,6 +1095,16 @@
             formData.AddressHistory.RemoveAt(index);
         }
     }
+    
+    private void GenerateNewCaptcha()
+    {
+        var random = new Random();
+        int num1 = random.Next(1, 20);
+        int num2 = random.Next(1, 20);
+        
+        captchaAnswer = num1 + num2;
+        captchaQuestion = $"What is {num1} + {num2}?";
+    }
 
     // Models for form steps
     public class EmailEntryModel
@@ -1036,6 +1116,10 @@
         [Required]
         [EmailAddress]
         public string ConfirmEmail { get; set; } = string.Empty;
+
+        [Required]
+        [Range(1, 100, ErrorMessage = "Please answer the security question correctly.")]
+        public int? CaptchaAnswer { get; set; }
     }
 
     public class EmailVerificationModel

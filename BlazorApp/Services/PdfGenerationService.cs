@@ -153,8 +153,7 @@ public class PdfGenerationService : IPdfGenerationService
 
                                 // Section 6: Employment
                                 AddSection(column, "6. Employment");
-                                AddField(column, "Employer Name", formData.Employment.EmployerName);
-                                AddField(column, "Employer Address", formData.Employment.EmployerAddress);
+                                AddField(column, "Name & Address of Employer", formData.Employment.EmployerNameAddress);
                                 AddField(column, "Job Title", formData.Employment.JobTitle);
                                 AddField(column, "Manager's Name", formData.Employment.ManagerName);
                                 AddField(column, "Manager's Tel", formData.Employment.ManagerTel);

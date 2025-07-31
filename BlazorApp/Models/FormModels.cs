@@ -54,7 +54,7 @@ public class TenantDetails
 
 public class BankDetails
 {
-    [Display(Name = "Bank Name")]
+    [Display(Name = "Name of Bank")]
     public string BankName { get; set; } = string.Empty;
 
     [Display(Name = "Postcode")]
@@ -126,11 +126,8 @@ public class MedicalDetails
 
 public class Employment
 {
-    [Display(Name = "Employer Name")]
-    public string EmployerName { get; set; } = string.Empty;
-
-    [Display(Name = "Employer Address")]
-    public string EmployerAddress { get; set; } = string.Empty;
+    [Display(Name = "Name & Address of Employer")]
+    public string EmployerNameAddress { get; set; } = string.Empty;
 
     [Display(Name = "Job Title")]
     public string JobTitle { get; set; } = string.Empty;
