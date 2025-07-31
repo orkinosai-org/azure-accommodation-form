@@ -147,14 +147,13 @@ public class PdfGenerationService : IPdfGenerationService
                                 AddField(column, "GP Practice", formData.MedicalDetails.GpPractice);
                                 AddField(column, "Doctor's Name", formData.MedicalDetails.DoctorName);
                                 AddField(column, "Doctor's Address", formData.MedicalDetails.DoctorAddress);
-                                AddField(column, "Doctor's Telephone", formData.MedicalDetails.DoctorTelephone);
+                                AddField(column, "Doctor's Telephone No", formData.MedicalDetails.DoctorTelephone);
 
                                 column.Item().PaddingVertical(5, Unit.Millimetre);
 
                                 // Section 6: Employment
                                 AddSection(column, "6. Employment");
-                                AddField(column, "Employer Name", formData.Employment.EmployerName);
-                                AddField(column, "Employer Address", formData.Employment.EmployerAddress);
+                                AddField(column, "Name & Address of Employer", formData.Employment.EmployerNameAddress);
                                 AddField(column, "Job Title", formData.Employment.JobTitle);
                                 AddField(column, "Manager's Name", formData.Employment.ManagerName);
                                 AddField(column, "Manager's Tel", formData.Employment.ManagerTel);
