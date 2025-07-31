@@ -119,7 +119,7 @@ public class MedicalDetails
     [Display(Name = "Doctor's Address")]
     public string DoctorAddress { get; set; } = string.Empty;
 
-    [Display(Name = "Doctor's Telephone")]
+    [Display(Name = "Doctor's Telephone No")]
     [Phone]
     public string DoctorTelephone { get; set; } = string.Empty;
 }

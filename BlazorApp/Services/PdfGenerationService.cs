@@ -147,7 +147,7 @@ public class PdfGenerationService : IPdfGenerationService
                                 AddField(column, "GP Practice", formData.MedicalDetails.GpPractice);
                                 AddField(column, "Doctor's Name", formData.MedicalDetails.DoctorName);
                                 AddField(column, "Doctor's Address", formData.MedicalDetails.DoctorAddress);
-                                AddField(column, "Doctor's Telephone", formData.MedicalDetails.DoctorTelephone);
+                                AddField(column, "Doctor's Telephone No", formData.MedicalDetails.DoctorTelephone);
 
                                 column.Item().PaddingVertical(5, Unit.Millimetre);
 

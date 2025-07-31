@@ -50,8 +50,7 @@
     "doctor_telephone": ""
   },
   "employment": {
-    "employer_name": "",
-    "employer_address": "",
+    "employer_name_address": "",
     "job_title": "",
     "manager_name": "",
     "manager_tel": "",
