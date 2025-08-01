@@ -916,6 +916,9 @@
     // Set to true when email validation is commented out for development/testing
     // WORKAROUND: To revert to production mode, set this to false and uncomment
     // the validation code in the InitializeForm method and email field validation
+    // 
+    // FAIL-SAFE: If validation is commented out, development mode should be true
+    // to prevent "Failed to initialize form" errors due to API/service configuration issues
     private bool developmentMode = true;
 
     public enum FormStep
@@ -975,7 +978,10 @@
             }
             catch (Exception ex)
             {
-                ShowError("An error occurred in development mode. Please try again.");
+                // DEVELOPMENT/TESTING: Enhanced error handling with logging
+                Console.WriteLine($"Development mode initialization error: {ex.Message}");
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                ShowError($"Development mode error: {ex.Message}. Please check console for details.");
             }
             finally
             {
@@ -1040,7 +1046,9 @@
         }
         catch (Exception ex)
         {
-            ShowError("An error occurred. Please try again.");
+            // DEVELOPMENT/TESTING: Enhanced error handling for production mode failures
+            Console.WriteLine($"Production mode initialization error: {ex.Message}");
+            ShowError("Failed to initialize form. If you are in development/testing mode with validation commented out, ensure developmentMode = true.");
         }
         finally
         {
