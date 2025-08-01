@@ -10,6 +10,7 @@ public interface IFormApiService
     Task<EmailVerificationResponse> SendEmailVerificationAsync(string submissionId, string email);
     Task<FormSubmissionResponse> VerifyEmailTokenAsync(string submissionId, string token);
     Task<FormSubmissionResponse> SubmitFormAsync(string submissionId, FormData formData);
+    Task<FormSubmissionResponse> SubmitFormDirectAsync(FormData formData);
 }
 
 public class FormApiService : IFormApiService
@@ -141,6 +142,34 @@ public class FormApiService : IFormApiService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error submitting form for submission {SubmissionId}", submissionId);
+            return new FormSubmissionResponse { Success = false, Message = "Network error occurred" };
+        }
+    }
+
+    public async Task<FormSubmissionResponse> SubmitFormDirectAsync(FormData formData)
+    {
+        try
+        {
+            var json = JsonSerializer.Serialize(formData, _jsonOptions);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+            var response = await _httpClient.PostAsync("api/form/submit-direct", content);
+            var responseJson = await response.Content.ReadAsStringAsync();
+
+            if (response.IsSuccessStatusCode)
+            {
+                return JsonSerializer.Deserialize<FormSubmissionResponse>(responseJson, _jsonOptions) 
+                    ?? new FormSubmissionResponse { Success = false, Message = "Invalid response format" };
+            }
+            else
+            {
+                _logger.LogError("Failed to submit form directly: {StatusCode} - {Response}", response.StatusCode, responseJson);
+                return new FormSubmissionResponse { Success = false, Message = "Failed to submit form" };
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error submitting form directly");
             return new FormSubmissionResponse { Success = false, Message = "Network error occurred" };
         }
     }
