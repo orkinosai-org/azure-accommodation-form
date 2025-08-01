@@ -33,7 +33,7 @@
                 
                 <div class="form-group">
                     <label for="confirmEmail">Confirm Email Address *</label>
-                    <InputText id="confirmEmail" @bind-Value="emailModel.ConfirmEmail" class="form-control" type="email" placeholder="Confirm your email" @oncontextmenu:preventDefault="true" />
+                    <InputText id="confirmEmail" @bind-Value="emailModel.ConfirmEmail" class="form-control" type="email" placeholder="Confirm your email" autocomplete="off" @oncontextmenu:preventDefault="true" />
                     <ValidationMessage For="@(() => emailModel.ConfirmEmail)" />
                 </div>
                 
@@ -907,6 +907,10 @@
 
     private async Task InitializeForm()
     {
+        // Debug logging for ConfirmEmail value
+        Console.WriteLine($"[DEBUG] ConfirmEmail value on submit: '{emailModel.ConfirmEmail}' (Length: {emailModel.ConfirmEmail?.Length ?? 0})");
+        Console.WriteLine($"[DEBUG] Email value on submit: '{emailModel.Email}' (Length: {emailModel.Email?.Length ?? 0})");
+        
         // Validate CAPTCHA
         if (emailModel.CaptchaAnswer != captchaAnswer)
         {
@@ -1131,12 +1135,12 @@
     // Models for form steps
     public class EmailEntryModel
     {
-        [Required]
-        [EmailAddress]
+        [Required(ErrorMessage = "The Email field is required.")]
+        [EmailAddress(ErrorMessage = "Please enter a valid email address.")]
         public string Email { get; set; } = string.Empty;
 
-        [Required]
-        [EmailAddress]
+        [Required(ErrorMessage = "The Confirm Email field is required.")]
+        [EmailAddress(ErrorMessage = "Please enter a valid email address.")]
         [EmailEquality(nameof(Email), ErrorMessage = "Email addresses do not match.")]
         public string ConfirmEmail { get; set; } = string.Empty;
 
