@@ -151,6 +151,23 @@
             
             <EditForm EditContext="@editContext" OnValidSubmit="@HandleSubmit" Enhance="false">
                 <DataAnnotationsValidator />
+                
+                <!-- Enhanced Validation Summary with Debug Info -->
+                @if (developmentMode && editContext.GetValidationMessages().Any())
+                {
+                    <div class="alert alert-danger mt-3" style="border: 2px solid #dc3545;">
+                        <h5>⚠️ Validation Errors (Development Mode)</h5>
+                        <p><strong>Form cannot be submitted until these errors are resolved:</strong></p>
+                        <ul>
+                            @foreach (var message in editContext.GetValidationMessages())
+                            {
+                                <li>@message</li>
+                            }
+                        </ul>
+                        <hr>
+                        <p><small><strong>Debug:</strong> Use the "🔧 Force Submit (Dev Mode)" button below to bypass validation for testing.</small></p>
+                    </div>
+                }
                 <ValidationSummary />
 
                 <!-- 1. Tenant Details Section -->
@@ -681,16 +698,26 @@
                 <!-- Alternative submit button that bypasses validation for development/testing -->
                 @if (developmentMode)
                 {
-                    <button type="button" @onclick="@HandleSubmit" class="btn btn-warning btn-lg ms-2" disabled="@isProcessing">
-                        @if (isProcessing)
-                        {
-                            <span>⏳ Submitting...</span>
-                        }
-                        else
-                        {
-                            <span>🔧 Force Submit (Dev Mode)</span>
-                        }
-                    </button>
+                    <div class="mt-3">
+                        <button type="button" @onclick="@HandleSubmit" class="btn btn-warning btn-lg me-2" disabled="@isProcessing">
+                            @if (isProcessing)
+                            {
+                                <span>⏳ Submitting...</span>
+                            }
+                            else
+                            {
+                                <span>🔧 Force Submit (Dev Mode)</span>
+                            }
+                        </button>
+                        
+                        <button type="button" @onclick="@FillTestData" class="btn btn-info btn-lg" disabled="@isProcessing">
+                            <span>📝 Fill Test Data</span>
+                        </button>
+                        
+                        <button type="button" @onclick="@ShowValidationErrors" class="btn btn-secondary btn-lg ms-2">
+                            <span>🔍 Check Validation</span>
+                        </button>
+                    </div>
                 }
             </EditForm>
         </div>
@@ -1544,6 +1571,60 @@
     private void ClearDebugMessages()
     {
         debugMessages.Clear();
+        StateHasChanged();
+    }
+    
+    private void FillTestData()
+    {
+        AddDebugMessage("Filling test data for development testing...", "info");
+        
+        // Fill required fields
+        formData.TenantDetails.FullName = "John Test User";
+        formData.TenantDetails.DateOfBirth = DateTime.Now.AddYears(-25);
+        formData.TenantDetails.Email = "test@example.com";
+        formData.TenantDetails.Telephone = "+44 123 456 7890";
+        
+        // Fill consent and declaration
+        formData.ConsentAndDeclaration.ConsentGiven = true;
+        formData.ConsentAndDeclaration.Signature = "John Test User";
+        formData.ConsentAndDeclaration.Date = DateTime.Today;
+        formData.ConsentAndDeclaration.PrintName = "John Test User";
+        formData.ConsentAndDeclaration.DeclarationSignature = "John Test User";
+        formData.ConsentAndDeclaration.DeclarationDate = DateTime.Today;
+        formData.ConsentAndDeclaration.DeclarationPrintName = "John Test User";
+        
+        // Fill some declaration checkboxes
+        formData.ConsentAndDeclaration.Declaration.MainHome = true;
+        formData.ConsentAndDeclaration.Declaration.EnquiriesPermission = true;
+        formData.ConsentAndDeclaration.Declaration.CertifyNoJudgements = true;
+        formData.ConsentAndDeclaration.Declaration.CertifyNoHousingDebt = true;
+        formData.ConsentAndDeclaration.Declaration.CertifyNoLandlordDebt = true;
+        formData.ConsentAndDeclaration.Declaration.CertifyNoAbuse = true;
+        
+        AddDebugMessage("Test data filled successfully", "info");
+        StateHasChanged();
+    }
+    
+    private void ShowValidationErrors()
+    {
+        AddDebugMessage("Checking form validation...", "info");
+        
+        var isValid = editContext.Validate();
+        var validationMessages = editContext.GetValidationMessages().ToList();
+        
+        AddDebugMessage($"Form is valid: {isValid}", isValid ? "info" : "error");
+        AddDebugMessage($"Validation error count: {validationMessages.Count}", validationMessages.Any() ? "warning" : "info");
+        
+        foreach (var message in validationMessages)
+        {
+            AddDebugMessage($"Validation Error: {message}", "error");
+        }
+        
+        if (!validationMessages.Any())
+        {
+            AddDebugMessage("✅ No validation errors found - form is ready for submission!", "info");
+        }
+        
         StateHasChanged();
     }
 
