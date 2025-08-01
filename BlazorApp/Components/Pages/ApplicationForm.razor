@@ -23,8 +23,13 @@
             <EditForm Model="@emailModel" OnSubmit="@InitializeForm" FormName="EmailEntry">
                 
                 <div class="form-group">
-                    <label for="email">Email Address *</label>
+                    @* TEMPORARILY COMMENTED OUT FOR DEVELOPMENT/TESTING - VALIDATION DISABLED *@
+                    @* Restore required asterisk (*) when re-enabling validation *@
+                    <label for="email">Email Address @* * *@</label>
                     <InputText id="email" @bind-Value="emailModel.Email" class="form-control" type="email" placeholder="your.email@example.com" />
+                    @* TEMPORARILY COMMENTED OUT FOR DEVELOPMENT/TESTING - VALIDATION DISABLED *@
+                    @* Uncomment the following validation messages to restore validation: *@
+                    @*
                     @if (emailSubmitAttempted && !IsValidEmail(emailModel.Email))
                     {
                         <div class="validation-message">The Email field is required.</div>
@@ -33,11 +38,17 @@
                     {
                         <div class="validation-message">The Email field is not a valid e-mail address.</div>
                     }
+                    *@
                 </div>
                 
                 <div class="form-group">
-                    <label for="confirmEmail">Confirm Email Address *</label>
+                    @* TEMPORARILY COMMENTED OUT FOR DEVELOPMENT/TESTING - VALIDATION DISABLED *@
+                    @* Restore required asterisk (*) when re-enabling validation *@
+                    <label for="confirmEmail">Confirm Email Address @* * *@</label>
                     <InputText id="confirmEmail" @bind-Value="emailModel.ConfirmEmail" class="form-control" type="email" placeholder="Confirm your email" @oncontextmenu:preventDefault="true" />
+                    @* TEMPORARILY COMMENTED OUT FOR DEVELOPMENT/TESTING - VALIDATION DISABLED *@
+                    @* Uncomment the following validation messages to restore validation: *@
+                    @*
                     @if (emailSubmitAttempted && !IsValidEmail(emailModel.ConfirmEmail))
                     {
                         <div class="validation-message">The ConfirmEmail field is required.</div>
@@ -50,19 +61,26 @@
                     {
                         <div class="validation-message">Email addresses do not match.</div>
                     }
+                    *@
                 </div>
                 
                 <div class="form-group">
-                    <label for="captcha">Security Verification *</label>
+                    @* TEMPORARILY COMMENTED OUT FOR DEVELOPMENT/TESTING - VALIDATION DISABLED *@
+                    @* Restore required asterisk (*) when re-enabling validation *@
+                    <label for="captcha">Security Verification @* * *@</label>
                     <div class="captcha-container">
                         <div class="captcha-question">
                             <strong>@captchaQuestion</strong>
                         </div>
                         <InputNumber id="captcha" @bind-Value="emailModel.CaptchaAnswer" class="form-control" placeholder="Enter answer" />
+                        @* TEMPORARILY COMMENTED OUT FOR DEVELOPMENT/TESTING - VALIDATION DISABLED *@
+                        @* Uncomment the following validation message to restore validation: *@
+                        @*
                         @if (emailSubmitAttempted && (!emailModel.CaptchaAnswer.HasValue || emailModel.CaptchaAnswer.Value < 1 || emailModel.CaptchaAnswer.Value > 100))
                         {
                             <div class="validation-message">Please answer the security question correctly.</div>
                         }
+                        *@
                     </div>
                 </div>
                 
@@ -925,6 +943,9 @@
 
     private async Task InitializeForm(EditContext context)
     {
+        // TEMPORARILY COMMENTED OUT FOR DEVELOPMENT/TESTING - VALIDATION DISABLED
+        // Uncomment the following lines to restore validation:
+        /*
         emailSubmitAttempted = true;
         StateHasChanged();
 
@@ -941,6 +962,7 @@
             GenerateNewCaptcha(); // Generate new CAPTCHA on failure
             return;
         }
+        */
 
         isProcessing = true;
         statusMessage = string.Empty;
@@ -1206,17 +1228,23 @@
     // Models for form steps
     public class EmailEntryModel
     {
-        [Required]
-        [EmailAddress]
+        // TEMPORARILY COMMENTED OUT FOR DEVELOPMENT/TESTING - VALIDATION DISABLED
+        // Uncomment the following attributes to restore validation:
+        // [Required]
+        // [EmailAddress]
         public string Email { get; set; } = string.Empty;
 
-        [Required]
-        [EmailAddress]
-        [EmailEquality(nameof(Email), ErrorMessage = "Email addresses do not match.")]
+        // TEMPORARILY COMMENTED OUT FOR DEVELOPMENT/TESTING - VALIDATION DISABLED
+        // Uncomment the following attributes to restore validation:
+        // [Required]
+        // [EmailAddress]
+        // [EmailEquality(nameof(Email), ErrorMessage = "Email addresses do not match.")]
         public string ConfirmEmail { get; set; } = string.Empty;
 
-        [Required]
-        [Range(1, 100, ErrorMessage = "Please answer the security question correctly.")]
+        // TEMPORARILY COMMENTED OUT FOR DEVELOPMENT/TESTING - VALIDATION DISABLED
+        // Uncomment the following attributes to restore validation:
+        // [Required]
+        // [Range(1, 100, ErrorMessage = "Please answer the security question correctly.")]
         public int? CaptchaAnswer { get; set; }
     }
 
