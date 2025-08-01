@@ -72,6 +72,10 @@ public class StartupWithoutAzureDiagnosticsTest
             Console.WriteLine("\n" + new string('=', 50));
             await DebugConsoleHelperTest.TestDebugConsoleHelper();
 
+            // Run the email validation test
+            Console.WriteLine("\n" + new string('=', 50));
+            await EmailValidationTest.TestEmailValidation();
+
         }
         catch (Exception ex)
         {
