@@ -9,6 +9,10 @@ db.sqlite3-journal
 # Blazor build artifacts
 BlazorApp/bin/
 BlazorApp/obj/
+BlazorApp.Client/bin/
+BlazorApp.Client/obj/
+Tests/bin/
+Tests/obj/
 *.log
 
 .vs/
