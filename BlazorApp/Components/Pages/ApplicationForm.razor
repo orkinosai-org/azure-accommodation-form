@@ -149,7 +149,7 @@
                 <span>✅ Email Verified</span> → <span class="current-step">📝 Complete Form</span> → <span>📄 Submit</span>
             </div>
             
-            <EditForm EditContext="@editContext" Enhance="false">
+            <EditForm EditContext="@editContext" OnValidSubmit="@HandleSubmit" Enhance="false">
                 <DataAnnotationsValidator />
                 <ValidationSummary />
 
@@ -688,6 +688,14 @@
         </div>
     }
 
+    @if (developmentMode && currentStep == FormStep.FormFilling)
+    {
+        <div class="alert alert-info mt-3" style="border: 2px solid #007acc; background-color: #e7f3ff; font-weight: bold;">
+            <p><strong>🔧 DEVELOPMENT MODE ACTIVE</strong></p>
+            <p>Email verification bypassed. Debug output visible in browser console and server logs.</p>
+        </div>
+    }
+
     @if (showSuccess)
     {
         <div class="alert alert-success mt-3">
@@ -1114,12 +1122,52 @@
 
     private async Task HandleSubmit()
     {
-        Console.WriteLine("HandleSubmit fired");
+        // DEBUG: Enhanced form submission logging for troubleshooting
+        Console.WriteLine("=== FORM SUBMISSION DEBUG ===");
+        Console.WriteLine($"HandleSubmit fired at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+        Console.WriteLine($"Development Mode: {developmentMode}");
+        Console.WriteLine($"Current Step: {currentStep}");
+        Console.WriteLine($"User Email: {formData.TenantDetails.Email}");
+        
+        // DEBUG: Additional validation debugging
+        Console.WriteLine("=== FORM VALIDATION CHECK ===");
+        Console.WriteLine($"Form fields populated:");
+        Console.WriteLine($"- Full Name: '{formData.TenantDetails.FullName}'");
+        Console.WriteLine($"- Date of Birth: '{formData.TenantDetails.DateOfBirth}'");
+        Console.WriteLine($"- Email: '{formData.TenantDetails.Email}'");
+        Console.WriteLine($"- Telephone: '{formData.TenantDetails.Telephone}'");
+        Console.WriteLine($"- Consent checkbox: {formData.ConsentAndDeclaration.ConsentGiven}");
+        Console.WriteLine($"- Signature: '{formData.ConsentAndDeclaration.Signature}'");
+        Console.WriteLine($"- Date: '{formData.ConsentAndDeclaration.Date}'");
+        Console.WriteLine($"- Print Name: '{formData.ConsentAndDeclaration.PrintName}'");
+        
         if (!editContext.Validate())
         {
+            Console.WriteLine("=== FORM VALIDATION FAILED ===");
+            var validationMessages = editContext.GetValidationMessages();
+            Console.WriteLine($"Number of validation errors: {validationMessages.Count()}");
+            foreach (var message in validationMessages)
+            {
+                Console.WriteLine($"Validation Error: {message}");
+            }
+            
+            // DEBUG: Show which specific fields have validation errors
+            var allValidationMessages = editContext.GetValidationMessages();
+            if (allValidationMessages.Any())
+            {
+                Console.WriteLine("All validation errors:");
+                foreach (var error in allValidationMessages)
+                {
+                    Console.WriteLine($"  - {error}");
+                }
+            }
+            
             // Validation errors will be automatically displayed
             return;
         }
+
+        Console.WriteLine("=== FORM VALIDATION PASSED ===");
+        Console.WriteLine("Starting form submission process...");
 
         isProcessing = true;
         statusMessage = string.Empty;
@@ -1133,31 +1181,51 @@
             // to bypass email verification requirements
             if (developmentMode)
             {
+                Console.WriteLine("=== DEVELOPMENT MODE SUBMISSION ===");
+                Console.WriteLine("Using direct submission API (no email verification required)");
+                
                 // DEVELOPMENT MODE: Use direct submission API (no email verification required)
                 response = await FormApiService.SubmitFormDirectAsync(formData);
+                
+                Console.WriteLine($"Direct submission response - Success: {response.Success}, Message: {response.Message}");
             }
             else
             {
+                Console.WriteLine("=== PRODUCTION MODE SUBMISSION ===");
+                Console.WriteLine($"Using standard submission with email verification, SubmissionId: {currentSubmissionId}");
+                
                 // PRODUCTION MODE: Use standard submission with email verification
                 response = await FormApiService.SubmitFormAsync(currentSubmissionId, formData);
+                
+                Console.WriteLine($"Standard submission response - Success: {response.Success}, Message: {response.Message}");
             }
             
             if (response.Success)
             {
+                Console.WriteLine("=== FORM SUBMISSION SUCCESSFUL ===");
+                Console.WriteLine($"Success message: {response.Message}");
                 showSuccess = true;
                 ShowSuccess("Form submitted successfully!");
             }
             else
             {
+                Console.WriteLine("=== FORM SUBMISSION FAILED ===");
+                Console.WriteLine($"Error message: {response.Message}");
                 ShowError(response.Message);
             }
         }
         catch (Exception ex)
         {
+            Console.WriteLine("=== FORM SUBMISSION EXCEPTION ===");
+            Console.WriteLine($"Exception Type: {ex.GetType().Name}");
+            Console.WriteLine($"Exception Message: {ex.Message}");
+            Console.WriteLine($"Stack Trace: {ex.StackTrace}");
             ShowError("An error occurred while submitting the form. Please try again.");
         }
         finally
         {
+            Console.WriteLine("=== FORM SUBMISSION CLEANUP ===");
+            Console.WriteLine("Resetting processing state");
             isProcessing = false;
             StateHasChanged();
         }

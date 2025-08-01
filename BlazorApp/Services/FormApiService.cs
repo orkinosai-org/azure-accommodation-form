@@ -121,26 +121,47 @@ public class FormApiService : IFormApiService
     {
         try
         {
+            // DEBUG: Enhanced API call logging for troubleshooting
+            Console.WriteLine("=== FORM API DEBUG: SUBMIT STANDARD ===");
+            Console.WriteLine($"API Call Time: {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+            Console.WriteLine($"Submission ID: {submissionId}");
+            Console.WriteLine($"User Email: {formData.TenantDetails.Email}");
+            Console.WriteLine($"User Name: {formData.TenantDetails.FullName}");
+            
             var request = new { SubmissionId = submissionId, FormData = formData };
             var json = JsonSerializer.Serialize(request, _jsonOptions);
+            Console.WriteLine($"JSON Payload Length: {json.Length} characters");
+            
             var content = new StringContent(json, Encoding.UTF8, "application/json");
 
+            Console.WriteLine("Sending POST request to: api/form/submit");
             var response = await _httpClient.PostAsync("api/form/submit", content);
             var responseJson = await response.Content.ReadAsStringAsync();
 
+            Console.WriteLine($"Response Status: {response.StatusCode}");
+            Console.WriteLine($"Response Content: {responseJson}");
+
             if (response.IsSuccessStatusCode)
             {
-                return JsonSerializer.Deserialize<FormSubmissionResponse>(responseJson, _jsonOptions) 
+                Console.WriteLine("=== API CALL SUCCESSFUL ===");
+                var result = JsonSerializer.Deserialize<FormSubmissionResponse>(responseJson, _jsonOptions) 
                     ?? new FormSubmissionResponse { Success = false, Message = "Invalid response format" };
+                Console.WriteLine($"Parsed Response - Success: {result.Success}, Message: {result.Message}");
+                return result;
             }
             else
             {
+                Console.WriteLine("=== API CALL FAILED ===");
                 _logger.LogError("Failed to submit form: {StatusCode} - {Response}", response.StatusCode, responseJson);
                 return new FormSubmissionResponse { Success = false, Message = "Failed to submit form" };
             }
         }
         catch (Exception ex)
         {
+            Console.WriteLine("=== API CALL EXCEPTION ===");
+            Console.WriteLine($"Exception Type: {ex.GetType().Name}");
+            Console.WriteLine($"Exception Message: {ex.Message}");
+            Console.WriteLine($"Stack Trace: {ex.StackTrace}");
             _logger.LogError(ex, "Error submitting form for submission {SubmissionId}", submissionId);
             return new FormSubmissionResponse { Success = false, Message = "Network error occurred" };
         }
@@ -150,25 +171,47 @@ public class FormApiService : IFormApiService
     {
         try
         {
+            // DEBUG: Enhanced API call logging for troubleshooting
+            Console.WriteLine("=== FORM API DEBUG: SUBMIT DIRECT ===");
+            Console.WriteLine($"API Call Time: {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+            Console.WriteLine($"User Email: {formData.TenantDetails.Email}");
+            Console.WriteLine($"User Name: {formData.TenantDetails.FullName}");
+            Console.WriteLine($"User Phone: {formData.TenantDetails.Telephone}");
+            
             var json = JsonSerializer.Serialize(formData, _jsonOptions);
+            Console.WriteLine($"JSON Payload Length: {json.Length} characters");
+            Console.WriteLine("JSON Sample (first 200 chars): " + (json.Length > 200 ? json.Substring(0, 200) + "..." : json));
+            
             var content = new StringContent(json, Encoding.UTF8, "application/json");
 
+            Console.WriteLine("Sending POST request to: api/form/submit-direct");
             var response = await _httpClient.PostAsync("api/form/submit-direct", content);
             var responseJson = await response.Content.ReadAsStringAsync();
 
+            Console.WriteLine($"Response Status: {response.StatusCode}");
+            Console.WriteLine($"Response Content: {responseJson}");
+
             if (response.IsSuccessStatusCode)
             {
-                return JsonSerializer.Deserialize<FormSubmissionResponse>(responseJson, _jsonOptions) 
+                Console.WriteLine("=== API CALL SUCCESSFUL ===");
+                var result = JsonSerializer.Deserialize<FormSubmissionResponse>(responseJson, _jsonOptions) 
                     ?? new FormSubmissionResponse { Success = false, Message = "Invalid response format" };
+                Console.WriteLine($"Parsed Response - Success: {result.Success}, Message: {result.Message}");
+                return result;
             }
             else
             {
+                Console.WriteLine("=== API CALL FAILED ===");
                 _logger.LogError("Failed to submit form directly: {StatusCode} - {Response}", response.StatusCode, responseJson);
                 return new FormSubmissionResponse { Success = false, Message = "Failed to submit form" };
             }
         }
         catch (Exception ex)
         {
+            Console.WriteLine("=== API CALL EXCEPTION ===");
+            Console.WriteLine($"Exception Type: {ex.GetType().Name}");
+            Console.WriteLine($"Exception Message: {ex.Message}");
+            Console.WriteLine($"Stack Trace: {ex.StackTrace}");
             _logger.LogError(ex, "Error submitting form directly");
             return new FormSubmissionResponse { Success = false, Message = "Network error occurred" };
         }
