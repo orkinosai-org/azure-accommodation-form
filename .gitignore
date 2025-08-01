@@ -47,3 +47,5 @@ KitDocuments_Debug/
 # Test build artifacts
 Tests/bin/
 Tests/obj/
+**/bin/Debug/
+**/obj/Debug/
