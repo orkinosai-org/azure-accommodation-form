@@ -1129,14 +1129,39 @@
         Console.WriteLine($"Current Step: {currentStep}");
         Console.WriteLine($"User Email: {formData.TenantDetails.Email}");
         
+        // DEBUG: Additional validation debugging
+        Console.WriteLine("=== FORM VALIDATION CHECK ===");
+        Console.WriteLine($"Form fields populated:");
+        Console.WriteLine($"- Full Name: '{formData.TenantDetails.FullName}'");
+        Console.WriteLine($"- Date of Birth: '{formData.TenantDetails.DateOfBirth}'");
+        Console.WriteLine($"- Email: '{formData.TenantDetails.Email}'");
+        Console.WriteLine($"- Telephone: '{formData.TenantDetails.Telephone}'");
+        Console.WriteLine($"- Consent checkbox: {formData.ConsentAndDeclaration.ConsentGiven}");
+        Console.WriteLine($"- Signature: '{formData.ConsentAndDeclaration.Signature}'");
+        Console.WriteLine($"- Date: '{formData.ConsentAndDeclaration.Date}'");
+        Console.WriteLine($"- Print Name: '{formData.ConsentAndDeclaration.PrintName}'");
+        
         if (!editContext.Validate())
         {
             Console.WriteLine("=== FORM VALIDATION FAILED ===");
             var validationMessages = editContext.GetValidationMessages();
+            Console.WriteLine($"Number of validation errors: {validationMessages.Count()}");
             foreach (var message in validationMessages)
             {
                 Console.WriteLine($"Validation Error: {message}");
             }
+            
+            // DEBUG: Show which specific fields have validation errors
+            var allValidationMessages = editContext.GetValidationMessages();
+            if (allValidationMessages.Any())
+            {
+                Console.WriteLine("All validation errors:");
+                foreach (var error in allValidationMessages)
+                {
+                    Console.WriteLine($"  - {error}");
+                }
+            }
+            
             // Validation errors will be automatically displayed
             return;
         }
