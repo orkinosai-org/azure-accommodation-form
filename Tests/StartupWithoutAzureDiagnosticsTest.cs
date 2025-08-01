@@ -80,6 +80,10 @@ public class StartupWithoutAzureDiagnosticsTest
             Console.WriteLine("\n" + new string('=', 50));
             await EmailStepValidationUXTest.TestEmailStepValidationUX();
 
+            // Run the validation removed test
+            Console.WriteLine("\n" + new string('=', 50));
+            ValidationRemovedTest.TestValidationRemoved();
+
         }
         catch (Exception ex)
         {

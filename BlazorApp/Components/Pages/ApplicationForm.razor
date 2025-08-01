@@ -25,6 +25,7 @@
                 <div class="form-group">
                     <label for="email">Email Address *</label>
                     <InputText id="email" @bind-Value="emailModel.Email" class="form-control" type="email" placeholder="your.email@example.com" />
+                    @* VALIDATION COMMENTED OUT FOR TESTING
                     @if (emailSubmitAttempted && !IsValidEmail(emailModel.Email))
                     {
                         <div class="validation-message">The Email field is required.</div>
@@ -33,11 +34,13 @@
                     {
                         <div class="validation-message">The Email field is not a valid e-mail address.</div>
                     }
+                    *@
                 </div>
                 
                 <div class="form-group">
                     <label for="confirmEmail">Confirm Email Address *</label>
                     <InputText id="confirmEmail" @bind-Value="emailModel.ConfirmEmail" class="form-control" type="email" placeholder="Confirm your email" @oncontextmenu:preventDefault="true" />
+                    @* VALIDATION COMMENTED OUT FOR TESTING
                     @if (emailSubmitAttempted && !IsValidEmail(emailModel.ConfirmEmail))
                     {
                         <div class="validation-message">The ConfirmEmail field is required.</div>
@@ -50,6 +53,7 @@
                     {
                         <div class="validation-message">Email addresses do not match.</div>
                     }
+                    *@
                 </div>
                 
                 <div class="form-group">
@@ -59,10 +63,12 @@
                             <strong>@captchaQuestion</strong>
                         </div>
                         <InputNumber id="captcha" @bind-Value="emailModel.CaptchaAnswer" class="form-control" placeholder="Enter answer" />
+                        @* VALIDATION COMMENTED OUT FOR TESTING
                         @if (emailSubmitAttempted && (!emailModel.CaptchaAnswer.HasValue || emailModel.CaptchaAnswer.Value < 1 || emailModel.CaptchaAnswer.Value > 100))
                         {
                             <div class="validation-message">Please answer the security question correctly.</div>
                         }
+                        *@
                     </div>
                 </div>
                 
@@ -928,7 +934,9 @@
         emailSubmitAttempted = true;
         StateHasChanged();
 
+        // VALIDATION COMMENTED OUT FOR TESTING - form will accept any input
         // Perform manual validation since we removed DataAnnotationsValidator
+        /*
         if (!IsValidEmailForm())
         {
             return; // Validation errors will be shown due to emailSubmitAttempted = true
@@ -941,6 +949,7 @@
             GenerateNewCaptcha(); // Generate new CAPTCHA on failure
             return;
         }
+        */
 
         isProcessing = true;
         statusMessage = string.Empty;
@@ -1206,17 +1215,18 @@
     // Models for form steps
     public class EmailEntryModel
     {
-        [Required]
-        [EmailAddress]
+        // VALIDATION ATTRIBUTES COMMENTED OUT FOR TESTING
+        //[Required]
+        //[EmailAddress]
         public string Email { get; set; } = string.Empty;
 
-        [Required]
-        [EmailAddress]
-        [EmailEquality(nameof(Email), ErrorMessage = "Email addresses do not match.")]
+        //[Required]
+        //[EmailAddress]
+        //[EmailEquality(nameof(Email), ErrorMessage = "Email addresses do not match.")]
         public string ConfirmEmail { get; set; } = string.Empty;
 
-        [Required]
-        [Range(1, 100, ErrorMessage = "Please answer the security question correctly.")]
+        //[Required]
+        //[Range(1, 100, ErrorMessage = "Please answer the security question correctly.")]
         public int? CaptchaAnswer { get; set; }
     }
 
