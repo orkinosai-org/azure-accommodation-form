@@ -22,7 +22,7 @@
             <h2>Step 1: Email Verification</h2>
             <p>Please enter your email address to begin the application process.</p>
             
-            <EditForm EditContext="@emailEditContext" OnValidSubmit="@InitializeForm" FormName="EmailEntry">
+            <EditForm Model="@emailModel" OnValidSubmit="@InitializeForm" OnInvalidSubmit="@HandleInvalidEmailSubmit">
                 <DataAnnotationsValidator />
                 <ValidationSummary />
                 
@@ -859,7 +859,6 @@
     private EmailEntryModel emailModel = new();
     private EmailVerificationModel verificationModel = new();
     private EditContext editContext = default!;
-    private EditContext? emailEditContext;
 
     
     private FormStep currentStep = FormStep.EmailEntry;
@@ -887,7 +886,6 @@
     protected override void OnInitialized()
     {
         editContext = new EditContext(formData);
-        emailEditContext = new EditContext(emailModel);
         GenerateNewCaptcha();
     }
 
@@ -905,6 +903,13 @@
                 // Ignore JavaScript errors in case the method isn't available
             }
         }
+    }
+
+    private void HandleInvalidEmailSubmit()
+    {
+        // This method is called when validation fails on the email form
+        // The ValidationSummary and ValidationMessage components will automatically display errors
+        // No additional action needed - just let the validation UI update
     }
 
     private async Task InitializeForm()
