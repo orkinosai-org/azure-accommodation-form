@@ -20,19 +20,19 @@
             <h2>Step 1: Email Verification</h2>
             <p>Please enter your email address to begin the application process.</p>
             
-            <EditForm EditContext="@emailEditContext" OnValidSubmit="@InitializeForm" FormName="EmailEntry">
+            <EditForm Model="@emailModel" OnValidSubmit="@InitializeForm" FormName="EmailEntry">
                 <DataAnnotationsValidator />
                 <ValidationSummary />
                 
                 <div class="form-group">
                     <label for="email">Email Address *</label>
-                    <InputText id="email" @bind-Value="emailModel.Email" @oninput="@((e) => OnEmailChanged(e.Value?.ToString()))" class="form-control" type="email" placeholder="your.email@example.com" />
+                    <InputText id="email" @bind-Value="emailModel.Email" class="form-control" type="email" placeholder="your.email@example.com" />
                     <ValidationMessage For="@(() => emailModel.Email)" />
                 </div>
                 
                 <div class="form-group">
                     <label for="confirmEmail">Confirm Email Address *</label>
-                    <InputText id="confirmEmail" @bind-Value="emailModel.ConfirmEmail" @oninput="@((e) => OnConfirmEmailChanged(e.Value?.ToString()))" class="form-control" type="email" placeholder="Confirm your email" @oncontextmenu:preventDefault="true" />
+                    <InputText id="confirmEmail" @bind-Value="emailModel.ConfirmEmail" class="form-control" type="email" placeholder="Confirm your email" @oncontextmenu:preventDefault="true" />
                     <ValidationMessage For="@(() => emailModel.ConfirmEmail)" />
                 </div>
                 
@@ -42,7 +42,7 @@
                         <div class="captcha-question">
                             <strong>@captchaQuestion</strong>
                         </div>
-                        <InputNumber id="captcha" @bind-Value="emailModel.CaptchaAnswer" @oninput="@((e) => OnCaptchaChanged(e.Value?.ToString()))" class="form-control" placeholder="Enter answer" />
+                        <InputNumber id="captcha" @bind-Value="emailModel.CaptchaAnswer" class="form-control" placeholder="Enter answer" />
                         <ValidationMessage For="@(() => emailModel.CaptchaAnswer)" />
                     </div>
                 </div>
@@ -857,7 +857,6 @@
     private EmailEntryModel emailModel = new();
     private EmailVerificationModel verificationModel = new();
     private EditContext editContext = default!;
-    private EditContext? emailEditContext;
 
     
     private FormStep currentStep = FormStep.EmailEntry;
@@ -885,7 +884,6 @@
     protected override void OnInitialized()
     {
         editContext = new EditContext(formData);
-        emailEditContext = new EditContext(emailModel);
         GenerateNewCaptcha();
     }
 
@@ -1119,31 +1117,6 @@
         
         captchaAnswer = num1 + num2;
         captchaQuestion = $"What is {num1} + {num2}?";
-    }
-
-    private void OnEmailChanged(string? value)
-    {
-        emailModel.Email = value ?? string.Empty;
-        emailEditContext?.NotifyFieldChanged(new FieldIdentifier(emailModel, nameof(emailModel.Email)));
-    }
-
-    private void OnConfirmEmailChanged(string? value)
-    {
-        emailModel.ConfirmEmail = value ?? string.Empty;
-        emailEditContext?.NotifyFieldChanged(new FieldIdentifier(emailModel, nameof(emailModel.ConfirmEmail)));
-    }
-
-    private void OnCaptchaChanged(string? value)
-    {
-        if (int.TryParse(value, out int result))
-        {
-            emailModel.CaptchaAnswer = result;
-        }
-        else
-        {
-            emailModel.CaptchaAnswer = null;
-        }
-        emailEditContext?.NotifyFieldChanged(new FieldIdentifier(emailModel, nameof(emailModel.CaptchaAnswer)));
     }
 
 
