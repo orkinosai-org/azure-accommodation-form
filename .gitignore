@@ -43,3 +43,7 @@ BlazorApp/BlazorApp.csproj.user
 
 # Debug PDF files (for local debugging only)
 KitDocuments_Debug/
+
+# Test build artifacts
+Tests/bin/
+Tests/obj/
