@@ -118,16 +118,16 @@ public class EmailValidationTest
     // Copy of EmailEntryModel for testing (to avoid circular dependencies)
     private class EmailEntryModel
     {
-        [Required]
+        [Required(ErrorMessage = "The Email field is required.")]
         [EmailAddress]
         public string Email { get; set; } = string.Empty;
 
-        [Required]
+        [Required(ErrorMessage = "The ConfirmEmail field is required.")]
         [EmailAddress]
         [EmailEquality(nameof(Email), ErrorMessage = "Email addresses do not match.")]
         public string ConfirmEmail { get; set; } = string.Empty;
 
-        [Required]
+        [Required(ErrorMessage = "Please answer the security question correctly.")]
         [Range(1, 100, ErrorMessage = "Please answer the security question correctly.")]
         public int? CaptchaAnswer { get; set; }
     }

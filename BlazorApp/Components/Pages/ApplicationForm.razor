@@ -20,36 +20,19 @@
             <h2>Step 1: Email Verification</h2>
             <p>Please enter your email address to begin the application process.</p>
             
-            <EditForm Model="@emailModel" OnSubmit="@InitializeForm" FormName="EmailEntry">
+            <EditForm Model="@emailModel" OnValidSubmit="@InitializeForm" FormName="EmailEntry">
+                <DataAnnotationsValidator />
                 
                 <div class="form-group">
                     <label for="email">Email Address *</label>
                     <InputText id="email" @bind-Value="emailModel.Email" class="form-control" type="email" placeholder="your.email@example.com" />
-                    @if (emailSubmitAttempted && !IsValidEmail(emailModel.Email))
-                    {
-                        <div class="validation-message">The Email field is required.</div>
-                    }
-                    else if (emailSubmitAttempted && !string.IsNullOrEmpty(emailModel.Email) && !IsValidEmailFormat(emailModel.Email))
-                    {
-                        <div class="validation-message">The Email field is not a valid e-mail address.</div>
-                    }
+                    <ValidationMessage For="@(() => emailModel.Email)" />
                 </div>
                 
                 <div class="form-group">
                     <label for="confirmEmail">Confirm Email Address *</label>
                     <InputText id="confirmEmail" @bind-Value="emailModel.ConfirmEmail" class="form-control" type="email" placeholder="Confirm your email" @oncontextmenu:preventDefault="true" />
-                    @if (emailSubmitAttempted && !IsValidEmail(emailModel.ConfirmEmail))
-                    {
-                        <div class="validation-message">The ConfirmEmail field is required.</div>
-                    }
-                    else if (emailSubmitAttempted && !string.IsNullOrEmpty(emailModel.ConfirmEmail) && !IsValidEmailFormat(emailModel.ConfirmEmail))
-                    {
-                        <div class="validation-message">The ConfirmEmail field is not a valid e-mail address.</div>
-                    }
-                    else if (emailSubmitAttempted && !string.IsNullOrEmpty(emailModel.Email) && !string.IsNullOrEmpty(emailModel.ConfirmEmail) && emailModel.Email != emailModel.ConfirmEmail)
-                    {
-                        <div class="validation-message">Email addresses do not match.</div>
-                    }
+                    <ValidationMessage For="@(() => emailModel.ConfirmEmail)" />
                 </div>
                 
                 <div class="form-group">
@@ -59,10 +42,7 @@
                             <strong>@captchaQuestion</strong>
                         </div>
                         <InputNumber id="captcha" @bind-Value="emailModel.CaptchaAnswer" class="form-control" placeholder="Enter answer" />
-                        @if (emailSubmitAttempted && (!emailModel.CaptchaAnswer.HasValue || emailModel.CaptchaAnswer.Value < 1 || emailModel.CaptchaAnswer.Value > 100))
-                        {
-                            <div class="validation-message">Please answer the security question correctly.</div>
-                        }
+                        <ValidationMessage For="@(() => emailModel.CaptchaAnswer)" />
                     </div>
                 </div>
                 
@@ -890,9 +870,6 @@
     // CAPTCHA functionality
     private string captchaQuestion = string.Empty;
     private int captchaAnswer = 0;
-    
-    // Email validation state tracking
-    private bool emailSubmitAttempted = false;
 
     public enum FormStep
     {
@@ -923,16 +900,8 @@
         }
     }
 
-    private async Task InitializeForm(EditContext context)
+    private async Task InitializeForm()
     {
-        emailSubmitAttempted = true;
-        StateHasChanged();
-
-        // Perform manual validation since we removed DataAnnotationsValidator
-        if (!IsValidEmailForm())
-        {
-            return; // Validation errors will be shown due to emailSubmitAttempted = true
-        }
 
         // Validate CAPTCHA
         if (emailModel.CaptchaAnswer != captchaAnswer)
@@ -1148,74 +1117,21 @@
         captchaQuestion = $"What is {num1} + {num2}?";
     }
 
-    // Email validation helper methods
-    private bool IsValidEmail(string email)
-    {
-        return !string.IsNullOrEmpty(email);
-    }
-
-    private bool IsValidEmailFormat(string email)
-    {
-        if (string.IsNullOrEmpty(email))
-            return false;
-            
-        try
-        {
-            var addr = new System.Net.Mail.MailAddress(email);
-            return addr.Address == email;
-        }
-        catch
-        {
-            return false;
-        }
-    }
-
-    private bool IsValidEmailForm()
-    {
-        bool isValid = true;
-
-        // Check email
-        if (!IsValidEmail(emailModel.Email) || !IsValidEmailFormat(emailModel.Email))
-        {
-            isValid = false;
-        }
-
-        // Check confirm email
-        if (!IsValidEmail(emailModel.ConfirmEmail) || !IsValidEmailFormat(emailModel.ConfirmEmail))
-        {
-            isValid = false;
-        }
-
-        // Check email equality
-        if (!string.IsNullOrEmpty(emailModel.Email) && !string.IsNullOrEmpty(emailModel.ConfirmEmail) && emailModel.Email != emailModel.ConfirmEmail)
-        {
-            isValid = false;
-        }
-
-        // Check captcha
-        if (!emailModel.CaptchaAnswer.HasValue || emailModel.CaptchaAnswer.Value < 1 || emailModel.CaptchaAnswer.Value > 100)
-        {
-            isValid = false;
-        }
-
-        return isValid;
-    }
-
 
 
     // Models for form steps
     public class EmailEntryModel
     {
-        [Required]
+        [Required(ErrorMessage = "The Email field is required.")]
         [EmailAddress]
         public string Email { get; set; } = string.Empty;
 
-        [Required]
+        [Required(ErrorMessage = "The ConfirmEmail field is required.")]
         [EmailAddress]
         [EmailEquality(nameof(Email), ErrorMessage = "Email addresses do not match.")]
         public string ConfirmEmail { get; set; } = string.Empty;
 
-        [Required]
+        [Required(ErrorMessage = "Please answer the security question correctly.")]
         [Range(1, 100, ErrorMessage = "Please answer the security question correctly.")]
         public int? CaptchaAnswer { get; set; }
     }
