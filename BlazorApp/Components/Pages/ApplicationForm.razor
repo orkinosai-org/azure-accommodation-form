@@ -914,6 +914,8 @@
     
     // DEVELOPMENT/TESTING MODE: When true, skips email validation and verification
     // Set to true when email validation is commented out for development/testing
+    // WORKAROUND: To revert to production mode, set this to false and uncomment
+    // the validation code in the InitializeForm method and email field validation
     private bool developmentMode = true;
 
     public enum FormStep
@@ -947,6 +949,10 @@
 
     private async Task InitializeForm(EditContext context)
     {
+        // DEVELOPMENT/TESTING WORKAROUND: This method has been modified to bypass
+        // email validation and verification when developmentMode = true.
+        // This allows the form to proceed without valid email input for testing purposes.
+        
         // DEVELOPMENT/TESTING MODE: Skip email validation and API calls
         if (developmentMode)
         {
@@ -1123,6 +1129,8 @@
         {
             FormSubmissionResponse response;
             
+            // DEVELOPMENT/TESTING WORKAROUND: Use direct submission API when in development mode
+            // to bypass email verification requirements
             if (developmentMode)
             {
                 // DEVELOPMENT MODE: Use direct submission API (no email verification required)
