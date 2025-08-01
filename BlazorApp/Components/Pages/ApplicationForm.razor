@@ -5,7 +5,6 @@
 @using BlazorApp.Validation
 @using Microsoft.AspNetCore.Components.Forms
 @using System.ComponentModel.DataAnnotations
-@using System.Linq.Expressions
 @inject IFormApiService FormApiService
 @inject IJSRuntime JSRuntime
 
@@ -27,13 +26,13 @@
                 
                 <div class="form-group">
                     <label for="email">Email Address *</label>
-                    <InputText id="email" @bind-Value="emailModel.Email" class="form-control" type="email" placeholder="your.email@example.com" />
+                    <InputText id="email" @bind-Value="emailModel.Email" @oninput="@((e) => OnEmailChanged(e.Value?.ToString()))" class="form-control" type="email" placeholder="your.email@example.com" />
                     <ValidationMessage For="@(() => emailModel.Email)" />
                 </div>
                 
                 <div class="form-group">
                     <label for="confirmEmail">Confirm Email Address *</label>
-                    <InputText id="confirmEmail" @bind-Value="emailModel.ConfirmEmail" class="form-control" type="email" placeholder="Confirm your email" @oncontextmenu:preventDefault="true" />
+                    <InputText id="confirmEmail" @bind-Value="emailModel.ConfirmEmail" @oninput="@((e) => OnConfirmEmailChanged(e.Value?.ToString()))" class="form-control" type="email" placeholder="Confirm your email" @oncontextmenu:preventDefault="true" />
                     <ValidationMessage For="@(() => emailModel.ConfirmEmail)" />
                 </div>
                 
@@ -43,7 +42,7 @@
                         <div class="captcha-question">
                             <strong>@captchaQuestion</strong>
                         </div>
-                        <InputNumber id="captcha" @bind-Value="emailModel.CaptchaAnswer" class="form-control" placeholder="Enter answer" />
+                        <InputNumber id="captcha" @bind-Value="emailModel.CaptchaAnswer" @oninput="@((e) => OnCaptchaChanged(e.Value?.ToString()))" class="form-control" placeholder="Enter answer" />
                         <ValidationMessage For="@(() => emailModel.CaptchaAnswer)" />
                     </div>
                 </div>
@@ -858,7 +857,8 @@
     private EmailEntryModel emailModel = new();
     private EmailVerificationModel verificationModel = new();
     private EditContext editContext = default!;
-    private EditContext emailEditContext = default!;
+    private EditContext? emailEditContext;
+
     
     private FormStep currentStep = FormStep.EmailEntry;
     private bool isProcessing = false;
@@ -1121,12 +1121,32 @@
         captchaQuestion = $"What is {num1} + {num2}?";
     }
 
-    private void NotifyFieldChanged<T>(Expression<Func<T>> field)
+    private void OnEmailChanged(string? value)
     {
-        var fieldIdentifier = FieldIdentifier.Create(field);
-        emailEditContext.NotifyFieldChanged(fieldIdentifier);
-        StateHasChanged();
+        emailModel.Email = value ?? string.Empty;
+        emailEditContext?.NotifyFieldChanged(new FieldIdentifier(emailModel, nameof(emailModel.Email)));
     }
+
+    private void OnConfirmEmailChanged(string? value)
+    {
+        emailModel.ConfirmEmail = value ?? string.Empty;
+        emailEditContext?.NotifyFieldChanged(new FieldIdentifier(emailModel, nameof(emailModel.ConfirmEmail)));
+    }
+
+    private void OnCaptchaChanged(string? value)
+    {
+        if (int.TryParse(value, out int result))
+        {
+            emailModel.CaptchaAnswer = result;
+        }
+        else
+        {
+            emailModel.CaptchaAnswer = null;
+        }
+        emailEditContext?.NotifyFieldChanged(new FieldIdentifier(emailModel, nameof(emailModel.CaptchaAnswer)));
+    }
+
+
 
     // Models for form steps
     public class EmailEntryModel
