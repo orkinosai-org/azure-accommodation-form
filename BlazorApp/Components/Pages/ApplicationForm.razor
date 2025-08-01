@@ -149,7 +149,7 @@
                 <span>✅ Email Verified</span> → <span class="current-step">📝 Complete Form</span> → <span>📄 Submit</span>
             </div>
             
-            <EditForm EditContext="@editContext" OnValidSubmit="@HandleSubmit" FormName="ApplicationForm">
+            <EditForm EditContext="@editContext" Enhance="false">
                 <DataAnnotationsValidator />
                 <ValidationSummary />
 
@@ -667,7 +667,7 @@
                     </div>
                 </fieldset>
 
-                <button type="submit" class="btn btn-success btn-lg" disabled="@isProcessing">
+                <button type="button" @onclick="@HandleSubmit" class="btn btn-success btn-lg" disabled="@isProcessing">
                     @if (isProcessing)
                     {
                         <span>Submitting...</span>
@@ -1112,10 +1112,10 @@
         }
     }
 
-    private async Task HandleSubmit(EditContext context)
+    private async Task HandleSubmit()
     {
         Console.WriteLine("HandleSubmit fired");
-        if (!context.Validate())
+        if (!editContext.Validate())
         {
             // Validation errors will be automatically displayed
             return;
