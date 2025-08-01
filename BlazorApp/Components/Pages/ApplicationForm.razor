@@ -149,7 +149,7 @@
                 <span>✅ Email Verified</span> → <span class="current-step">📝 Complete Form</span> → <span>📄 Submit</span>
             </div>
             
-            <EditForm Model="@formData" EditContext="@editContext" OnValidSubmit="@HandleSubmit" FormName="ApplicationForm">
+            <EditForm EditContext="@editContext" OnValidSubmit="@HandleSubmit" FormName="ApplicationForm">
                 <DataAnnotationsValidator />
                 <ValidationSummary />
 
@@ -911,6 +911,12 @@
     
     // Email validation state tracking
     private bool emailSubmitAttempted = false;
+    
+    // DEVELOPMENT/TESTING MODE: When true, skips email validation and verification
+    // Set to true when email validation is commented out for development/testing
+    // WORKAROUND: To revert to production mode, set this to false and uncomment
+    // the validation code in the InitializeForm method and email field validation
+    private bool developmentMode = true;
 
     public enum FormStep
     {
@@ -943,6 +949,43 @@
 
     private async Task InitializeForm(EditContext context)
     {
+        // DEVELOPMENT/TESTING WORKAROUND: This method has been modified to bypass
+        // email validation and verification when developmentMode = true.
+        // This allows the form to proceed without valid email input for testing purposes.
+        
+        // DEVELOPMENT/TESTING MODE: Skip email validation and API calls
+        if (developmentMode)
+        {
+            isProcessing = true;
+            statusMessage = string.Empty;
+            StateHasChanged();
+
+            try
+            {
+                // Generate a fake submission ID for development/testing
+                currentSubmissionId = Guid.NewGuid().ToString();
+                
+                // Use placeholder email if none provided
+                var emailToUse = string.IsNullOrEmpty(emailModel.Email) ? "development@test.com" : emailModel.Email;
+                formData.TenantDetails.Email = emailToUse;
+                
+                // Skip email verification step and go directly to form filling
+                currentStep = FormStep.FormFilling;
+                ShowSuccess("Development mode: Email verification bypassed. You can now complete the form.");
+            }
+            catch (Exception ex)
+            {
+                ShowError("An error occurred in development mode. Please try again.");
+            }
+            finally
+            {
+                isProcessing = false;
+                StateHasChanged();
+            }
+            return;
+        }
+
+        // PRODUCTION MODE: Full email validation and verification
         // TEMPORARILY COMMENTED OUT FOR DEVELOPMENT/TESTING - VALIDATION DISABLED
         // Uncomment the following lines to restore validation:
         /*
@@ -1084,7 +1127,20 @@
 
         try
         {
-            var response = await FormApiService.SubmitFormAsync(currentSubmissionId, formData);
+            FormSubmissionResponse response;
+            
+            // DEVELOPMENT/TESTING WORKAROUND: Use direct submission API when in development mode
+            // to bypass email verification requirements
+            if (developmentMode)
+            {
+                // DEVELOPMENT MODE: Use direct submission API (no email verification required)
+                response = await FormApiService.SubmitFormDirectAsync(formData);
+            }
+            else
+            {
+                // PRODUCTION MODE: Use standard submission with email verification
+                response = await FormApiService.SubmitFormAsync(currentSubmissionId, formData);
+            }
             
             if (response.Success)
             {
