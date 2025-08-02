@@ -151,6 +151,23 @@
             
             <EditForm EditContext="@editContext" OnValidSubmit="@HandleSubmit" Enhance="false">
                 <DataAnnotationsValidator />
+                
+                <!-- Enhanced Validation Summary with Debug Info -->
+                @if (developmentMode && editContext.GetValidationMessages().Any())
+                {
+                    <div class="alert alert-danger mt-3" style="border: 2px solid #dc3545;">
+                        <h5>⚠️ Validation Errors (Development Mode)</h5>
+                        <p><strong>Form cannot be submitted until these errors are resolved:</strong></p>
+                        <ul>
+                            @foreach (var message in editContext.GetValidationMessages())
+                            {
+                                <li>@message</li>
+                            }
+                        </ul>
+                        <hr>
+                        <p><small><strong>Debug:</strong> Use the "🔧 Force Submit (Dev Mode)" button below to bypass validation for testing.</small></p>
+                    </div>
+                }
                 <ValidationSummary />
 
                 <!-- 1. Tenant Details Section -->
@@ -667,16 +684,41 @@
                     </div>
                 </fieldset>
 
-                <button type="button" @onclick="@HandleSubmit" class="btn btn-success btn-lg" disabled="@isProcessing">
+                <button type="submit" class="btn btn-success btn-lg" disabled="@isProcessing">
                     @if (isProcessing)
                     {
-                        <span>Submitting...</span>
+                        <span>⏳ Submitting...</span>
                     }
                     else
                     {
-                        <span>Submit Application</span>
+                        <span>📝 Submit Application</span>
                     }
                 </button>
+                
+                <!-- Alternative submit button that bypasses validation for development/testing -->
+                @if (developmentMode)
+                {
+                    <div class="mt-3">
+                        <button type="button" @onclick="@HandleSubmit" class="btn btn-warning btn-lg me-2" disabled="@isProcessing">
+                            @if (isProcessing)
+                            {
+                                <span>⏳ Submitting...</span>
+                            }
+                            else
+                            {
+                                <span>🔧 Force Submit (Dev Mode)</span>
+                            }
+                        </button>
+                        
+                        <button type="button" @onclick="@FillTestData" class="btn btn-info btn-lg" disabled="@isProcessing">
+                            <span>📝 Fill Test Data</span>
+                        </button>
+                        
+                        <button type="button" @onclick="@ShowValidationErrors" class="btn btn-secondary btn-lg ms-2">
+                            <span>🔍 Check Validation</span>
+                        </button>
+                    </div>
+                }
             </EditForm>
         </div>
     }
@@ -696,13 +738,98 @@
         </div>
     }
 
+    <!-- Enhanced Progress Tracking and Debug Information -->
+    @if (isProcessing && currentStep == FormStep.FormFilling)
+    {
+        <div class="alert alert-info mt-3" style="border: 2px solid #28a745; background-color: #d4edda;">
+            <h4>🔄 Processing Your Application</h4>
+            <div class="progress-steps">
+                @foreach (var step in submissionProgress)
+                {
+                    <div class="progress-step @(step.Status == "completed" ? "completed" : step.Status == "processing" ? "processing" : "pending")">
+                        <span class="step-icon">
+                            @if (step.Status == "completed")
+                            {
+                                <text>✅</text>
+                            }
+                            else if (step.Status == "processing")
+                            {
+                                <text>⏳</text>
+                            }
+                            else if (step.Status == "failed")
+                            {
+                                <text>❌</text>
+                            }
+                            else
+                            {
+                                <text>⭕</text>
+                            }
+                        </span>
+                        <span class="step-text">@step.Description</span>
+                    </div>
+                }
+            </div>
+            @if (!string.IsNullOrEmpty(currentProcessingStep))
+            {
+                <p class="mt-2"><strong>Current Step:</strong> @currentProcessingStep</p>
+            }
+        </div>
+    }
+
+    <!-- Debug Information Panel -->
+    @if (developmentMode && debugMessages.Any())
+    {
+        <div class="alert alert-warning mt-3" style="border: 2px solid #ffc107; background-color: #fff3cd;">
+            <h5>🔧 Debug Information</h5>
+            <div class="debug-panel" style="max-height: 300px; overflow-y: auto; font-family: monospace; font-size: 12px;">
+                @foreach (var debug in debugMessages.TakeLast(20))
+                {
+                    <div class="debug-entry @debug.Level" style="margin: 2px 0; padding: 2px 5px; border-left: 3px solid @(debug.Level == "error" ? "#dc3545" : debug.Level == "warning" ? "#ffc107" : "#28a745");">
+                        <span style="color: #666;">[@debug.Timestamp.ToString("HH:mm:ss")]</span>
+                        <span>@debug.Message</span>
+                    </div>
+                }
+            </div>
+            <button type="button" class="btn btn-sm btn-outline-secondary mt-2" @onclick="ClearDebugMessages">Clear Debug Messages</button>
+        </div>
+    }
+
     @if (showSuccess)
     {
-        <div class="alert alert-success mt-3">
-            <h4>Success!</h4>
+        <div class="alert alert-success mt-3" style="border: 2px solid #28a745; background-color: #d4edda; font-weight: bold;">
+            <h4>✅ Success!</h4>
             <p>Your accommodation application has been submitted successfully!</p>
             <p><strong>Submission ID:</strong> @currentSubmissionId</p>
             <p>You should receive a confirmation email shortly with your completed application form attached.</p>
+            @if (developmentMode)
+            {
+                <hr>
+                <h6>Debug Information:</h6>
+                <ul style="font-size: 12px; font-family: monospace;">
+                    <li>Submission Time: @DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")</li>
+                    <li>Development Mode: @developmentMode</li>
+                    <li>User Email: @formData.TenantDetails.Email</li>
+                    <li>Form Valid: @editContext.IsModified()</li>
+                </ul>
+            }
+        </div>
+    }
+
+    @if (hasSubmissionError)
+    {
+        <div class="alert alert-danger mt-3" style="border: 2px solid #dc3545; background-color: #f8d7da; font-weight: bold;">
+            <h4>❌ Submission Failed</h4>
+            <p>There was an error submitting your application. Please try again.</p>
+            @if (!string.IsNullOrEmpty(submissionErrorDetails))
+            {
+                <p><strong>Error Details:</strong> @submissionErrorDetails</p>
+            }
+            @if (developmentMode)
+            {
+                <hr>
+                <h6>Debug Information:</h6>
+                <div style="font-size: 12px; font-family: monospace; white-space: pre-wrap;">@submissionErrorDetails</div>
+            }
         </div>
     }
 </div>
@@ -875,6 +1002,86 @@
         margin: 0;
         padding-left: 20px;
     }
+
+    /* Progress tracking styles */
+    .progress-steps {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin: 15px 0;
+    }
+
+    .progress-step {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px;
+        border-radius: 4px;
+        transition: all 0.3s ease;
+    }
+
+    .progress-step.pending {
+        background-color: #f8f9fa;
+        color: #6c757d;
+    }
+
+    .progress-step.processing {
+        background-color: #fff3cd;
+        color: #856404;
+        animation: pulse 1.5s infinite;
+    }
+
+    .progress-step.completed {
+        background-color: #d4edda;
+        color: #155724;
+    }
+
+    .progress-step.failed {
+        background-color: #f8d7da;
+        color: #721c24;
+    }
+
+    .step-icon {
+        font-size: 16px;
+        width: 20px;
+        text-align: center;
+    }
+
+    .step-text {
+        font-weight: 500;
+    }
+
+    @@keyframes pulse {
+        0% { opacity: 1; }
+        50% { opacity: 0.6; }
+        100% { opacity: 1; }
+    }
+
+    /* Debug panel styles */
+    .debug-panel {
+        border: 1px solid #ffc107;
+        border-radius: 4px;
+        background-color: #fffacd;
+        padding: 10px;
+    }
+
+    .debug-entry {
+        font-size: 11px;
+        margin: 1px 0;
+        word-wrap: break-word;
+    }
+
+    .debug-entry.error {
+        background-color: rgba(220, 53, 69, 0.1);
+    }
+
+    .debug-entry.warning {
+        background-color: rgba(255, 193, 7, 0.1);
+    }
+
+    .debug-entry.info {
+        background-color: rgba(40, 167, 69, 0.1);
+    }
 </style>
 
 <script>
@@ -925,6 +1132,13 @@
     // WORKAROUND: To revert to production mode, set this to false and uncomment
     // the validation code in the InitializeForm method and email field validation
     private bool developmentMode = true;
+    
+    // Enhanced UI feedback and debugging
+    private bool hasSubmissionError = false;
+    private string submissionErrorDetails = string.Empty;
+    private string currentProcessingStep = string.Empty;
+    private List<SubmissionProgressStep> submissionProgress = new();
+    private List<DebugMessage> debugMessages = new();
 
     public enum FormStep
     {
@@ -1122,12 +1336,32 @@
 
     private async Task HandleSubmit()
     {
+        // Clear previous error state
+        hasSubmissionError = false;
+        submissionErrorDetails = string.Empty;
+        
+        // Initialize progress tracking
+        InitializeSubmissionProgress();
+        
+        // Add debug message for development mode
+        AddDebugMessage("=== FORM SUBMISSION STARTED ===", "info");
+        AddDebugMessage($"HandleSubmit fired at {DateTime.Now:yyyy-MM-dd HH:mm:ss}", "info");
+        AddDebugMessage($"Development Mode: {developmentMode}", "info");
+        AddDebugMessage($"Current Step: {currentStep}", "info");
+        AddDebugMessage($"User Email: {formData.TenantDetails.Email}", "info");
+        
         // DEBUG: Enhanced form submission logging for troubleshooting
         Console.WriteLine("=== FORM SUBMISSION DEBUG ===");
         Console.WriteLine($"HandleSubmit fired at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
         Console.WriteLine($"Development Mode: {developmentMode}");
         Console.WriteLine($"Current Step: {currentStep}");
         Console.WriteLine($"User Email: {formData.TenantDetails.Email}");
+        
+        // Update progress
+        UpdateProgress("form-validation", "processing");
+        currentProcessingStep = "Validating form data...";
+        StateHasChanged();
+        await Task.Delay(500); // Give UI time to update
         
         // DEBUG: Additional validation debugging
         Console.WriteLine("=== FORM VALIDATION CHECK ===");
@@ -1141,37 +1375,65 @@
         Console.WriteLine($"- Date: '{formData.ConsentAndDeclaration.Date}'");
         Console.WriteLine($"- Print Name: '{formData.ConsentAndDeclaration.PrintName}'");
         
+        AddDebugMessage("=== FORM VALIDATION CHECK ===", "info");
+        AddDebugMessage($"Full Name: '{formData.TenantDetails.FullName}'", "info");
+        AddDebugMessage($"Email: '{formData.TenantDetails.Email}'", "info");
+        AddDebugMessage($"Telephone: '{formData.TenantDetails.Telephone}'", "info");
+        AddDebugMessage($"Consent: {formData.ConsentAndDeclaration.ConsentGiven}", "info");
+        
+        bool validationPassed = true;
         if (!editContext.Validate())
         {
             Console.WriteLine("=== FORM VALIDATION FAILED ===");
             var validationMessages = editContext.GetValidationMessages();
             Console.WriteLine($"Number of validation errors: {validationMessages.Count()}");
+            
+            AddDebugMessage("=== FORM VALIDATION FAILED ===", "error");
+            AddDebugMessage($"Number of validation errors: {validationMessages.Count()}", "error");
+            
             foreach (var message in validationMessages)
             {
                 Console.WriteLine($"Validation Error: {message}");
+                AddDebugMessage($"Validation Error: {message}", "error");
             }
             
-            // DEBUG: Show which specific fields have validation errors
-            var allValidationMessages = editContext.GetValidationMessages();
-            if (allValidationMessages.Any())
+            UpdateProgress("form-validation", "failed");
+            
+            // In development mode, allow submission even with validation errors
+            if (developmentMode)
             {
-                Console.WriteLine("All validation errors:");
-                foreach (var error in allValidationMessages)
-                {
-                    Console.WriteLine($"  - {error}");
-                }
+                AddDebugMessage("⚠️ Development Mode: Proceeding despite validation errors", "warning");
+                Console.WriteLine("⚠️ Development Mode: Proceeding despite validation errors");
+                UpdateProgress("form-validation", "completed");
             }
-            
-            // Validation errors will be automatically displayed
-            return;
+            else
+            {
+                validationPassed = false;
+                currentProcessingStep = "Form validation failed. Please check required fields.";
+                hasSubmissionError = true;
+                submissionErrorDetails = string.Join("; ", validationMessages);
+                isProcessing = false;
+                StateHasChanged();
+                return;
+            }
+        }
+        else
+        {
+            Console.WriteLine("=== FORM VALIDATION PASSED ===");
+            AddDebugMessage("=== FORM VALIDATION PASSED ===", "info");
+            UpdateProgress("form-validation", "completed");
         }
 
-        Console.WriteLine("=== FORM VALIDATION PASSED ===");
         Console.WriteLine("Starting form submission process...");
+        AddDebugMessage("Starting form submission process...", "info");
 
         isProcessing = true;
         statusMessage = string.Empty;
+        
+        UpdateProgress("api-call", "processing");
+        currentProcessingStep = "Sending form data to server...";
         StateHasChanged();
+        await Task.Delay(500); // Give UI time to update
 
         try
         {
@@ -1183,34 +1445,60 @@
             {
                 Console.WriteLine("=== DEVELOPMENT MODE SUBMISSION ===");
                 Console.WriteLine("Using direct submission API (no email verification required)");
+                AddDebugMessage("=== DEVELOPMENT MODE SUBMISSION ===", "info");
+                AddDebugMessage("Using direct submission API", "info");
                 
                 // DEVELOPMENT MODE: Use direct submission API (no email verification required)
                 response = await FormApiService.SubmitFormDirectAsync(formData);
                 
                 Console.WriteLine($"Direct submission response - Success: {response.Success}, Message: {response.Message}");
+                AddDebugMessage($"API Response - Success: {response.Success}", response.Success ? "info" : "error");
+                AddDebugMessage($"API Message: {response.Message}", response.Success ? "info" : "error");
             }
             else
             {
                 Console.WriteLine("=== PRODUCTION MODE SUBMISSION ===");
                 Console.WriteLine($"Using standard submission with email verification, SubmissionId: {currentSubmissionId}");
+                AddDebugMessage("=== PRODUCTION MODE SUBMISSION ===", "info");
+                AddDebugMessage($"Using email-verified submission, ID: {currentSubmissionId}", "info");
                 
                 // PRODUCTION MODE: Use standard submission with email verification
                 response = await FormApiService.SubmitFormAsync(currentSubmissionId, formData);
                 
                 Console.WriteLine($"Standard submission response - Success: {response.Success}, Message: {response.Message}");
+                AddDebugMessage($"API Response - Success: {response.Success}", response.Success ? "info" : "error");
+                AddDebugMessage($"API Message: {response.Message}", response.Success ? "info" : "error");
             }
+            
+            UpdateProgress("api-call", response.Success ? "completed" : "failed");
             
             if (response.Success)
             {
                 Console.WriteLine("=== FORM SUBMISSION SUCCESSFUL ===");
                 Console.WriteLine($"Success message: {response.Message}");
+                AddDebugMessage("=== FORM SUBMISSION SUCCESSFUL ===", "info");
+                AddDebugMessage($"Success message: {response.Message}", "info");
+                
+                UpdateProgress("pdf-generation", "completed");
+                UpdateProgress("email-sending", "completed");
+                UpdateProgress("blob-storage", "completed");
+                
                 showSuccess = true;
+                hasSubmissionError = false;
+                currentProcessingStep = "Application submitted successfully!";
                 ShowSuccess("Form submitted successfully!");
             }
             else
             {
                 Console.WriteLine("=== FORM SUBMISSION FAILED ===");
                 Console.WriteLine($"Error message: {response.Message}");
+                AddDebugMessage("=== FORM SUBMISSION FAILED ===", "error");
+                AddDebugMessage($"Error message: {response.Message}", "error");
+                
+                UpdateProgress("api-call", "failed");
+                hasSubmissionError = true;
+                submissionErrorDetails = response.Message;
+                currentProcessingStep = "Submission failed. Please try again.";
                 ShowError(response.Message);
             }
         }
@@ -1220,15 +1508,124 @@
             Console.WriteLine($"Exception Type: {ex.GetType().Name}");
             Console.WriteLine($"Exception Message: {ex.Message}");
             Console.WriteLine($"Stack Trace: {ex.StackTrace}");
+            
+            AddDebugMessage("=== FORM SUBMISSION EXCEPTION ===", "error");
+            AddDebugMessage($"Exception: {ex.GetType().Name}", "error");
+            AddDebugMessage($"Message: {ex.Message}", "error");
+            
+            UpdateProgress("api-call", "failed");
+            hasSubmissionError = true;
+            submissionErrorDetails = $"{ex.GetType().Name}: {ex.Message}";
+            currentProcessingStep = "An error occurred during submission.";
             ShowError("An error occurred while submitting the form. Please try again.");
         }
         finally
         {
             Console.WriteLine("=== FORM SUBMISSION CLEANUP ===");
             Console.WriteLine("Resetting processing state");
+            AddDebugMessage("=== FORM SUBMISSION CLEANUP ===", "info");
+            AddDebugMessage("Resetting processing state", "info");
+            
             isProcessing = false;
             StateHasChanged();
         }
+    }
+    
+    private void InitializeSubmissionProgress()
+    {
+        submissionProgress = new List<SubmissionProgressStep>
+        {
+            new SubmissionProgressStep { Id = "form-validation", Description = "Validating form data", Status = "pending" },
+            new SubmissionProgressStep { Id = "api-call", Description = "Sending data to server", Status = "pending" },
+            new SubmissionProgressStep { Id = "pdf-generation", Description = "Generating PDF document", Status = "pending" },
+            new SubmissionProgressStep { Id = "email-sending", Description = "Sending confirmation emails", Status = "pending" },
+            new SubmissionProgressStep { Id = "blob-storage", Description = "Storing documents", Status = "pending" }
+        };
+    }
+    
+    private void UpdateProgress(string stepId, string status)
+    {
+        var step = submissionProgress.FirstOrDefault(s => s.Id == stepId);
+        if (step != null)
+        {
+            step.Status = status;
+        }
+    }
+    
+    private void AddDebugMessage(string message, string level = "info")
+    {
+        debugMessages.Add(new DebugMessage
+        {
+            Timestamp = DateTime.Now,
+            Message = message,
+            Level = level
+        });
+        
+        // Keep only the last 50 messages to prevent memory issues
+        if (debugMessages.Count > 50)
+        {
+            debugMessages.RemoveAt(0);
+        }
+    }
+    
+    private void ClearDebugMessages()
+    {
+        debugMessages.Clear();
+        StateHasChanged();
+    }
+    
+    private void FillTestData()
+    {
+        AddDebugMessage("Filling test data for development testing...", "info");
+        
+        // Fill required fields
+        formData.TenantDetails.FullName = "John Test User";
+        formData.TenantDetails.DateOfBirth = DateTime.Now.AddYears(-25);
+        formData.TenantDetails.Email = "test@example.com";
+        formData.TenantDetails.Telephone = "+44 123 456 7890";
+        
+        // Fill consent and declaration
+        formData.ConsentAndDeclaration.ConsentGiven = true;
+        formData.ConsentAndDeclaration.Signature = "John Test User";
+        formData.ConsentAndDeclaration.Date = DateTime.Today;
+        formData.ConsentAndDeclaration.PrintName = "John Test User";
+        formData.ConsentAndDeclaration.DeclarationSignature = "John Test User";
+        formData.ConsentAndDeclaration.DeclarationDate = DateTime.Today;
+        formData.ConsentAndDeclaration.DeclarationPrintName = "John Test User";
+        
+        // Fill some declaration checkboxes
+        formData.ConsentAndDeclaration.Declaration.MainHome = true;
+        formData.ConsentAndDeclaration.Declaration.EnquiriesPermission = true;
+        formData.ConsentAndDeclaration.Declaration.CertifyNoJudgements = true;
+        formData.ConsentAndDeclaration.Declaration.CertifyNoHousingDebt = true;
+        formData.ConsentAndDeclaration.Declaration.CertifyNoLandlordDebt = true;
+        formData.ConsentAndDeclaration.Declaration.CertifyNoAbuse = true;
+        
+        AddDebugMessage("Test data filled successfully", "info");
+        StateHasChanged();
+    }
+    
+    private void ShowValidationErrors()
+    {
+        AddDebugMessage("Checking form validation...", "info");
+        
+        var isValid = editContext.Validate();
+        var validationMessages = editContext.GetValidationMessages().ToList();
+        
+        AddDebugMessage($"Form is valid: {isValid}", isValid ? "info" : "error");
+        AddDebugMessage($"Validation error count: {validationMessages.Count}", validationMessages.Any() ? "warning" : "info");
+        
+        foreach (var message in validationMessages)
+        {
+            AddDebugMessage($"Validation Error: {message}", "error");
+        }
+        
+        if (!validationMessages.Any())
+        {
+            AddDebugMessage("✅ No validation errors found - form is ready for submission!", "info");
+        }
+        
+        StateHasChanged();
     }
 
     private void ShowSuccess(string message)
@@ -1378,5 +1775,20 @@
         [StringLength(6, MinimumLength = 5)]
         [RegularExpression(@"^\d+$", ErrorMessage = "Please enter a valid numeric code")]
         public string Token { get; set; } = string.Empty;
+    }
+    
+    // Enhanced UI feedback classes
+    public class SubmissionProgressStep
+    {
+        public string Id { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        public string Status { get; set; } = "pending"; // pending, processing, completed, failed
+    }
+    
+    public class DebugMessage
+    {
+        public DateTime Timestamp { get; set; }
+        public string Message { get; set; } = string.Empty;
+        public string Level { get; set; } = "info"; // info, warning, error
     }
 }
