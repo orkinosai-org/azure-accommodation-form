@@ -153,7 +153,42 @@ public class FormApiService : IFormApiService
             {
                 Console.WriteLine("=== API CALL FAILED ===");
                 _logger.LogError("Failed to submit form: {StatusCode} - {Response}", response.StatusCode, responseJson);
-                return new FormSubmissionResponse { Success = false, Message = "Failed to submit form" };
+                
+                // Try to parse error response for more details
+                string errorMessage = "Failed to submit form";
+                try
+                {
+                    if (!string.IsNullOrEmpty(responseJson))
+                    {
+                        var errorResponse = JsonSerializer.Deserialize<FormSubmissionResponse>(responseJson, _jsonOptions);
+                        if (errorResponse != null && !string.IsNullOrEmpty(errorResponse.Message))
+                        {
+                            errorMessage = errorResponse.Message;
+                        }
+                    }
+                }
+                catch
+                {
+                    // If we can't parse the error response, check for validation errors
+                    if (responseJson.Contains("validation errors") || responseJson.Contains("errors"))
+                    {
+                        errorMessage = "Form validation failed - please check your input data";
+                    }
+                    else if (response.StatusCode == System.Net.HttpStatusCode.InternalServerError)
+                    {
+                        errorMessage = "Server error occurred during form submission";
+                    }
+                    else if (response.StatusCode == System.Net.HttpStatusCode.BadRequest)
+                    {
+                        errorMessage = "Invalid form data submitted";
+                    }
+                }
+                
+                Console.WriteLine($"Status Code: {response.StatusCode}");
+                Console.WriteLine($"Error Message: {errorMessage}");
+                Console.WriteLine($"Raw Response: {responseJson}");
+                
+                return new FormSubmissionResponse { Success = false, Message = errorMessage };
             }
         }
         catch (Exception ex)
@@ -203,7 +238,42 @@ public class FormApiService : IFormApiService
             {
                 Console.WriteLine("=== API CALL FAILED ===");
                 _logger.LogError("Failed to submit form directly: {StatusCode} - {Response}", response.StatusCode, responseJson);
-                return new FormSubmissionResponse { Success = false, Message = "Failed to submit form" };
+                
+                // Try to parse error response for more details
+                string errorMessage = "Failed to submit form";
+                try
+                {
+                    if (!string.IsNullOrEmpty(responseJson))
+                    {
+                        var errorResponse = JsonSerializer.Deserialize<FormSubmissionResponse>(responseJson, _jsonOptions);
+                        if (errorResponse != null && !string.IsNullOrEmpty(errorResponse.Message))
+                        {
+                            errorMessage = errorResponse.Message;
+                        }
+                    }
+                }
+                catch
+                {
+                    // If we can't parse the error response, check for validation errors
+                    if (responseJson.Contains("validation errors") || responseJson.Contains("errors"))
+                    {
+                        errorMessage = "Form validation failed - please check your input data";
+                    }
+                    else if (response.StatusCode == System.Net.HttpStatusCode.InternalServerError)
+                    {
+                        errorMessage = "Server error occurred during form submission";
+                    }
+                    else if (response.StatusCode == System.Net.HttpStatusCode.BadRequest)
+                    {
+                        errorMessage = "Invalid form data submitted";
+                    }
+                }
+                
+                Console.WriteLine($"Status Code: {response.StatusCode}");
+                Console.WriteLine($"Error Message: {errorMessage}");
+                Console.WriteLine($"Raw Response: {responseJson}");
+                
+                return new FormSubmissionResponse { Success = false, Message = errorMessage };
             }
         }
         catch (Exception ex)
