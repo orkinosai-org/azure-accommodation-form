@@ -49,6 +49,12 @@ public class BlobStorageService : IBlobStorageService
             _logger.LogInformation("DEBUG - Blob storage configuration: Container={ContainerName}, ConnectionString={MaskedConnectionString}",
                 _settings.ContainerName, maskedConnectionString);
 
+            // Development storage fallback when Azurite is not available
+            if (_settings.ConnectionString == "UseDevelopmentStorage=true")
+            {
+                return await UploadToLocalDevelopmentStorageAsync(pdfData, fileName, submissionId);
+            }
+
             var containerClient = await GetContainerClientAsync();
             var blobName = $"{submissionId}/{fileName}";
             var blobClient = containerClient.GetBlobClient(blobName);
@@ -104,6 +110,22 @@ public class BlobStorageService : IBlobStorageService
         }
         catch (Exception ex)
         {
+            // Check if this is a development storage connection failure
+            if (_settings.ConnectionString == "UseDevelopmentStorage=true" && 
+                (ex.Message.Contains("Connection refused") || ex.Message.Contains("127.0.0.1:10000")))
+            {
+                _logger.LogWarning("Azure Storage Emulator (Azurite) not available, falling back to local file storage");
+                
+                // DEBUG: Log fallback to browser console (production: remove this section)
+                await _debugConsole.LogWarningAsync("AZURITE NOT AVAILABLE - USING LOCAL FALLBACK");
+                await _debugConsole.LogAsync("Azure Storage Emulator is not running, saving to local file system");
+                
+                Console.WriteLine("=== AZURITE NOT AVAILABLE - USING LOCAL FALLBACK ===");
+                Console.WriteLine("Azure Storage Emulator is not running, saving to local file system");
+                
+                return await UploadToLocalDevelopmentStorageAsync(pdfData, fileName, submissionId);
+            }
+
             // DEBUG: Enhanced error logging to browser console (production: keep but remove DEBUG prefix)
             await _debugConsole.LogErrorAsync("BLOB UPLOAD FAILED");
             await _debugConsole.LogErrorAsync($"Error: {ex.Message}");
@@ -197,8 +219,28 @@ public class BlobStorageService : IBlobStorageService
 
     private async Task<BlobContainerClient> GetContainerClientAsync()
     {
+        // For development storage, we need to handle Azurite not being available
         var containerClient = _blobServiceClient.GetBlobContainerClient(_settings.ContainerName);
-        await containerClient.CreateIfNotExistsAsync(PublicAccessType.None);
+        
+        // Only attempt to create container if not using development storage fallback
+        if (_settings.ConnectionString != "UseDevelopmentStorage=true")
+        {
+            await containerClient.CreateIfNotExistsAsync(PublicAccessType.None);
+        }
+        else
+        {
+            // For development storage, try to create but don't fail if Azurite is not running
+            try
+            {
+                await containerClient.CreateIfNotExistsAsync(PublicAccessType.None);
+            }
+            catch (Exception ex) when (ex.Message.Contains("Connection refused") || ex.Message.Contains("127.0.0.1:10000"))
+            {
+                // Azurite is not running, this will be handled in the calling method
+                throw;
+            }
+        }
+        
         return containerClient;
     }
 
@@ -220,5 +262,74 @@ public class BlobStorageService : IBlobStorageService
         masked = System.Text.RegularExpressions.Regex.Replace(masked, sasPattern, "SharedAccessSignature=***MASKED***");
         
         return masked;
+    }
+
+    /// <summary>
+    /// Development fallback storage when Azurite is not available
+    /// Saves files to local file system for development testing
+    /// </summary>
+    private async Task<string> UploadToLocalDevelopmentStorageAsync(byte[] pdfData, string fileName, string submissionId)
+    {
+        try
+        {
+            // Create local development storage directory
+            var baseDir = Path.Combine(Path.GetTempPath(), "azure-accommodation-form-dev-storage", _settings.ContainerName);
+            var submissionDir = Path.Combine(baseDir, submissionId);
+            
+            Directory.CreateDirectory(submissionDir);
+            
+            var filePath = Path.Combine(submissionDir, fileName);
+            
+            // DEBUG: Log local storage details to browser console (production: remove this section)
+            await _debugConsole.LogGroupAsync("LOCAL DEVELOPMENT STORAGE");
+            await _debugConsole.LogAsync($"Storage Directory: {baseDir}");
+            await _debugConsole.LogAsync($"Submission Directory: {submissionDir}");
+            await _debugConsole.LogAsync($"File Path: {filePath}");
+            await _debugConsole.LogAsync($"File Size: {pdfData.Length} bytes");
+            await _debugConsole.LogGroupEndAsync();
+
+            // DEBUG: Log local storage details (production: remove this section)
+            Console.WriteLine("=== LOCAL DEVELOPMENT STORAGE ===");
+            Console.WriteLine($"Storage Directory: {baseDir}");
+            Console.WriteLine($"Submission Directory: {submissionDir}");
+            Console.WriteLine($"File Path: {filePath}");
+            Console.WriteLine($"File Size: {pdfData.Length} bytes");
+
+            _logger.LogInformation("DEBUG - Local development storage: BaseDir={BaseDir}, FilePath={FilePath}, FileSize={FileSize}",
+                baseDir, filePath, pdfData.Length);
+
+            // Write the file to local storage
+            await File.WriteAllBytesAsync(filePath, pdfData);
+
+            // Create a local file URL for development
+            var localUrl = $"file://{filePath.Replace('\\', '/')}";
+
+            // DEBUG: Log successful local save to browser console (production: remove this section)
+            await _debugConsole.LogInfoAsync("LOCAL FILE SAVED SUCCESSFULLY");
+            await _debugConsole.LogAsync($"Local URL: {localUrl}");
+
+            // DEBUG: Log successful local save (production: remove this section)
+            Console.WriteLine("=== LOCAL FILE SAVED SUCCESSFULLY ===");
+            Console.WriteLine($"Local URL: {localUrl}");
+
+            _logger.LogInformation("Successfully saved PDF to local development storage: {FilePath}", filePath);
+            _logger.LogInformation("DEBUG - Local file saved successfully: {LocalUrl}", localUrl);
+
+            return localUrl;
+        }
+        catch (Exception ex)
+        {
+            // DEBUG: Enhanced error logging to browser console (production: keep but remove DEBUG prefix)
+            await _debugConsole.LogErrorAsync("LOCAL STORAGE SAVE FAILED");
+            await _debugConsole.LogErrorAsync($"Error: {ex.Message}");
+
+            // DEBUG: Enhanced error logging (production: keep but remove DEBUG prefix)
+            Console.WriteLine($"=== LOCAL STORAGE SAVE FAILED ===");
+            Console.WriteLine($"Error: {ex.Message}");
+            Console.WriteLine($"Stack trace: {ex.StackTrace}");
+
+            _logger.LogError(ex, "Failed to save PDF to local development storage for submission {SubmissionId}", submissionId);
+            throw;
+        }
     }
 }
