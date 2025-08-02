@@ -61,6 +61,7 @@ public class Program
         builder.Services.AddScoped<IPdfGenerationService, PdfGenerationService>();
         builder.Services.AddScoped<IBlobStorageService, BlobStorageService>();
         builder.Services.AddScoped<IDebugConsoleHelper, DebugConsoleHelper>();
+        builder.Services.AddSingleton<IThreadPoolMonitoringService, ThreadPoolMonitoringService>();
 
         // Register HTTP client for API calls
         builder.Services.AddHttpClient<IFormApiService, FormApiService>(client =>
@@ -133,6 +134,11 @@ public class Program
         {
             var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
             context.Database.EnsureCreated();
+            
+            // Start thread pool monitoring
+            var threadPoolMonitor = scope.ServiceProvider.GetRequiredService<IThreadPoolMonitoringService>();
+            threadPoolMonitor.StartMonitoring();
+            threadPoolMonitor.LogThreadPoolStatus("Application Startup");
         }
 
         app.Run();

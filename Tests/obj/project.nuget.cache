@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "rhr0YMEyt7HH8KQIEcXN7A2B1aSoEdM7Dc3vf+8/vsjOyKPdPY6G61v0ewxpsLUXkc7zKBoNqBaaxFH9vAEXWA==",
+  "dgSpecHash": "6RYlYqoyOImz4+9/5E/RXxjmFcSDtiYaYeLkWSEE94IA14TJSWZN5uDIFAnoNajMkHHRPQMiSnNNSihvlBgKuw==",
   "success": true,
   "projectFilePath": "/home/runner/work/azure-accommodation-form/azure-accommodation-form/Tests/Tests.csproj",
   "expectedPackageFiles": [
@@ -34,6 +34,7 @@
     "/home/runner/.nuget/packages/microsoft.entityframeworkcore.abstractions/8.0.0/microsoft.entityframeworkcore.abstractions.8.0.0.nupkg.sha512",
     "/home/runner/.nuget/packages/microsoft.entityframeworkcore.analyzers/8.0.0/microsoft.entityframeworkcore.analyzers.8.0.0.nupkg.sha512",
     "/home/runner/.nuget/packages/microsoft.entityframeworkcore.design/8.0.0/microsoft.entityframeworkcore.design.8.0.0.nupkg.sha512",
+    "/home/runner/.nuget/packages/microsoft.entityframeworkcore.inmemory/8.0.0/microsoft.entityframeworkcore.inmemory.8.0.0.nupkg.sha512",
     "/home/runner/.nuget/packages/microsoft.entityframeworkcore.relational/8.0.0/microsoft.entityframeworkcore.relational.8.0.0.nupkg.sha512",
     "/home/runner/.nuget/packages/microsoft.entityframeworkcore.sqlite/8.0.0/microsoft.entityframeworkcore.sqlite.8.0.0.nupkg.sha512",
     "/home/runner/.nuget/packages/microsoft.entityframeworkcore.sqlite.core/8.0.0/microsoft.entityframeworkcore.sqlite.core.8.0.0.nupkg.sha512",

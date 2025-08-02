@@ -288,6 +288,7 @@ public class PdfGenerationService : IPdfGenerationService
             throw;
         }
     }
+    }
 
     public string GenerateFileName(FormData formData, DateTime submissionTime)
     {

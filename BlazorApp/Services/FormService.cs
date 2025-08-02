@@ -25,6 +25,7 @@ public class FormService : IFormService
     private readonly ApplicationSettings _appSettings;
     private readonly ILogger<FormService> _logger;
     private readonly IDebugConsoleHelper _debugConsole;
+    private readonly IThreadPoolMonitoringService _threadPoolMonitor;
 
     public FormService(
         ApplicationDbContext context,
@@ -33,7 +34,8 @@ public class FormService : IFormService
         IBlobStorageService blobService,
         IOptions<ApplicationSettings> appSettings,
         ILogger<FormService> logger,
-        IDebugConsoleHelper debugConsole)
+        IDebugConsoleHelper debugConsole,
+        IThreadPoolMonitoringService threadPoolMonitor)
     {
         _context = context;
         _emailService = emailService;
@@ -42,6 +44,7 @@ public class FormService : IFormService
         _appSettings = appSettings.Value;
         _logger = logger;
         _debugConsole = debugConsole;
+        _threadPoolMonitor = threadPoolMonitor;
     }
 
     public async Task<FormSubmissionResponse> InitializeFormSessionAsync(string email)
@@ -61,7 +64,7 @@ public class FormService : IFormService
             _context.FormSubmissions.Add(submission);
             
             LogSubmissionAction(submission.Id, "SessionInitialized", $"Form session initialized for email: {email}");
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync().ConfigureAwait(false);
 
             _logger.LogInformation("Form session initialized for {Email} with submission ID {SubmissionId}", email, submissionId);
 
@@ -89,7 +92,7 @@ public class FormService : IFormService
         try
         {
             var submission = await _context.FormSubmissions
-                .FirstOrDefaultAsync(s => s.SubmissionId == submissionId);
+                .FirstOrDefaultAsync(s => s.SubmissionId == submissionId).ConfigureAwait(false);
 
             if (submission == null)
             {
@@ -110,9 +113,9 @@ public class FormService : IFormService
             submission.UserEmail = email;
 
             LogSubmissionAction(submission.Id, "EmailVerificationSent", $"Verification token sent to {email}");
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync().ConfigureAwait(false);
 
-            var emailSent = await _emailService.SendEmailVerificationTokenAsync(email, token, submissionId);
+            var emailSent = await _emailService.SendEmailVerificationTokenAsync(email, token, submissionId).ConfigureAwait(false);
 
             if (emailSent)
             {
@@ -150,7 +153,7 @@ public class FormService : IFormService
         try
         {
             var submission = await _context.FormSubmissions
-                .FirstOrDefaultAsync(s => s.SubmissionId == submissionId);
+                .FirstOrDefaultAsync(s => s.SubmissionId == submissionId).ConfigureAwait(false);
 
             if (submission == null)
             {
@@ -186,7 +189,7 @@ public class FormService : IFormService
             submission.EmailVerificationToken = null; // Clear the token
 
             LogSubmissionAction(submission.Id, "EmailVerified", "Email successfully verified");
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync().ConfigureAwait(false);
 
             _logger.LogInformation("Email verified for submission {SubmissionId}", submissionId);
 
@@ -211,10 +214,12 @@ public class FormService : IFormService
 
     public async Task<FormSubmissionResponse> SubmitFormAsync(string submissionId, FormData formData, string clientIpAddress)
     {
+        _threadPoolMonitor.LogThreadPoolStatus($"SubmitFormAsync Start - {submissionId}");
+        
         try
         {
             var submission = await _context.FormSubmissions
-                .FirstOrDefaultAsync(s => s.SubmissionId == submissionId);
+                .FirstOrDefaultAsync(s => s.SubmissionId == submissionId).ConfigureAwait(false);
 
             if (submission == null)
             {
@@ -244,14 +249,17 @@ public class FormService : IFormService
 
             // Generate PDF with audit trail information
             // DEBUG: Enhanced PDF generation logging to browser console (production: remove DEBUG prefix)
-            await _debugConsole.LogInfoAsync("FORM SUBMISSION: PDF GENERATION");
-            await _debugConsole.LogAsync($"Starting PDF generation for submission {submissionId}");
+            await _debugConsole.LogInfoAsync("FORM SUBMISSION: PDF GENERATION").ConfigureAwait(false);
+            await _debugConsole.LogAsync($"Starting PDF generation for submission {submissionId}").ConfigureAwait(false);
             
             Console.WriteLine("=== FORM SUBMISSION: PDF GENERATION ===");
             Console.WriteLine($"Starting PDF generation for submission {submissionId}");
             _logger.LogInformation("DEBUG - Starting PDF generation for submission {SubmissionId}", submissionId);
             
-            var pdfData = await _pdfService.GenerateFormPdfAsync(formData, submissionId, submission.SubmittedAt, clientIpAddress);
+            _threadPoolMonitor.LogThreadPoolStatus($"Before PDF Generation - {submissionId}");
+            var pdfData = await _pdfService.GenerateFormPdfAsync(formData, submissionId, submission.SubmittedAt, clientIpAddress).ConfigureAwait(false);
+            _threadPoolMonitor.LogThreadPoolStatus($"After PDF Generation - {submissionId}");
+            
             var fileName = _pdfService.GenerateFileName(formData, submission.SubmittedAt);
             
             submission.PdfFileName = fileName;
@@ -261,34 +269,39 @@ public class FormService : IFormService
 
             // Upload to blob storage
             // DEBUG: Enhanced blob upload logging to browser console (production: remove DEBUG prefix)
-            await _debugConsole.LogInfoAsync("FORM SUBMISSION: BLOB UPLOAD");
-            await _debugConsole.LogAsync($"Starting blob upload for submission {submissionId}, file: {fileName}");
+            await _debugConsole.LogInfoAsync("FORM SUBMISSION: BLOB UPLOAD").ConfigureAwait(false);
+            await _debugConsole.LogAsync($"Starting blob upload for submission {submissionId}, file: {fileName}").ConfigureAwait(false);
             
             Console.WriteLine("=== FORM SUBMISSION: BLOB UPLOAD ===");
             Console.WriteLine($"Starting blob upload for submission {submissionId}, file: {fileName}");
             _logger.LogInformation("DEBUG - Starting blob upload for submission {SubmissionId}, file {FileName}", submissionId, fileName);
             
-            var blobUrl = await _blobService.UploadFormPdfAsync(pdfData, fileName, submissionId);
+            _threadPoolMonitor.LogThreadPoolStatus($"Before Blob Upload - {submissionId}");
+            var blobUrl = await _blobService.UploadFormPdfAsync(pdfData, fileName, submissionId).ConfigureAwait(false);
+            _threadPoolMonitor.LogThreadPoolStatus($"After Blob Upload - {submissionId}");
+            
             submission.BlobStorageUrl = blobUrl;
 
             LogSubmissionAction(submission.Id, "PdfUploaded", $"PDF uploaded to: {blobUrl}");
 
             // Send confirmation emails
             // DEBUG: Enhanced email sending logging to browser console (production: remove DEBUG prefix)
-            await _debugConsole.LogInfoAsync("FORM SUBMISSION: EMAIL SENDING");
-            await _debugConsole.LogAsync($"Starting email send for submission {submissionId} to user: {submission.UserEmail}");
+            await _debugConsole.LogInfoAsync("FORM SUBMISSION: EMAIL SENDING").ConfigureAwait(false);
+            await _debugConsole.LogAsync($"Starting email send for submission {submissionId} to user: {submission.UserEmail}").ConfigureAwait(false);
             
             Console.WriteLine("=== FORM SUBMISSION: EMAIL SENDING ===");
             Console.WriteLine($"Starting email send for submission {submissionId} to user: {submission.UserEmail}");
             _logger.LogInformation("DEBUG - Starting email send for submission {SubmissionId} to user {UserEmail}", submissionId, submission.UserEmail);
             
+            _threadPoolMonitor.LogThreadPoolStatus($"Before Email Send - {submissionId}");
             var userEmailSent = await _emailService.SendFormSubmissionConfirmationAsync(
-                submission.UserEmail, submissionId, pdfData, fileName);
+                submission.UserEmail, submissionId, pdfData, fileName).ConfigureAwait(false);
 
-            await _debugConsole.LogAsync($"Sending company notification email for submission {submissionId}");
+            await _debugConsole.LogAsync($"Sending company notification email for submission {submissionId}").ConfigureAwait(false);
             Console.WriteLine($"Sending company notification email for submission {submissionId}");
             var companyEmailSent = await _emailService.SendFormSubmissionToCompanyAsync(
-                submissionId, pdfData, fileName, submission.UserEmail);
+                submissionId, pdfData, fileName, submission.UserEmail).ConfigureAwait(false);
+            _threadPoolMonitor.LogThreadPoolStatus($"After Email Send - {submissionId}");
 
             if (userEmailSent && companyEmailSent)
             {
@@ -301,8 +314,9 @@ public class FormService : IFormService
                     $"Email send status - User: {userEmailSent}, Company: {companyEmailSent}");
             }
 
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync().ConfigureAwait(false);
 
+            _threadPoolMonitor.LogThreadPoolStatus($"SubmitFormAsync Success - {submissionId}");
             _logger.LogInformation("Form submission completed successfully for submission {SubmissionId}", submissionId);
 
             return new FormSubmissionResponse
@@ -315,18 +329,19 @@ public class FormService : IFormService
         }
         catch (Exception ex)
         {
+            _threadPoolMonitor.LogThreadPoolStatus($"SubmitFormAsync Exception - {submissionId}");
             _logger.LogError(ex, "Failed to submit form for submission {SubmissionId}", submissionId);
             
             // Update status to failed
             try
             {
                 var submission = await _context.FormSubmissions
-                    .FirstOrDefaultAsync(s => s.SubmissionId == submissionId);
+                    .FirstOrDefaultAsync(s => s.SubmissionId == submissionId).ConfigureAwait(false);
                 if (submission != null)
                 {
                     submission.Status = FormSubmissionStatus.Failed;
                     LogSubmissionAction(submission.Id, "SubmissionFailed", ex.Message);
-                    await _context.SaveChangesAsync();
+                    await _context.SaveChangesAsync().ConfigureAwait(false);
                 }
             }
             catch (Exception logEx)
@@ -344,9 +359,11 @@ public class FormService : IFormService
 
     public async Task<FormSubmissionResponse> ProcessFormDirectAsync(FormData formData, string clientIpAddress)
     {
+        var submissionId = Guid.NewGuid().ToString();
+        _threadPoolMonitor.LogThreadPoolStatus($"ProcessFormDirectAsync Start - {submissionId}");
+        
         try
         {
-            var submissionId = Guid.NewGuid().ToString();
             var submissionTime = DateTime.UtcNow;
             
             // Create submission record
@@ -366,14 +383,17 @@ public class FormService : IFormService
 
             // Generate PDF with audit trail information
             // DEBUG: Enhanced PDF generation logging for direct submission to browser console (production: remove DEBUG prefix)
-            await _debugConsole.LogInfoAsync("DIRECT FORM SUBMISSION: PDF GENERATION");
-            await _debugConsole.LogAsync($"Starting PDF generation for direct submission {submissionId}");
+            await _debugConsole.LogInfoAsync("DIRECT FORM SUBMISSION: PDF GENERATION").ConfigureAwait(false);
+            await _debugConsole.LogAsync($"Starting PDF generation for direct submission {submissionId}").ConfigureAwait(false);
             
             Console.WriteLine("=== DIRECT FORM SUBMISSION: PDF GENERATION ===");
             Console.WriteLine($"Starting PDF generation for direct submission {submissionId}");
             _logger.LogInformation("DEBUG - Starting PDF generation for direct submission {SubmissionId}", submissionId);
             
-            var pdfData = await _pdfService.GenerateFormPdfAsync(formData, submissionId, submissionTime, clientIpAddress);
+            _threadPoolMonitor.LogThreadPoolStatus($"Before PDF Generation Direct - {submissionId}");
+            var pdfData = await _pdfService.GenerateFormPdfAsync(formData, submissionId, submissionTime, clientIpAddress).ConfigureAwait(false);
+            _threadPoolMonitor.LogThreadPoolStatus($"After PDF Generation Direct - {submissionId}");
+            
             var fileName = _pdfService.GenerateFileName(formData, submissionTime);
             
             submission.PdfFileName = fileName;
@@ -383,34 +403,34 @@ public class FormService : IFormService
 
             // Upload to blob storage
             // DEBUG: Enhanced blob upload logging for direct submission to browser console (production: remove DEBUG prefix)
-            await _debugConsole.LogInfoAsync("DIRECT FORM SUBMISSION: BLOB UPLOAD");
-            await _debugConsole.LogAsync($"Starting blob upload for direct submission {submissionId}, file: {fileName}");
+            await _debugConsole.LogInfoAsync("DIRECT FORM SUBMISSION: BLOB UPLOAD").ConfigureAwait(false);
+            await _debugConsole.LogAsync($"Starting blob upload for direct submission {submissionId}, file: {fileName}").ConfigureAwait(false);
             
             Console.WriteLine("=== DIRECT FORM SUBMISSION: BLOB UPLOAD ===");
             Console.WriteLine($"Starting blob upload for direct submission {submissionId}, file: {fileName}");
             _logger.LogInformation("DEBUG - Starting blob upload for direct submission {SubmissionId}, file {FileName}", submissionId, fileName);
             
-            var blobUrl = await _blobService.UploadFormPdfAsync(pdfData, fileName, submissionId);
+            var blobUrl = await _blobService.UploadFormPdfAsync(pdfData, fileName, submissionId).ConfigureAwait(false);
             submission.BlobStorageUrl = blobUrl;
 
             LogSubmissionAction(submission.Id, "PdfUploaded", $"PDF uploaded to: {blobUrl}");
 
             // Send confirmation emails
             // DEBUG: Enhanced email sending logging for direct submission to browser console (production: remove DEBUG prefix)
-            await _debugConsole.LogInfoAsync("DIRECT FORM SUBMISSION: EMAIL SENDING");
-            await _debugConsole.LogAsync($"Starting email send for direct submission {submissionId} to user: {submission.UserEmail}");
+            await _debugConsole.LogInfoAsync("DIRECT FORM SUBMISSION: EMAIL SENDING").ConfigureAwait(false);
+            await _debugConsole.LogAsync($"Starting email send for direct submission {submissionId} to user: {submission.UserEmail}").ConfigureAwait(false);
             
             Console.WriteLine("=== DIRECT FORM SUBMISSION: EMAIL SENDING ===");
             Console.WriteLine($"Starting email send for direct submission {submissionId} to user: {submission.UserEmail}");
             _logger.LogInformation("DEBUG - Starting email send for direct submission {SubmissionId} to user {UserEmail}", submissionId, submission.UserEmail);
             
             var userEmailSent = await _emailService.SendFormSubmissionConfirmationAsync(
-                submission.UserEmail, submissionId, pdfData, fileName);
+                submission.UserEmail, submissionId, pdfData, fileName).ConfigureAwait(false);
 
-            await _debugConsole.LogAsync($"Sending company notification email for direct submission {submissionId}");
+            await _debugConsole.LogAsync($"Sending company notification email for direct submission {submissionId}").ConfigureAwait(false);
             Console.WriteLine($"Sending company notification email for direct submission {submissionId}");
             var companyEmailSent = await _emailService.SendFormSubmissionToCompanyAsync(
-                submissionId, pdfData, fileName, submission.UserEmail);
+                submissionId, pdfData, fileName, submission.UserEmail).ConfigureAwait(false);
 
             if (userEmailSent && companyEmailSent)
             {
@@ -423,8 +443,9 @@ public class FormService : IFormService
                     $"Email send status - User: {userEmailSent}, Company: {companyEmailSent}");
             }
 
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync().ConfigureAwait(false);
 
+            _threadPoolMonitor.LogThreadPoolStatus($"ProcessFormDirectAsync Success - {submissionId}");
             _logger.LogInformation("Direct form submission completed successfully for submission {SubmissionId}", submissionId);
 
             return new FormSubmissionResponse
@@ -437,6 +458,7 @@ public class FormService : IFormService
         }
         catch (Exception ex)
         {
+            _threadPoolMonitor.LogThreadPoolStatus($"ProcessFormDirectAsync Exception - {submissionId}");
             _logger.LogError(ex, "Failed to process direct form submission");
             
             return new FormSubmissionResponse
@@ -451,7 +473,7 @@ public class FormService : IFormService
     {
         return await _context.FormSubmissions
             .Include(s => s.Logs)
-            .FirstOrDefaultAsync(s => s.SubmissionId == submissionId);
+            .FirstOrDefaultAsync(s => s.SubmissionId == submissionId).ConfigureAwait(false);
     }
 
     private void LogSubmissionAction(int submissionId, string action, string? details = null)

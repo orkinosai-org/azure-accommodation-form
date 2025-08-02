@@ -36,10 +36,10 @@ public class BlobStorageService : IBlobStorageService
             var maskedConnectionString = MaskConnectionString(_settings.ConnectionString);
 
             // DEBUG: Log blob storage configuration to browser console (production: remove this section)
-            await _debugConsole.LogGroupAsync("BLOB STORAGE DEBUG INFO");
-            await _debugConsole.LogAsync($"Container Name: {_settings.ContainerName}");
-            await _debugConsole.LogAsync($"Connection String: {maskedConnectionString}");
-            await _debugConsole.LogGroupEndAsync();
+            await _debugConsole.LogGroupAsync("BLOB STORAGE DEBUG INFO").ConfigureAwait(false);
+            await _debugConsole.LogAsync($"Container Name: {_settings.ContainerName}").ConfigureAwait(false);
+            await _debugConsole.LogAsync($"Connection String: {maskedConnectionString}").ConfigureAwait(false);
+            await _debugConsole.LogGroupEndAsync().ConfigureAwait(false);
 
             // DEBUG: Log blob storage configuration (production: remove this section)
             Console.WriteLine("=== BLOB STORAGE DEBUG INFO ===");
@@ -49,17 +49,17 @@ public class BlobStorageService : IBlobStorageService
             _logger.LogInformation("DEBUG - Blob storage configuration: Container={ContainerName}, ConnectionString={MaskedConnectionString}",
                 _settings.ContainerName, maskedConnectionString);
 
-            var containerClient = await GetContainerClientAsync();
+            var containerClient = await GetContainerClientAsync().ConfigureAwait(false);
             var blobName = $"{submissionId}/{fileName}";
             var blobClient = containerClient.GetBlobClient(blobName);
 
             // DEBUG: Log blob upload details to browser console (production: remove this section)
-            await _debugConsole.LogGroupAsync("BLOB UPLOAD DEBUG");
-            await _debugConsole.LogAsync($"Blob Name: {blobName}");
-            await _debugConsole.LogAsync($"File Size: {pdfData.Length} bytes");
-            await _debugConsole.LogAsync($"Submission ID: {submissionId}");
-            await _debugConsole.LogAsync($"Target URI: {blobClient.Uri}");
-            await _debugConsole.LogGroupEndAsync();
+            await _debugConsole.LogGroupAsync("BLOB UPLOAD DEBUG").ConfigureAwait(false);
+            await _debugConsole.LogAsync($"Blob Name: {blobName}").ConfigureAwait(false);
+            await _debugConsole.LogAsync($"File Size: {pdfData.Length} bytes").ConfigureAwait(false);
+            await _debugConsole.LogAsync($"Submission ID: {submissionId}").ConfigureAwait(false);
+            await _debugConsole.LogAsync($"Target URI: {blobClient.Uri}").ConfigureAwait(false);
+            await _debugConsole.LogGroupEndAsync().ConfigureAwait(false);
 
             // DEBUG: Log blob upload details (production: remove this section)
             Console.WriteLine("=== BLOB UPLOAD DEBUG ===");
@@ -87,11 +87,11 @@ public class BlobStorageService : IBlobStorageService
                 }
             };
 
-            await blobClient.UploadAsync(stream, options);
+            await blobClient.UploadAsync(stream, options).ConfigureAwait(false);
 
             // DEBUG: Log successful upload to browser console (production: remove this section)
-            await _debugConsole.LogInfoAsync("BLOB UPLOADED SUCCESSFULLY");
-            await _debugConsole.LogAsync($"Blob URL: {blobClient.Uri}");
+            await _debugConsole.LogInfoAsync("BLOB UPLOADED SUCCESSFULLY").ConfigureAwait(false);
+            await _debugConsole.LogAsync($"Blob URL: {blobClient.Uri}").ConfigureAwait(false);
 
             // DEBUG: Log successful upload (production: remove this section)
             Console.WriteLine("=== BLOB UPLOADED SUCCESSFULLY ===");
@@ -105,8 +105,8 @@ public class BlobStorageService : IBlobStorageService
         catch (Exception ex)
         {
             // DEBUG: Enhanced error logging to browser console (production: keep but remove DEBUG prefix)
-            await _debugConsole.LogErrorAsync("BLOB UPLOAD FAILED");
-            await _debugConsole.LogErrorAsync($"Error: {ex.Message}");
+            await _debugConsole.LogErrorAsync("BLOB UPLOAD FAILED").ConfigureAwait(false);
+            await _debugConsole.LogErrorAsync($"Error: {ex.Message}").ConfigureAwait(false);
 
             // DEBUG: Enhanced error logging (production: keep but remove DEBUG prefix)
             Console.WriteLine($"=== BLOB UPLOAD FAILED ===");
@@ -129,12 +129,12 @@ public class BlobStorageService : IBlobStorageService
             var maskedConnectionString = MaskConnectionString(_settings.ConnectionString);
 
             // DEBUG: Log blob deletion details to browser console (production: remove this section)
-            await _debugConsole.LogGroupAsync("BLOB DELETE DEBUG");
-            await _debugConsole.LogAsync($"Container Name: {_settings.ContainerName}");
-            await _debugConsole.LogAsync($"Connection String: {maskedConnectionString}");
-            await _debugConsole.LogAsync($"Blob URL: {blobUrl}");
-            await _debugConsole.LogAsync($"Blob Name: {blobName}");
-            await _debugConsole.LogGroupEndAsync();
+            await _debugConsole.LogGroupAsync("BLOB DELETE DEBUG").ConfigureAwait(false);
+            await _debugConsole.LogAsync($"Container Name: {_settings.ContainerName}").ConfigureAwait(false);
+            await _debugConsole.LogAsync($"Connection String: {maskedConnectionString}").ConfigureAwait(false);
+            await _debugConsole.LogAsync($"Blob URL: {blobUrl}").ConfigureAwait(false);
+            await _debugConsole.LogAsync($"Blob Name: {blobName}").ConfigureAwait(false);
+            await _debugConsole.LogGroupEndAsync().ConfigureAwait(false);
 
             // DEBUG: Log blob deletion details (production: remove this section)
             Console.WriteLine("=== BLOB DELETE DEBUG ===");
@@ -146,16 +146,16 @@ public class BlobStorageService : IBlobStorageService
             _logger.LogInformation("DEBUG - Blob deletion: ContainerName={ContainerName}, BlobName={BlobName}, BlobUrl={BlobUrl}",
                 _settings.ContainerName, blobName, blobUrl);
             
-            var containerClient = await GetContainerClientAsync();
+            var containerClient = await GetContainerClientAsync().ConfigureAwait(false);
             var blobClient = containerClient.GetBlobClient(blobName);
 
-            var response = await blobClient.DeleteIfExistsAsync();
+            var response = await blobClient.DeleteIfExistsAsync().ConfigureAwait(false);
             
             if (response.Value)
             {
                 // DEBUG: Log successful deletion to browser console (production: remove this section)
-                await _debugConsole.LogInfoAsync("BLOB DELETED SUCCESSFULLY");
-                await _debugConsole.LogAsync($"Deleted blob: {blobUrl}");
+                await _debugConsole.LogInfoAsync("BLOB DELETED SUCCESSFULLY").ConfigureAwait(false);
+                await _debugConsole.LogAsync($"Deleted blob: {blobUrl}").ConfigureAwait(false);
 
                 // DEBUG: Log successful deletion (production: remove this section)
                 Console.WriteLine("=== BLOB DELETED SUCCESSFULLY ===");
@@ -167,8 +167,8 @@ public class BlobStorageService : IBlobStorageService
             else
             {
                 // DEBUG: Log blob not found to browser console (production: remove this section)
-                await _debugConsole.LogWarningAsync("BLOB NOT FOUND FOR DELETION");
-                await _debugConsole.LogAsync($"Blob not found: {blobUrl}");
+                await _debugConsole.LogWarningAsync("BLOB NOT FOUND FOR DELETION").ConfigureAwait(false);
+                await _debugConsole.LogAsync($"Blob not found: {blobUrl}").ConfigureAwait(false);
 
                 // DEBUG: Log blob not found (production: remove this section)
                 Console.WriteLine("=== BLOB NOT FOUND FOR DELETION ===");
@@ -182,8 +182,8 @@ public class BlobStorageService : IBlobStorageService
         catch (Exception ex)
         {
             // DEBUG: Enhanced error logging to browser console (production: keep but remove DEBUG prefix)
-            await _debugConsole.LogErrorAsync("BLOB DELETE FAILED");
-            await _debugConsole.LogErrorAsync($"Error: {ex.Message}");
+            await _debugConsole.LogErrorAsync("BLOB DELETE FAILED").ConfigureAwait(false);
+            await _debugConsole.LogErrorAsync($"Error: {ex.Message}").ConfigureAwait(false);
 
             // DEBUG: Enhanced error logging (production: keep but remove DEBUG prefix)
             Console.WriteLine($"=== BLOB DELETE FAILED ===");
@@ -198,7 +198,7 @@ public class BlobStorageService : IBlobStorageService
     private async Task<BlobContainerClient> GetContainerClientAsync()
     {
         var containerClient = _blobServiceClient.GetBlobContainerClient(_settings.ContainerName);
-        await containerClient.CreateIfNotExistsAsync(PublicAccessType.None);
+        await containerClient.CreateIfNotExistsAsync(PublicAccessType.None).ConfigureAwait(false);
         return containerClient;
     }
 

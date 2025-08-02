@@ -201,16 +201,16 @@ Regards,
         try
         {
             // DEBUG: Log email configuration to browser console (production: remove this section)
-            await _debugConsole.LogGroupAsync("EMAIL DEBUG INFO");
-            await _debugConsole.LogAsync($"SMTP Server: {_emailSettings.SmtpServer}");
-            await _debugConsole.LogAsync($"SMTP Port: {_emailSettings.SmtpPort}");
-            await _debugConsole.LogAsync($"Use SSL: {_emailSettings.UseSsl}");
-            await _debugConsole.LogAsync($"Username: {_emailSettings.SmtpUsername}");
-            await _debugConsole.LogAsync($"Password: {(!string.IsNullOrEmpty(_emailSettings.SmtpPassword) ? "***CONFIGURED***" : "***NOT SET***")}");
-            await _debugConsole.LogAsync($"From Email: {_emailSettings.FromEmail}");
-            await _debugConsole.LogAsync($"From Name: {_emailSettings.FromName}");
-            await _debugConsole.LogAsync($"Company Email: {_emailSettings.CompanyEmail}");
-            await _debugConsole.LogGroupEndAsync();
+            await _debugConsole.LogGroupAsync("EMAIL DEBUG INFO").ConfigureAwait(false);
+            await _debugConsole.LogAsync($"SMTP Server: {_emailSettings.SmtpServer}").ConfigureAwait(false);
+            await _debugConsole.LogAsync($"SMTP Port: {_emailSettings.SmtpPort}").ConfigureAwait(false);
+            await _debugConsole.LogAsync($"Use SSL: {_emailSettings.UseSsl}").ConfigureAwait(false);
+            await _debugConsole.LogAsync($"Username: {_emailSettings.SmtpUsername}").ConfigureAwait(false);
+            await _debugConsole.LogAsync($"Password: {(!string.IsNullOrEmpty(_emailSettings.SmtpPassword) ? "***CONFIGURED***" : "***NOT SET***")}").ConfigureAwait(false);
+            await _debugConsole.LogAsync($"From Email: {_emailSettings.FromEmail}").ConfigureAwait(false);
+            await _debugConsole.LogAsync($"From Name: {_emailSettings.FromName}").ConfigureAwait(false);
+            await _debugConsole.LogAsync($"Company Email: {_emailSettings.CompanyEmail}").ConfigureAwait(false);
+            await _debugConsole.LogGroupEndAsync().ConfigureAwait(false);
 
             // DEBUG: Log email configuration (production: remove this section)
             Console.WriteLine("=== EMAIL DEBUG INFO ===");
@@ -227,18 +227,18 @@ Regards,
                 _emailSettings.SmtpServer, _emailSettings.SmtpPort, _emailSettings.UseSsl, _emailSettings.SmtpUsername, _emailSettings.FromEmail);
 
             // DEBUG: Log email message details to browser console (production: remove this section)
-            await _debugConsole.LogGroupAsync("EMAIL MESSAGE DEBUG");
-            await _debugConsole.LogAsync($"Subject: {message.Subject}");
-            await _debugConsole.LogAsync($"From: {string.Join(", ", message.From)}");
-            await _debugConsole.LogAsync($"To: {string.Join(", ", message.To)}");
-            await _debugConsole.LogAsync($"Attachment count: {message.Attachments.Count()}");
+            await _debugConsole.LogGroupAsync("EMAIL MESSAGE DEBUG").ConfigureAwait(false);
+            await _debugConsole.LogAsync($"Subject: {message.Subject}").ConfigureAwait(false);
+            await _debugConsole.LogAsync($"From: {string.Join(", ", message.From)}").ConfigureAwait(false);
+            await _debugConsole.LogAsync($"To: {string.Join(", ", message.To)}").ConfigureAwait(false);
+            await _debugConsole.LogAsync($"Attachment count: {message.Attachments.Count()}").ConfigureAwait(false);
             
             var attachmentNames = message.Attachments.Select(a => a.ContentDisposition?.FileName ?? "unnamed").ToList();
             if (attachmentNames.Any())
             {
-                await _debugConsole.LogAsync($"Attachment names: {string.Join(", ", attachmentNames)}");
+                await _debugConsole.LogAsync($"Attachment names: {string.Join(", ", attachmentNames)}").ConfigureAwait(false);
             }
-            await _debugConsole.LogGroupEndAsync();
+            await _debugConsole.LogGroupEndAsync().ConfigureAwait(false);
 
             // DEBUG: Log email message details (production: remove this section)
             Console.WriteLine("=== EMAIL MESSAGE DEBUG ===");
@@ -288,19 +288,19 @@ Regards,
             using var client = new SmtpClient();
             
             await client.ConnectAsync(_emailSettings.SmtpServer, _emailSettings.SmtpPort, 
-                _emailSettings.UseSsl ? SecureSocketOptions.StartTls : SecureSocketOptions.None);
+                _emailSettings.UseSsl ? SecureSocketOptions.StartTls : SecureSocketOptions.None).ConfigureAwait(false);
 
             if (!string.IsNullOrEmpty(_emailSettings.SmtpUsername))
             {
-                await client.AuthenticateAsync(_emailSettings.SmtpUsername, _emailSettings.SmtpPassword);
+                await client.AuthenticateAsync(_emailSettings.SmtpUsername, _emailSettings.SmtpPassword).ConfigureAwait(false);
             }
 
-            await client.SendAsync(message);
-            await client.DisconnectAsync(true);
+            await client.SendAsync(message).ConfigureAwait(false);
+            await client.DisconnectAsync(true).ConfigureAwait(false);
 
             // DEBUG: Log successful send to browser console (production: remove this section)
-            await _debugConsole.LogInfoAsync("EMAIL SENT SUCCESSFULLY");
-            await _debugConsole.LogAsync($"Email sent successfully to {string.Join(", ", message.To)}");
+            await _debugConsole.LogInfoAsync("EMAIL SENT SUCCESSFULLY").ConfigureAwait(false);
+            await _debugConsole.LogAsync($"Email sent successfully to {string.Join(", ", message.To)}").ConfigureAwait(false);
 
             // DEBUG: Log successful send (production: remove this section)
             Console.WriteLine("=== EMAIL SENT SUCCESSFULLY ===");
@@ -311,8 +311,8 @@ Regards,
         catch (Exception ex)
         {
             // DEBUG: Enhanced error logging to browser console (production: keep but remove DEBUG prefix)
-            await _debugConsole.LogErrorAsync("EMAIL SEND FAILED");
-            await _debugConsole.LogErrorAsync($"Error: {ex.Message}");
+            await _debugConsole.LogErrorAsync("EMAIL SEND FAILED").ConfigureAwait(false);
+            await _debugConsole.LogErrorAsync($"Error: {ex.Message}").ConfigureAwait(false);
             
             // DEBUG: Enhanced error logging (production: keep but remove DEBUG prefix)
             Console.WriteLine($"=== EMAIL SEND FAILED ===");
