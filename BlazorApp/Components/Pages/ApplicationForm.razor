@@ -149,7 +149,7 @@
                 <span>✅ Email Verified</span> → <span class="current-step">📝 Complete Form</span> → <span>📄 Submit</span>
             </div>
             
-            <EditForm EditContext="@editContext" OnValidSubmit="@HandleSubmit" FormName="ApplicationForm" Enhance="false">
+            <EditForm EditContext="@editContext" FormName="ApplicationForm" Enhance="false">
                 <DataAnnotationsValidator />
                 
                 <!-- Enhanced Validation Summary with Debug Info -->
@@ -684,7 +684,7 @@
                     </div>
                 </fieldset>
 
-                <button type="submit" class="btn btn-success btn-lg" disabled="@isProcessing">
+                <button type="button" @onclick="HandleSubmitWithValidation" class="btn btn-success btn-lg" disabled="@isProcessing">
                     @if (isProcessing)
                     {
                         <span>⏳ Submitting...</span>
@@ -1340,6 +1340,35 @@
             isProcessing = false;
             StateHasChanged();
         }
+    }
+
+    private async Task HandleSubmitWithValidation()
+    {
+        // Ensure we're in the correct step
+        if (currentStep != FormStep.FormFilling)
+        {
+            AddDebugMessage($"❌ Form submission attempted in wrong step: {currentStep}", "error");
+            ShowError("Form submission is only allowed in the form filling step.");
+            return;
+        }
+
+        // Perform form validation before proceeding
+        bool isValid = editContext.Validate();
+        if (!isValid && !developmentMode)
+        {
+            AddDebugMessage("❌ Form validation failed - submission cancelled", "error");
+            var validationMessages = editContext.GetValidationMessages();
+            foreach (var message in validationMessages)
+            {
+                AddDebugMessage($"Validation Error: {message}", "error");
+            }
+            ShowError("Please correct the form errors before submitting.");
+            StateHasChanged();
+            return;
+        }
+
+        // Proceed with submission
+        await HandleSubmit();
     }
 
     private async Task HandleSubmit()
