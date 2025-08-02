@@ -87,53 +87,88 @@ public class FormController : ControllerBase
     [HttpPost("submit-direct")]
     public async Task<ActionResult<FormSubmissionResponse>> SubmitFormDirect([FromBody] FormData formData)
     {
+        var requestTimestamp = DateTime.UtcNow;
+        var requestId = Guid.NewGuid().ToString("N")[..8]; // Short request ID for tracking
+        
         // DEBUG: Enhanced API entry logging for troubleshooting
-        _logger.LogInformation("=== FORM CONTROLLER: DIRECT SUBMISSION ENTRY ===");
-        _logger.LogInformation("Request received at {Timestamp}", DateTime.UtcNow);
+        _logger.LogInformation("=== FORM CONTROLLER: DIRECT SUBMISSION ENTRY (Request: {RequestId}) ===", requestId);
+        _logger.LogInformation("Request received at {Timestamp}", requestTimestamp);
+        _logger.LogInformation("Request ID: {RequestId}", requestId);
         _logger.LogInformation("Model State Valid: {IsValid}", ModelState.IsValid);
         _logger.LogInformation("User Email: {Email}", formData?.TenantDetails?.Email);
         _logger.LogInformation("User Name: {Name}", formData?.TenantDetails?.FullName);
+        _logger.LogInformation("Request Content-Type: {ContentType}", Request.ContentType);
+        _logger.LogInformation("Request Content-Length: {ContentLength}", Request.ContentLength);
+        _logger.LogInformation("User-Agent: {UserAgent}", Request.Headers.UserAgent.ToString());
         
-        Console.WriteLine("=== FORM CONTROLLER: DIRECT SUBMISSION ENTRY ===");
-        Console.WriteLine($"Request received at {DateTime.UtcNow}");
+        Console.WriteLine($"=== FORM CONTROLLER: DIRECT SUBMISSION ENTRY (Request: {requestId}) ===");
+        Console.WriteLine($"Request received at {requestTimestamp}");
+        Console.WriteLine($"Request ID: {requestId}");
         Console.WriteLine($"Model State Valid: {ModelState.IsValid}");
         Console.WriteLine($"User Email: {formData?.TenantDetails?.Email}");
         Console.WriteLine($"User Name: {formData?.TenantDetails?.FullName}");
+        Console.WriteLine($"Request Content-Type: {Request.ContentType}");
+        Console.WriteLine($"Request Content-Length: {Request.ContentLength}");
+        Console.WriteLine($"User-Agent: {Request.Headers.UserAgent}");
 
         if (!ModelState.IsValid)
         {
-            _logger.LogWarning("Model state validation failed for direct form submission");
-            Console.WriteLine("=== MODEL STATE VALIDATION FAILED ===");
+            _logger.LogWarning("Model state validation failed for direct form submission (Request: {RequestId})", requestId);
+            Console.WriteLine($"=== MODEL STATE VALIDATION FAILED (Request: {requestId}) ===");
             
+            var validationErrors = new List<string>();
             foreach (var modelError in ModelState)
             {
                 foreach (var error in modelError.Value.Errors)
                 {
-                    _logger.LogWarning("Model Error - Key: {Key}, Error: {Error}", modelError.Key, error.ErrorMessage);
-                    Console.WriteLine($"Model Error - Key: {modelError.Key}, Error: {error.ErrorMessage}");
+                    var errorMsg = $"Field: {modelError.Key}, Error: {error.ErrorMessage}";
+                    validationErrors.Add(errorMsg);
+                    _logger.LogWarning("Model Error - {ErrorMessage}", errorMsg);
+                    Console.WriteLine($"Model Error - {errorMsg}");
                 }
             }
             
-            return BadRequest(new FormSubmissionResponse
+            var response = new FormSubmissionResponse
             {
                 Success = false,
-                Message = "Form validation failed: " + string.Join("; ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage))
-            });
+                Message = "Form validation failed. Please check all required fields and try again.",
+                SubmissionId = "",
+                Status = FormSubmissionStatus.Failed,
+                Timestamp = DateTime.UtcNow
+            };
+            
+            // Enhanced error response with detailed validation information
+            _logger.LogInformation("API Response (Request: {RequestId}): {Response}", requestId, 
+                System.Text.Json.JsonSerializer.Serialize(response));
+            Console.WriteLine($"API Response (Request: {requestId}): {System.Text.Json.JsonSerializer.Serialize(response)}");
+            
+            return BadRequest(response);
         }
 
         try
         {
             var clientIp = GetClientIpAddress();
             
-            _logger.LogInformation("Processing direct form submission for {Email} from IP {ClientIp}", 
-                formData.TenantDetails.Email, clientIp);
-            Console.WriteLine($"Processing direct form submission for {formData.TenantDetails.Email} from IP {clientIp}");
+            _logger.LogInformation("Processing direct form submission for {Email} from IP {ClientIp} (Request: {RequestId})", 
+                formData.TenantDetails.Email, clientIp, requestId);
+            Console.WriteLine($"Processing direct form submission for {formData.TenantDetails.Email} from IP {clientIp} (Request: {requestId})");
             
+            var processingStartTime = DateTime.UtcNow;
             var result = await _formService.ProcessFormDirectAsync(formData, clientIp);
+            var processingDuration = DateTime.UtcNow - processingStartTime;
             
-            _logger.LogInformation("Direct form submission completed - Success: {Success}, Message: {Message}", 
-                result.Success, result.Message);
-            Console.WriteLine($"Direct form submission completed - Success: {result.Success}, Message: {result.Message}");
+            // Enhanced response logging with timing information
+            _logger.LogInformation("Direct form submission completed - Success: {Success}, Message: {Message}, Duration: {Duration}ms (Request: {RequestId})", 
+                result.Success, result.Message, processingDuration.TotalMilliseconds, requestId);
+            Console.WriteLine($"Direct form submission completed - Success: {result.Success}, Message: {result.Message}, Duration: {processingDuration.TotalMilliseconds}ms (Request: {requestId})");
+            
+            // Add request tracking to response
+            result.Timestamp = DateTime.UtcNow;
+            
+            // Log the complete API response for debugging
+            var responseJson = System.Text.Json.JsonSerializer.Serialize(result, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+            _logger.LogInformation("API Response (Request: {RequestId}): {Response}", requestId, responseJson);
+            Console.WriteLine($"API Response (Request: {requestId}): {responseJson}");
             
             if (result.Success)
             {
@@ -144,17 +179,32 @@ public class FormController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error in direct form submission for {Email}", formData?.TenantDetails?.Email);
-            Console.WriteLine($"=== FORM CONTROLLER EXCEPTION ===");
+            var processingDuration = DateTime.UtcNow - requestTimestamp;
+            
+            _logger.LogError(ex, "Error in direct form submission for {Email} after {Duration}ms (Request: {RequestId})", 
+                formData?.TenantDetails?.Email, processingDuration.TotalMilliseconds, requestId);
+            
+            Console.WriteLine($"=== FORM CONTROLLER EXCEPTION (Request: {requestId}) ===");
+            Console.WriteLine($"Duration before exception: {processingDuration.TotalMilliseconds}ms");
             Console.WriteLine($"Exception: {ex.GetType().Name}");
             Console.WriteLine($"Message: {ex.Message}");
             Console.WriteLine($"Stack Trace: {ex.StackTrace}");
             
-            return StatusCode(500, new FormSubmissionResponse
+            var errorResponse = new FormSubmissionResponse
             {
                 Success = false,
-                Message = "An internal error occurred while processing your submission. Please try again."
-            });
+                Message = "An internal error occurred while processing your submission. Please try again later.",
+                SubmissionId = "",
+                Status = FormSubmissionStatus.Failed,
+                Timestamp = DateTime.UtcNow
+            };
+            
+            // Log error response
+            var errorResponseJson = System.Text.Json.JsonSerializer.Serialize(errorResponse, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+            _logger.LogInformation("API Error Response (Request: {RequestId}): {Response}", requestId, errorResponseJson);
+            Console.WriteLine($"API Error Response (Request: {requestId}): {errorResponseJson}");
+            
+            return StatusCode(500, errorResponse);
         }
     }
 
