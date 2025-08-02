@@ -190,14 +190,50 @@ public class FormController : ControllerBase
             Console.WriteLine($"Message: {ex.Message}");
             Console.WriteLine($"Stack Trace: {ex.StackTrace}");
             
+            // Provide more detailed error messages based on exception type
+            string userFriendlyMessage;
+            string technicalDetails = ex.Message;
+            
+            if (ex is InvalidOperationException && ex.Message.Contains("connection string"))
+            {
+                userFriendlyMessage = "Configuration error: Storage service is not properly configured for development mode";
+                technicalDetails = "Azure Blob Storage connection string is invalid or Azure Storage Emulator (Azurite) is not running";
+            }
+            else if (ex.Message.Contains("Azure Storage") || ex.Message.Contains("BlobServiceClient"))
+            {
+                userFriendlyMessage = "Storage service is temporarily unavailable. The form data has been validated but could not be permanently stored";
+                technicalDetails = "Azure Blob Storage service error - check connection string and service availability";
+            }
+            else if (ex.Message.Contains("email") || ex.Message.Contains("smtp"))
+            {
+                userFriendlyMessage = "Email service is temporarily unavailable. Your form has been submitted but confirmation emails may not be sent";
+                technicalDetails = "SMTP email service error - check email configuration";
+            }
+            else if (ex.Message.Contains("database") || ex.Message.Contains("DbUpdate"))
+            {
+                userFriendlyMessage = "Database service is temporarily unavailable. Please try submitting your form again";
+                technicalDetails = "Database connection or update error";
+            }
+            else
+            {
+                userFriendlyMessage = "An unexpected error occurred while processing your submission. Please try again later";
+                technicalDetails = ex.Message;
+            }
+            
             var errorResponse = new FormSubmissionResponse
             {
                 Success = false,
-                Message = "An internal error occurred while processing your submission. Please try again later.",
+                Message = userFriendlyMessage,
                 SubmissionId = "",
                 Status = FormSubmissionStatus.Failed,
                 Timestamp = DateTime.UtcNow
             };
+            
+            // In development mode, include technical details
+            if (HttpContext.RequestServices.GetService<IWebHostEnvironment>()?.IsDevelopment() == true)
+            {
+                errorResponse.Message += $" [Dev Details: {technicalDetails}]";
+            }
             
             // Log error response
             var errorResponseJson = System.Text.Json.JsonSerializer.Serialize(errorResponse, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
