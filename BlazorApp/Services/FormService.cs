@@ -362,6 +362,10 @@ public class FormService : IFormService
             };
 
             _context.FormSubmissions.Add(submission);
+            
+            // Save submission first to get the auto-generated Id for foreign key references
+            await _context.SaveChangesAsync();
+            
             LogSubmissionAction(submission.Id, "DirectSubmission", $"Form submitted directly via API from IP: {clientIpAddress}");
 
             // Generate PDF with audit trail information
@@ -437,11 +441,70 @@ public class FormService : IFormService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to process direct form submission");
+            _logger.LogError(ex, "Failed to process direct form submission for user {Email}", formData?.TenantDetails?.Email);
+            
+            // Enhanced error handling with specific failure details
+            var errorMessage = "An error occurred while processing your submission";
+            var errorDetails = ex.Message;
+            
+            // Provide more specific error messages based on exception type
+            if (ex is DbUpdateException dbEx)
+            {
+                if (dbEx.InnerException?.Message?.Contains("FOREIGN KEY constraint failed") == true)
+                {
+                    errorMessage = "Database constraint error occurred during submission";
+                    errorDetails = "Foreign key constraint failure - this is likely a data integrity issue";
+                }
+                else if (dbEx.InnerException?.Message?.Contains("UNIQUE constraint failed") == true)
+                {
+                    errorMessage = "Duplicate submission detected";
+                    errorDetails = "A submission with similar data already exists";
+                }
+                else
+                {
+                    errorMessage = "Database error occurred during submission";
+                    errorDetails = dbEx.InnerException?.Message ?? dbEx.Message;
+                }
+            }
+            else if (ex is HttpRequestException || ex.Message.Contains("network") || ex.Message.Contains("connection"))
+            {
+                errorMessage = "Network connectivity issue occurred";
+                errorDetails = "Failed to connect to external services (email or storage)";
+            }
+            else if (ex.Message.Contains("blob") || ex.Message.Contains("storage"))
+            {
+                errorMessage = "File storage error occurred";
+                errorDetails = "Failed to save form document to storage";
+            }
+            else if (ex.Message.Contains("email") || ex.Message.Contains("smtp"))
+            {
+                errorMessage = "Email delivery error occurred";
+                errorDetails = "Failed to send confirmation emails";
+            }
+            else if (ex.Message.Contains("pdf") || ex.Message.Contains("generation"))
+            {
+                errorMessage = "Document generation error occurred";
+                errorDetails = "Failed to generate PDF document from form data";
+            }
+            
+            // Log the detailed error for debugging
+            _logger.LogError("Direct form submission failed with error: {ErrorMessage}. Details: {ErrorDetails}. Exception: {Exception}", 
+                errorMessage, errorDetails, ex.ToString());
+            
+            Console.WriteLine($"=== DIRECT FORM SUBMISSION FAILED ===");
+            Console.WriteLine($"Error Message: {errorMessage}");
+            Console.WriteLine($"Error Details: {errorDetails}");
+            Console.WriteLine($"Exception Type: {ex.GetType().Name}");
+            Console.WriteLine($"Exception Message: {ex.Message}");
+            if (ex.InnerException != null)
+            {
+                Console.WriteLine($"Inner Exception: {ex.InnerException.GetType().Name}: {ex.InnerException.Message}");
+            }
+            Console.WriteLine($"Stack Trace: {ex.StackTrace}");
             
             return new FormSubmissionResponse
             {
-                Message = "An error occurred while processing your submission",
+                Message = $"{errorMessage}. {errorDetails}",
                 Success = false
             };
         }
