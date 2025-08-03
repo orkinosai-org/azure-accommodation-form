@@ -1,6 +1,7 @@
 fastapi==0.104.1
 uvicorn[standard]==0.24.0
 pydantic==2.5.0
+pydantic-settings==2.1.0
 python-multipart==0.0.6
 jinja2==3.1.2
 aiofiles==23.2.1
@@ -10,11 +11,8 @@ azure-storage-blob==12.19.0
 azure-communication-email==1.0.0
 reportlab==4.0.7
 pillow==10.1.0
-qrcode==7.4.2
 requests==2.31.0
 email-validator==2.1.0
 python-dotenv==1.0.0
 cryptography==41.0.8
-captcha==0.5.0
-smtplib-async==1.1.4
-secure==0.3.0
+aiohttp==3.9.1

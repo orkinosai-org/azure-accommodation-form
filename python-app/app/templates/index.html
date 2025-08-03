@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Azure Accommodation Form</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="/static/css/style.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container-fluid">
+        <!-- Header -->
+        <header class="bg-primary text-white py-3 mb-4">
+            <div class="container">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h1 class="h3 mb-0">
+                            <i class="fas fa-home me-2"></i>
+                            Azure Accommodation Application Form
+                        </h1>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <small>Secure • Verified • Professional</small>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <div class="container">
+            <!-- Security Notice -->
+            <div class="alert alert-info" role="alert">
+                <i class="fas fa-shield-alt me-2"></i>
+                <strong>Secure Connection:</strong> This form uses certificate-based authentication and multi-factor verification for your security.
+            </div>
+
+            <!-- Progress Steps -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="progress-steps">
+                        <div class="step active" id="step-1">
+                            <div class="step-number">1</div>
+                            <div class="step-label">Certificate Verification</div>
+                        </div>
+                        <div class="step" id="step-2">
+                            <div class="step-number">2</div>
+                            <div class="step-label">Email Verification</div>
+                        </div>
+                        <div class="step" id="step-3">
+                            <div class="step-number">3</div>
+                            <div class="step-label">Application Form</div>
+                        </div>
+                        <div class="step" id="step-4">
+                            <div class="step-number">4</div>
+                            <div class="step-label">Submission</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Certificate Verification Section -->
+            <div id="certificate-section" class="card shadow">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-certificate me-2"></i>
+                        Certificate Verification
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div class="text-center">
+                        <div class="spinner-border text-primary" role="status" id="cert-spinner">
+                            <span class="visually-hidden">Verifying certificate...</span>
+                        </div>
+                        <p class="mt-3">Verifying your client certificate...</p>
+                        <div id="cert-status"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Email Verification Section -->
+            <div id="email-section" class="card shadow d-none">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-envelope me-2"></i>
+                        Email Verification
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <!-- CAPTCHA and Email Entry -->
+                    <div id="email-entry-form">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="email" class="form-label">Email Address *</label>
+                                    <input type="email" class="form-control" id="email" required>
+                                    <div class="form-text">Enter your email address for verification</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="email-confirm" class="form-label">Confirm Email Address *</label>
+                                    <input type="email" class="form-control" id="email-confirm" required readonly onfocus="this.removeAttribute('readonly');">
+                                    <div class="form-text">Type your email again (copy-paste disabled)</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- CAPTCHA -->
+                        <div class="mb-3">
+                            <div id="captcha-container"></div>
+                        </div>
+                        
+                        <button type="button" class="btn btn-primary" id="send-verification-btn">
+                            <i class="fas fa-paper-plane me-2"></i>
+                            Send Verification Code
+                        </button>
+                    </div>
+
+                    <!-- MFA Token Entry -->
+                    <div id="mfa-token-form" class="d-none">
+                        <div class="alert alert-success">
+                            <i class="fas fa-check-circle me-2"></i>
+                            Verification code sent to your email address.
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="mfa-token" class="form-label">Verification Code *</label>
+                                    <input type="text" class="form-control text-center" id="mfa-token" maxlength="6" style="font-size: 1.5rem; letter-spacing: 0.5rem;" required>
+                                    <div class="form-text">Enter the 6-digit code sent to your email</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-primary" id="verify-token-btn">
+                                <i class="fas fa-key me-2"></i>
+                                Verify Code
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary" id="resend-code-btn">
+                                <i class="fas fa-redo me-2"></i>
+                                Resend Code
+                            </button>
+                        </div>
+                        
+                        <div id="token-timer" class="mt-2 text-muted"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Application Form Section -->
+            <div id="form-section" class="card shadow d-none">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-file-alt me-2"></i>
+                        Accommodation Application Form
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <form id="accommodation-form">
+                        <!-- Form content will be loaded here -->
+                        <div id="form-loading" class="text-center">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading form...</span>
+                            </div>
+                            <p class="mt-3">Loading application form...</p>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Submission Confirmation Section -->
+            <div id="submission-section" class="card shadow d-none">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-check-circle me-2 text-success"></i>
+                        Application Submitted Successfully
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-success">
+                        <h4 class="alert-heading">Thank you!</h4>
+                        <p>Your accommodation application has been submitted successfully.</p>
+                        <hr>
+                        <div id="submission-details"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="bg-light mt-5 py-4">
+            <div class="container">
+                <div class="row">
+                    <div class="col-md-8">
+                        <p class="mb-0">&copy; 2024 Azure Accommodation Form. All rights reserved.</p>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <small class="text-muted">
+                            Client IP: {{ client_ip }}
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+    <script src="/static/js/app.js"></script>
+</body>
+</html>

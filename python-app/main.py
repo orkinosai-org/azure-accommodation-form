@@ -5,12 +5,12 @@ Main FastAPI application entry point
 import os
 import logging
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, Request, HTTPException, Depends
+from fastapi import FastAPI, Request, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
-from fastapi.security import HTTPSRedirectMiddleware
+from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
 from dotenv import load_dotenv
 import uvicorn
 
