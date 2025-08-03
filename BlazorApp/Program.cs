@@ -62,12 +62,9 @@ public class Program
         builder.Services.AddScoped<IBlobStorageService, BlobStorageService>();
         builder.Services.AddScoped<IDebugConsoleHelper, DebugConsoleHelper>();
 
-        // Register HTTP client for API calls
-        builder.Services.AddHttpClient<IFormApiService, FormApiService>(client =>
-        {
-            var baseAddress = builder.Configuration["ApplicationSettings:ApplicationUrl"] ?? "https://localhost:5001";
-            client.BaseAddress = new Uri(baseAddress);
-        });
+        // Register HTTP client for API calls  
+        builder.Services.AddHttpClient();
+        builder.Services.AddScoped<IFormApiService, FormApiService>();
 
         // Add CORS for API endpoints
         builder.Services.AddCors(options =>

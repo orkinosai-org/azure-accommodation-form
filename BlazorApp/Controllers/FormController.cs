@@ -89,17 +89,37 @@ public class FormController : ControllerBase
     {
         var requestTimestamp = DateTime.UtcNow;
         var requestId = Guid.NewGuid().ToString("N")[..8]; // Short request ID for tracking
+        var isDevelopment = HttpContext.RequestServices.GetService<IWebHostEnvironment>()?.IsDevelopment() == true;
         
         // DEBUG: Enhanced API entry logging for troubleshooting
         _logger.LogInformation("=== FORM CONTROLLER: DIRECT SUBMISSION ENTRY (Request: {RequestId}) ===", requestId);
         _logger.LogInformation("Request received at {Timestamp}", requestTimestamp);
         _logger.LogInformation("Request ID: {RequestId}", requestId);
+        _logger.LogInformation("Environment: {Environment}", isDevelopment ? "Development" : "Production");
         _logger.LogInformation("Model State Valid: {IsValid}", ModelState.IsValid);
         _logger.LogInformation("User Email: {Email}", formData?.TenantDetails?.Email);
         _logger.LogInformation("User Name: {Name}", formData?.TenantDetails?.FullName);
         _logger.LogInformation("Request Content-Type: {ContentType}", Request.ContentType);
         _logger.LogInformation("Request Content-Length: {ContentLength}", Request.ContentLength);
         _logger.LogInformation("User-Agent: {UserAgent}", Request.Headers.UserAgent.ToString());
+        
+        // DEVELOPMENT MODE: Log complete request payload for debugging (never in production)
+        if (isDevelopment && formData != null)
+        {
+            try
+            {
+                var requestPayloadJson = System.Text.Json.JsonSerializer.Serialize(formData, new System.Text.Json.JsonSerializerOptions 
+                { 
+                    WriteIndented = true,
+                    PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase
+                });
+                _logger.LogInformation("DEVELOPMENT ONLY - Request Payload (Request: {RequestId}): {RequestPayload}", requestId, requestPayloadJson);
+            }
+            catch (Exception serializationEx)
+            {
+                _logger.LogWarning("DEVELOPMENT ONLY - Failed to serialize request payload for logging (Request: {RequestId}): {Error}", requestId, serializationEx.Message);
+            }
+        }
         
         Console.WriteLine($"=== FORM CONTROLLER: DIRECT SUBMISSION ENTRY (Request: {requestId}) ===");
         Console.WriteLine($"Request received at {requestTimestamp}");
@@ -117,6 +137,8 @@ public class FormController : ControllerBase
             Console.WriteLine($"=== MODEL STATE VALIDATION FAILED (Request: {requestId}) ===");
             
             var validationErrors = new List<string>();
+            var detailedValidationInfo = new List<string>();
+            
             foreach (var modelError in ModelState)
             {
                 foreach (var error in modelError.Value.Errors)
@@ -125,13 +147,95 @@ public class FormController : ControllerBase
                     validationErrors.Add(errorMsg);
                     _logger.LogWarning("Model Error - {ErrorMessage}", errorMsg);
                     Console.WriteLine($"Model Error - {errorMsg}");
+                    
+                    // DEVELOPMENT MODE: Add detailed validation information for debugging
+                    if (isDevelopment)
+                    {
+                        var fieldValue = "Not Available";
+                        try
+                        {
+                            // Try to get the actual field value for debugging
+                            if (modelError.Value.AttemptedValue != null)
+                            {
+                                fieldValue = modelError.Value.AttemptedValue;
+                            }
+                            else if (formData != null)
+                            {
+                                // Try to extract the field value from the form data using reflection
+                                var fieldPath = modelError.Key.Split('.');
+                                object? currentObj = formData;
+                                foreach (var segment in fieldPath)
+                                {
+                                    if (currentObj == null) break;
+                                    var property = currentObj.GetType().GetProperty(segment);
+                                    if (property != null)
+                                    {
+                                        currentObj = property.GetValue(currentObj);
+                                    }
+                                    else
+                                    {
+                                        currentObj = null;
+                                        break;
+                                    }
+                                }
+                                if (currentObj != null)
+                                {
+                                    fieldValue = currentObj.ToString() ?? "null";
+                                }
+                            }
+                        }
+                        catch
+                        {
+                            fieldValue = "Unable to retrieve";
+                        }
+                        
+                        var detailedInfo = $"Field: {modelError.Key}, Value: '{fieldValue}', Error: {error.ErrorMessage}";
+                        detailedValidationInfo.Add(detailedInfo);
+                        _logger.LogWarning("DEVELOPMENT ONLY - Detailed validation error: {DetailedError}", detailedInfo);
+                    }
                 }
+            }
+            
+            // DEVELOPMENT MODE: Log form data structure for validation debugging
+            if (isDevelopment && formData != null)
+            {
+                try
+                {
+                    var formStructureInfo = new
+                    {
+                        TenantDetailsProvided = formData.TenantDetails != null,
+                        BankDetailsProvided = formData.BankDetails != null,
+                        AddressHistoryCount = formData.AddressHistory?.Count ?? 0,
+                        ContactsCount = formData.Contacts != null ? 1 : 0,
+                        MedicalDetailsProvided = formData.MedicalDetails != null,
+                        EmploymentProvided = formData.Employment != null,
+                        PassportDetailsProvided = formData.PassportDetails != null,
+                        CurrentLivingArrangementProvided = formData.CurrentLivingArrangement != null,
+                        OtherProvided = formData.Other != null,
+                        ConsentAndDeclarationProvided = formData.ConsentAndDeclaration != null
+                    };
+                    var structureJson = System.Text.Json.JsonSerializer.Serialize(formStructureInfo, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+                    _logger.LogInformation("DEVELOPMENT ONLY - Form data structure analysis (Request: {RequestId}): {FormStructure}", requestId, structureJson);
+                }
+                catch (Exception structureEx)
+                {
+                    _logger.LogWarning("DEVELOPMENT ONLY - Failed to analyze form structure (Request: {RequestId}): {Error}", requestId, structureEx.Message);
+                }
+            }
+            
+            var baseMessage = "Form validation failed. Please check all required fields and try again.";
+            var responseMessage = baseMessage;
+            
+            // In development mode, include detailed validation information
+            if (isDevelopment && detailedValidationInfo.Any())
+            {
+                responseMessage += $" [Dev Validation Details: {string.Join("; ", detailedValidationInfo)}]";
             }
             
             var response = new FormSubmissionResponse
             {
                 Success = false,
-                Message = "Form validation failed. Please check all required fields and try again.",
+                Message = responseMessage,
                 SubmissionId = "",
                 Status = FormSubmissionStatus.Failed,
                 Timestamp = DateTime.UtcNow
@@ -181,38 +285,117 @@ public class FormController : ControllerBase
         {
             var processingDuration = DateTime.UtcNow - requestTimestamp;
             
+            // Enhanced error logging with complete exception details and stack traces
             _logger.LogError(ex, "Error in direct form submission for {Email} after {Duration}ms (Request: {RequestId})", 
                 formData?.TenantDetails?.Email, processingDuration.TotalMilliseconds, requestId);
+            
+            // DEVELOPMENT MODE: Log comprehensive error details including inner exceptions and full stack trace
+            if (isDevelopment)
+            {
+                _logger.LogError("DEVELOPMENT ONLY - Complete Exception Details (Request: {RequestId}):", requestId);
+                _logger.LogError("Exception Type: {ExceptionType}", ex.GetType().FullName);
+                _logger.LogError("Exception Message: {ExceptionMessage}", ex.Message);
+                _logger.LogError("Exception Source: {ExceptionSource}", ex.Source);
+                _logger.LogError("Exception StackTrace: {StackTrace}", ex.StackTrace);
+                
+                // Log inner exceptions recursively
+                var innerEx = ex.InnerException;
+                var innerLevel = 1;
+                while (innerEx != null)
+                {
+                    _logger.LogError("Inner Exception Level {Level} - Type: {InnerType}, Message: {InnerMessage}", 
+                        innerLevel, innerEx.GetType().FullName, innerEx.Message);
+                    _logger.LogError("Inner Exception Level {Level} - StackTrace: {InnerStackTrace}", 
+                        innerLevel, innerEx.StackTrace);
+                    innerEx = innerEx.InnerException;
+                    innerLevel++;
+                }
+                
+                // Log additional exception data if available
+                if (ex.Data.Count > 0)
+                {
+                    _logger.LogError("Exception Data: {ExceptionData}", string.Join(", ", ex.Data.Cast<System.Collections.DictionaryEntry>().Select(de => $"{de.Key}={de.Value}")));
+                }
+            }
             
             Console.WriteLine($"=== FORM CONTROLLER EXCEPTION (Request: {requestId}) ===");
             Console.WriteLine($"Duration before exception: {processingDuration.TotalMilliseconds}ms");
             Console.WriteLine($"Exception: {ex.GetType().Name}");
             Console.WriteLine($"Message: {ex.Message}");
-            Console.WriteLine($"Stack Trace: {ex.StackTrace}");
             
-            // Provide more detailed error messages based on exception type
+            // Enhanced console logging for development mode
+            if (isDevelopment)
+            {
+                Console.WriteLine($"DEVELOPMENT MODE - Full Exception Details:");
+                Console.WriteLine($"Exception Type: {ex.GetType().FullName}");
+                Console.WriteLine($"Exception Source: {ex.Source}");
+                Console.WriteLine($"Stack Trace: {ex.StackTrace}");
+                
+                var innerEx = ex.InnerException;
+                var innerLevel = 1;
+                while (innerEx != null)
+                {
+                    Console.WriteLine($"Inner Exception Level {innerLevel}: {innerEx.GetType().FullName} - {innerEx.Message}");
+                    Console.WriteLine($"Inner Exception Level {innerLevel} StackTrace: {innerEx.StackTrace}");
+                    innerEx = innerEx.InnerException;
+                    innerLevel++;
+                }
+            }
+            else
+            {
+                Console.WriteLine($"Stack Trace: {ex.StackTrace}");
+            }
+            
+            // Provide more detailed error messages based on exception type and context
             string userFriendlyMessage;
             string technicalDetails = ex.Message;
             
+            // Enhanced error categorization for better root cause analysis
             if (ex is InvalidOperationException && ex.Message.Contains("connection string"))
             {
                 userFriendlyMessage = "Configuration error: Storage service is not properly configured for development mode";
-                technicalDetails = "Azure Blob Storage connection string is invalid or Azure Storage Emulator (Azurite) is not running";
+                technicalDetails = $"Azure Blob Storage connection string is invalid or Azure Storage Emulator (Azurite) is not running. Details: {ex.Message}";
             }
-            else if (ex.Message.Contains("Azure Storage") || ex.Message.Contains("BlobServiceClient"))
+            else if (ex.Message.Contains("Azure Storage") || ex.Message.Contains("BlobServiceClient") || ex.Message.Contains("blob"))
             {
                 userFriendlyMessage = "Storage service is temporarily unavailable. The form data has been validated but could not be permanently stored";
-                technicalDetails = "Azure Blob Storage service error - check connection string and service availability";
+                technicalDetails = $"Azure Blob Storage service error - check connection string and service availability. Error: {ex.Message}";
+                
+                // Check for specific Azure Storage errors
+                if (ex.Message.Contains("Connection refused") || ex.Message.Contains("127.0.0.1:10000"))
+                {
+                    technicalDetails += " [Azurite not running - start with 'azurite --silent --location c:\\azurite --debug c:\\azurite\\debug.log']";
+                }
             }
-            else if (ex.Message.Contains("email") || ex.Message.Contains("smtp"))
+            else if (ex.Message.Contains("email") || ex.Message.Contains("smtp") || ex.Message.Contains("mail"))
             {
                 userFriendlyMessage = "Email service is temporarily unavailable. Your form has been submitted but confirmation emails may not be sent";
-                technicalDetails = "SMTP email service error - check email configuration";
+                technicalDetails = $"SMTP email service error - check email configuration. Error: {ex.Message}";
             }
-            else if (ex.Message.Contains("database") || ex.Message.Contains("DbUpdate"))
+            else if (ex.Message.Contains("database") || ex.Message.Contains("DbUpdate") || ex.Message.Contains("SQL") || ex.Message.Contains("Entity"))
             {
                 userFriendlyMessage = "Database service is temporarily unavailable. Please try submitting your form again";
-                technicalDetails = "Database connection or update error";
+                technicalDetails = $"Database connection or update error. Error: {ex.Message}";
+            }
+            else if (ex.Message.Contains("pdf") || ex.Message.Contains("PDF") || ex.Message.Contains("generation") || ex.Message.Contains("QuestPDF"))
+            {
+                userFriendlyMessage = "Document generation error occurred";
+                technicalDetails = $"Failed to generate PDF document from form data. Error: {ex.Message}";
+            }
+            else if (ex.Message.Contains("validation") || ex.Message.Contains("required") || ex.Message.Contains("invalid"))
+            {
+                userFriendlyMessage = "Form data validation failed";
+                technicalDetails = $"One or more form fields contain invalid data. Error: {ex.Message}";
+            }
+            else if (ex is System.IO.DirectoryNotFoundException || ex is System.IO.FileNotFoundException || ex is System.UnauthorizedAccessException)
+            {
+                userFriendlyMessage = "File system access error occurred";
+                technicalDetails = $"Cannot access required directories or files. Check permissions and disk space. Error: {ex.Message}";
+            }
+            else if (ex is System.Net.Http.HttpRequestException || ex.Message.Contains("network") || ex.Message.Contains("connection"))
+            {
+                userFriendlyMessage = "Network connectivity issue occurred";
+                technicalDetails = $"Failed to connect to external services (email or storage). Error: {ex.Message}";
             }
             else
             {
@@ -229,13 +412,19 @@ public class FormController : ControllerBase
                 Timestamp = DateTime.UtcNow
             };
             
-            // In development mode, include technical details
-            if (HttpContext.RequestServices.GetService<IWebHostEnvironment>()?.IsDevelopment() == true)
+            // In development mode, include comprehensive technical details for debugging
+            if (isDevelopment)
             {
-                errorResponse.Message += $" [Dev Details: {technicalDetails}]";
+                var devDetails = $"[Dev Details: {technicalDetails}]";
+                if (ex.InnerException != null)
+                {
+                    devDetails += $" [Inner Exception: {ex.InnerException.GetType().Name}: {ex.InnerException.Message}]";
+                }
+                devDetails += $" [Stack Trace: {ex.StackTrace}]";
+                errorResponse.Message += $" {devDetails}";
             }
             
-            // Log error response
+            // Log error response for debugging
             var errorResponseJson = System.Text.Json.JsonSerializer.Serialize(errorResponse, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
             _logger.LogInformation("API Error Response (Request: {RequestId}): {Response}", requestId, errorResponseJson);
             Console.WriteLine($"API Error Response (Request: {requestId}): {errorResponseJson}");
