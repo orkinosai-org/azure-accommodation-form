@@ -54,7 +54,21 @@ This Python application now mirrors the complete configuration structure from th
 
 ## Quick Start
 
-### 1. Installation
+### Option 1: Automated Setup (Recommended)
+
+**Linux/macOS:**
+```bash
+cd python-app
+./setup.sh
+```
+
+**Windows:**
+```cmd
+cd python-app
+setup.bat
+```
+
+### Option 2: Manual Installation
 
 ```bash
 cd python-app
@@ -268,6 +282,46 @@ curl -X POST http://localhost:8000/api/auth/verify-certificate
 # Check health
 curl http://localhost:8000/health
 ```
+
+## Troubleshooting
+
+### FastAPI Import Error
+
+If you encounter `ModuleNotFoundError: No module named 'fastapi'`:
+
+1. **Ensure dependencies are installed:**
+   ```bash
+   cd python-app
+   pip install -r requirements.txt
+   ```
+
+2. **Or use the automated setup script:**
+   ```bash
+   ./setup.sh  # Linux/macOS
+   setup.bat   # Windows
+   ```
+
+3. **Verify FastAPI installation:**
+   ```bash
+   python -c "import fastapi; print('FastAPI version:', fastapi.__version__)"
+   ```
+
+### Virtual Environment Issues
+
+If you're having dependency conflicts:
+
+1. **Create a fresh virtual environment:**
+   ```bash
+   rm -rf venv  # Remove existing venv
+   python -m venv venv
+   source venv/bin/activate
+   pip install -r requirements.txt
+   ```
+
+2. **Verify Python version:**
+   ```bash
+   python --version  # Should be 3.11+
+   ```
 
 ## Support
 
