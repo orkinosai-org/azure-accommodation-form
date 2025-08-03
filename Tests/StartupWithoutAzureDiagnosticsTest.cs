@@ -106,6 +106,15 @@ public class StartupWithoutAzureDiagnosticsTest
                 Environment.Exit(1);
             }
 
+            // Run the comprehensive integration test
+            Console.WriteLine("\n" + new string('=', 50));
+            var integrationTestResult = await FormSubmissionIntegrationTest.TestFormSubmissionIntegration();
+            if (!integrationTestResult)
+            {
+                Console.WriteLine("❌ Integration test failed!");
+                Environment.Exit(1);
+            }
+
         }
         catch (Exception ex)
         {
