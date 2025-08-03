@@ -2,6 +2,32 @@
 
 A secure, modern web application for processing accommodation applications with certificate-based authentication, email MFA, and automated PDF generation.
 
+## Configuration Migration from .NET
+
+This Python application now mirrors the complete configuration structure from the .NET Blazor application's `appsettings.json`. All settings have been implemented with Python equivalents while maintaining backward compatibility.
+
+### ✅ Implemented Configuration Sections
+
+- **Logging Configuration** - Complete .NET log level mapping (TRACE→DEBUG, INFORMATION→INFO, etc.)
+- **Email Settings** - Full SMTP configuration mirroring .NET EmailSettings
+- **Azure Blob Storage** - Complete BlobStorageSettings equivalent
+- **Application Settings** - Application metadata and token configuration
+- **Application Insights** - Telemetry and monitoring integration
+- **Diagnostics** - Retention policies and logging settings
+
+### 📋 Configuration Mapping
+
+| .NET Section | Python Equivalent | Status |
+|--------------|-------------------|--------|
+| `Logging.LogLevel` | `LoggingSettings` | ✅ Complete |
+| `EmailSettings` | `EmailSettings` | ✅ Complete |
+| `BlobStorageSettings` | `BlobStorageSettings` | ✅ Complete |
+| `ApplicationSettings` | `ApplicationSettings` | ✅ Complete |
+| `ApplicationInsights` | `ApplicationInsightsSettings` | ✅ Complete |
+| `Diagnostics` | `DiagnosticsSettings` | ✅ Complete |
+| `AllowedHosts` | FastAPI middleware | ⚠️ Different implementation |
+| `ConnectionStrings.DefaultConnection` | N/A | ❌ Not needed (no database) |
+
 ## Features
 
 - **Certificate-based authentication** for secure access
@@ -10,17 +36,20 @@ A secure, modern web application for processing accommodation applications with 
 - **Professional PDF generation** with automated naming
 - **Azure Blob Storage** integration for secure file storage
 - **Email notifications** to both users and administrators
+- **Application Insights** telemetry and monitoring
 - **Real-time form validation** and user-friendly interface
 - **Admin dashboard** for submission management
-- **Comprehensive logging** and audit trails
+- **Comprehensive logging** with .NET-compatible log levels
 
 ## Architecture
 
 - **Backend**: FastAPI (Python 3.11+)
+- **Configuration**: Pydantic Settings with .NET appsettings.json structure
 - **Frontend**: Modern JavaScript with Bootstrap 5
 - **PDF Generation**: ReportLab for professional documents
-- **Email**: SMTP with HTML templates
-- **Storage**: Azure Blob Storage
+- **Email**: SMTP with HTML templates (mirrors .NET EmailSettings)
+- **Storage**: Azure Blob Storage (mirrors .NET BlobStorageSettings)
+- **Telemetry**: Application Insights integration
 - **Authentication**: Certificate-based with session management
 
 ## Quick Start
@@ -36,16 +65,18 @@ pip install -r requirements.txt
 
 ### 2. Configuration
 
+See [CONFIGURATION.md](CONFIGURATION.md) for complete configuration guide.
+
 ```bash
 cp .env.example .env
 # Edit .env with your configuration
 ```
 
-Required settings:
-- SMTP email configuration
-- Azure Blob Storage connection string
-- CAPTCHA keys (reCAPTCHA or hCaptcha)
-- SSL certificates for production
+**Required settings:**
+- Email/SMTP configuration (mirrors .NET EmailSettings)
+- Azure Blob Storage connection (mirrors .NET BlobStorageSettings)
+- Application Insights connection (mirrors .NET ApplicationInsights)
+- Logging levels (mirrors .NET Logging.LogLevel)
 
 ### 3. Run Development Server
 
