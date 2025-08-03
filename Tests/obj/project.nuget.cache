@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "rhr0YMEyt7HH8KQIEcXN7A2B1aSoEdM7Dc3vf+8/vsjOyKPdPY6G61v0ewxpsLUXkc7zKBoNqBaaxFH9vAEXWA==",
+  "dgSpecHash": "dYZdGMz3Z4tVPHCpGdwvovZhGZoSzh93A1QB9gMLaUa/iVF/ZTIYYCXDnPDEK8euUHmjJT/b9vLqXovmQirb/g==",
   "success": true,
   "projectFilePath": "/home/runner/work/azure-accommodation-form/azure-accommodation-form/Tests/Tests.csproj",
   "expectedPackageFiles": [
@@ -30,10 +30,11 @@
     "/home/runner/.nuget/packages/microsoft.data.sqlclient/5.1.1/microsoft.data.sqlclient.5.1.1.nupkg.sha512",
     "/home/runner/.nuget/packages/microsoft.data.sqlclient.sni.runtime/5.1.0/microsoft.data.sqlclient.sni.runtime.5.1.0.nupkg.sha512",
     "/home/runner/.nuget/packages/microsoft.data.sqlite.core/8.0.0/microsoft.data.sqlite.core.8.0.0.nupkg.sha512",
-    "/home/runner/.nuget/packages/microsoft.entityframeworkcore/8.0.0/microsoft.entityframeworkcore.8.0.0.nupkg.sha512",
-    "/home/runner/.nuget/packages/microsoft.entityframeworkcore.abstractions/8.0.0/microsoft.entityframeworkcore.abstractions.8.0.0.nupkg.sha512",
-    "/home/runner/.nuget/packages/microsoft.entityframeworkcore.analyzers/8.0.0/microsoft.entityframeworkcore.analyzers.8.0.0.nupkg.sha512",
+    "/home/runner/.nuget/packages/microsoft.entityframeworkcore/8.0.1/microsoft.entityframeworkcore.8.0.1.nupkg.sha512",
+    "/home/runner/.nuget/packages/microsoft.entityframeworkcore.abstractions/8.0.1/microsoft.entityframeworkcore.abstractions.8.0.1.nupkg.sha512",
+    "/home/runner/.nuget/packages/microsoft.entityframeworkcore.analyzers/8.0.1/microsoft.entityframeworkcore.analyzers.8.0.1.nupkg.sha512",
     "/home/runner/.nuget/packages/microsoft.entityframeworkcore.design/8.0.0/microsoft.entityframeworkcore.design.8.0.0.nupkg.sha512",
+    "/home/runner/.nuget/packages/microsoft.entityframeworkcore.inmemory/8.0.1/microsoft.entityframeworkcore.inmemory.8.0.1.nupkg.sha512",
     "/home/runner/.nuget/packages/microsoft.entityframeworkcore.relational/8.0.0/microsoft.entityframeworkcore.relational.8.0.0.nupkg.sha512",
     "/home/runner/.nuget/packages/microsoft.entityframeworkcore.sqlite/8.0.0/microsoft.entityframeworkcore.sqlite.8.0.0.nupkg.sha512",
     "/home/runner/.nuget/packages/microsoft.entityframeworkcore.sqlite.core/8.0.0/microsoft.entityframeworkcore.sqlite.core.8.0.0.nupkg.sha512",
