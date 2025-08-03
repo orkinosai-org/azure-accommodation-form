@@ -362,39 +362,167 @@ public class BlobStorageService : IBlobStorageService
     /// <summary>
     /// Development fallback storage when Azurite is not available
     /// Saves files to local file system for development testing
+    /// Includes comprehensive error logging for directory and permission issues
     /// </summary>
     private async Task<string> UploadToLocalDevelopmentStorageAsync(byte[] pdfData, string fileName, string submissionId)
     {
         try
         {
-            // Create local development storage directory
-            var baseDir = Path.Combine(Path.GetTempPath(), "azure-accommodation-form-dev-storage", _settings.ContainerName);
+            // Create local development storage directory with enhanced error checking
+            var tempPath = Path.GetTempPath();
+            var baseDir = Path.Combine(tempPath, "azure-accommodation-form-dev-storage", _settings.ContainerName);
             var submissionDir = Path.Combine(baseDir, submissionId);
             
-            Directory.CreateDirectory(submissionDir);
+            // ENHANCED: Comprehensive directory and permission validation
+            _logger.LogInformation("Local development storage setup - Base temp path: {TempPath}", tempPath);
+            
+            // Check base temp directory accessibility
+            if (!Directory.Exists(tempPath))
+            {
+                throw new DirectoryNotFoundException($"System temp directory not found: {tempPath}");
+            }
+            
+            // Check/create base storage directory with detailed error handling
+            try
+            {
+                if (!Directory.Exists(baseDir))
+                {
+                    _logger.LogInformation("Creating base storage directory: {BaseDir}", baseDir);
+                    Directory.CreateDirectory(baseDir);
+                    _logger.LogInformation("Successfully created base storage directory");
+                    
+                    // Test write permissions immediately after creation
+                    var testFile = Path.Combine(baseDir, ".test_permissions");
+                    try
+                    {
+                        await File.WriteAllTextAsync(testFile, "permission test");
+                        File.Delete(testFile);
+                        _logger.LogInformation("Base directory write permissions verified");
+                    }
+                    catch (Exception permEx)
+                    {
+                        _logger.LogError(permEx, "Base directory write permission test failed: {BaseDir}", baseDir);
+                        throw new UnauthorizedAccessException($"Cannot write to base storage directory: {baseDir}. Error: {permEx.Message}", permEx);
+                    }
+                }
+                else
+                {
+                    _logger.LogInformation("Base storage directory already exists: {BaseDir}", baseDir);
+                }
+            }
+            catch (UnauthorizedAccessException uaEx)
+            {
+                _logger.LogError(uaEx, "Access denied creating base storage directory: {BaseDir}", baseDir);
+                throw new UnauthorizedAccessException($"Access denied creating storage directory '{baseDir}'. Check folder permissions and ensure the application has write access to the temp directory.", uaEx);
+            }
+            catch (DirectoryNotFoundException dnfEx)
+            {
+                _logger.LogError(dnfEx, "Parent directory not found for base storage: {BaseDir}", baseDir);
+                throw new DirectoryNotFoundException($"Parent directory not found for storage path '{baseDir}'. This may indicate a system configuration issue.", dnfEx);
+            }
+            catch (IOException ioEx)
+            {
+                _logger.LogError(ioEx, "I/O error creating base storage directory: {BaseDir}", baseDir);
+                throw new IOException($"I/O error creating storage directory '{baseDir}'. This may be due to disk space, file locks, or system permissions. Error: {ioEx.Message}", ioEx);
+            }
+            
+            // Check/create submission subdirectory with detailed error handling
+            try
+            {
+                if (!Directory.Exists(submissionDir))
+                {
+                    _logger.LogInformation("Creating submission directory: {SubmissionDir}", submissionDir);
+                    Directory.CreateDirectory(submissionDir);
+                    _logger.LogInformation("Successfully created submission directory");
+                }
+                else
+                {
+                    _logger.LogInformation("Submission directory already exists: {SubmissionDir}", submissionDir);
+                }
+            }
+            catch (Exception subDirEx)
+            {
+                _logger.LogError(subDirEx, "Failed to create submission directory: {SubmissionDir}", submissionDir);
+                throw new IOException($"Failed to create submission directory '{submissionDir}'. Error: {subDirEx.Message}", subDirEx);
+            }
             
             var filePath = Path.Combine(submissionDir, fileName);
             
-            // DEBUG: Log local storage details to browser console (production: remove this section)
+            // Enhanced directory and file validation
+            var directoryInfo = new DirectoryInfo(submissionDir);
+            var driveInfo = new DriveInfo(directoryInfo.Root.Name);
+            
+            // Check available disk space
+            var requiredSpace = pdfData.Length + (1024 * 1024); // PDF size + 1MB buffer
+            if (driveInfo.AvailableFreeSpace < requiredSpace)
+            {
+                var errorMsg = $"Insufficient disk space. Required: {requiredSpace / 1024 / 1024}MB, Available: {driveInfo.AvailableFreeSpace / 1024 / 1024}MB";
+                _logger.LogError(errorMsg);
+                throw new IOException(errorMsg);
+            }
+            
+            // DEBUG: Log comprehensive local storage details (production: remove this section)
             await _debugConsole.LogGroupAsync("LOCAL DEVELOPMENT STORAGE");
+            await _debugConsole.LogAsync($"Base Temp Path: {tempPath}");
             await _debugConsole.LogAsync($"Storage Directory: {baseDir}");
             await _debugConsole.LogAsync($"Submission Directory: {submissionDir}");
             await _debugConsole.LogAsync($"File Path: {filePath}");
-            await _debugConsole.LogAsync($"File Size: {pdfData.Length} bytes");
+            await _debugConsole.LogAsync($"File Size: {pdfData.Length} bytes ({pdfData.Length / 1024.0:F2} KB)");
+            await _debugConsole.LogAsync($"Available Disk Space: {driveInfo.AvailableFreeSpace / 1024 / 1024:F2} MB");
+            await _debugConsole.LogAsync($"Directory Exists: {Directory.Exists(submissionDir)}");
+            await _debugConsole.LogAsync($"Directory Writable: {directoryInfo.Exists}");
             await _debugConsole.LogGroupEndAsync();
 
-            // DEBUG: Log local storage details (production: remove this section)
-            Console.WriteLine("=== LOCAL DEVELOPMENT STORAGE ===");
+            // DEBUG: Log comprehensive local storage details (production: remove this section)
+            Console.WriteLine("=== LOCAL DEVELOPMENT STORAGE DETAILS ===");
+            Console.WriteLine($"Base Temp Path: {tempPath}");
             Console.WriteLine($"Storage Directory: {baseDir}");
             Console.WriteLine($"Submission Directory: {submissionDir}");
             Console.WriteLine($"File Path: {filePath}");
-            Console.WriteLine($"File Size: {pdfData.Length} bytes");
+            Console.WriteLine($"File Size: {pdfData.Length} bytes ({pdfData.Length / 1024.0:F2} KB)");
+            Console.WriteLine($"Available Disk Space: {driveInfo.AvailableFreeSpace / 1024 / 1024:F2} MB");
+            Console.WriteLine($"Directory Exists: {Directory.Exists(submissionDir)}");
+            Console.WriteLine($"Parent Directory Writable: {directoryInfo.Parent?.Exists}");
 
-            _logger.LogInformation("DEBUG - Local development storage: BaseDir={BaseDir}, FilePath={FilePath}, FileSize={FileSize}",
-                baseDir, filePath, pdfData.Length);
+            _logger.LogInformation("Local development storage validated - BaseDir={BaseDir}, FilePath={FilePath}, FileSize={FileSize}, AvailableSpace={AvailableSpace}MB",
+                baseDir, filePath, pdfData.Length, driveInfo.AvailableFreeSpace / 1024 / 1024);
 
-            // Write the file to local storage
-            await File.WriteAllBytesAsync(filePath, pdfData);
+            // Write the file to local storage with enhanced error handling
+            try
+            {
+                await File.WriteAllBytesAsync(filePath, pdfData);
+                _logger.LogInformation("Successfully wrote {FileSize} bytes to local storage: {FilePath}", pdfData.Length, filePath);
+            }
+            catch (UnauthorizedAccessException uaEx)
+            {
+                _logger.LogError(uaEx, "Access denied writing file: {FilePath}", filePath);
+                throw new UnauthorizedAccessException($"Access denied writing file '{filePath}'. Check file and directory permissions.", uaEx);
+            }
+            catch (DirectoryNotFoundException dnfEx)
+            {
+                _logger.LogError(dnfEx, "Directory not found when writing file: {FilePath}", filePath);
+                throw new DirectoryNotFoundException($"Directory not found when writing file '{filePath}'. Directory may have been deleted after creation.", dnfEx);
+            }
+            catch (IOException ioEx)
+            {
+                _logger.LogError(ioEx, "I/O error writing file: {FilePath}", filePath);
+                throw new IOException($"I/O error writing file '{filePath}'. This may be due to disk space, file locks, or antivirus interference. Error: {ioEx.Message}", ioEx);
+            }
+            
+            // Verify the file was written correctly
+            if (!File.Exists(filePath))
+            {
+                throw new IOException($"File verification failed: File '{filePath}' was not created successfully");
+            }
+            
+            var writtenFileInfo = new FileInfo(filePath);
+            if (writtenFileInfo.Length != pdfData.Length)
+            {
+                _logger.LogError("File size mismatch: Expected {ExpectedSize} bytes, Actual {ActualSize} bytes", pdfData.Length, writtenFileInfo.Length);
+                throw new IOException($"File size verification failed: Expected {pdfData.Length} bytes, but file is {writtenFileInfo.Length} bytes");
+            }
+            
+            _logger.LogInformation("File verification successful: {FileSize} bytes written correctly", writtenFileInfo.Length);
 
             // Create a local file URL for development
             var localUrl = $"file://{filePath.Replace('\\', '/')}";
@@ -402,28 +530,63 @@ public class BlobStorageService : IBlobStorageService
             // DEBUG: Log successful local save to browser console (production: remove this section)
             await _debugConsole.LogInfoAsync("LOCAL FILE SAVED SUCCESSFULLY");
             await _debugConsole.LogAsync($"Local URL: {localUrl}");
+            await _debugConsole.LogAsync($"File verified: {writtenFileInfo.Length} bytes");
 
             // DEBUG: Log successful local save (production: remove this section)
             Console.WriteLine("=== LOCAL FILE SAVED SUCCESSFULLY ===");
             Console.WriteLine($"Local URL: {localUrl}");
+            Console.WriteLine($"File verified: {writtenFileInfo.Length} bytes");
+            Console.WriteLine($"Full file path: {filePath}");
 
             _logger.LogInformation("Successfully saved PDF to local development storage: {FilePath}", filePath);
-            _logger.LogInformation("DEBUG - Local file saved successfully: {LocalUrl}", localUrl);
+            _logger.LogInformation("Local file URL created: {LocalUrl}", localUrl);
 
             return localUrl;
         }
         catch (Exception ex)
         {
+            // Enhanced error categorization and logging for directory/file issues
+            var errorCategory = "Unknown";
+            var troubleshootingTips = "Check system permissions and disk space.";
+            
+            if (ex is UnauthorizedAccessException)
+            {
+                errorCategory = "Permission Error";
+                troubleshootingTips = "Ensure the application has write permissions to the temp directory. On Windows, check if antivirus is blocking file creation.";
+            }
+            else if (ex is DirectoryNotFoundException)
+            {
+                errorCategory = "Directory Error";
+                troubleshootingTips = "Verify the temp directory exists and is accessible. Check system configuration.";
+            }
+            else if (ex is IOException)
+            {
+                errorCategory = "I/O Error";
+                troubleshootingTips = "Check available disk space, ensure no other process is locking the directory, and verify antivirus settings.";
+            }
+            else if (ex is ArgumentException)
+            {
+                errorCategory = "Path Error";
+                troubleshootingTips = "Check for invalid characters in the submission ID or file name.";
+            }
+            
             // DEBUG: Enhanced error logging to browser console (production: keep but remove DEBUG prefix)
             await _debugConsole.LogErrorAsync("LOCAL STORAGE SAVE FAILED");
+            await _debugConsole.LogErrorAsync($"Error Category: {errorCategory}");
             await _debugConsole.LogErrorAsync($"Error: {ex.Message}");
+            await _debugConsole.LogErrorAsync($"Troubleshooting: {troubleshootingTips}");
 
             // DEBUG: Enhanced error logging (production: keep but remove DEBUG prefix)
             Console.WriteLine($"=== LOCAL STORAGE SAVE FAILED ===");
-            Console.WriteLine($"Error: {ex.Message}");
+            Console.WriteLine($"Error Category: {errorCategory}");
+            Console.WriteLine($"Error Type: {ex.GetType().Name}");
+            Console.WriteLine($"Error Message: {ex.Message}");
+            Console.WriteLine($"Troubleshooting Tips: {troubleshootingTips}");
             Console.WriteLine($"Stack trace: {ex.StackTrace}");
 
-            _logger.LogError(ex, "Failed to save PDF to local development storage for submission {SubmissionId}", submissionId);
+            _logger.LogError(ex, "Failed to save PDF to local development storage for submission {SubmissionId}. Category: {ErrorCategory}. Troubleshooting: {TroubleshootingTips}", 
+                submissionId, errorCategory, troubleshootingTips);
+            
             throw;
         }
     }
