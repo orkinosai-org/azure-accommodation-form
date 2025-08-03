@@ -58,7 +58,17 @@ public class FormApiService : IFormApiService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error initializing form for email {Email}", email);
+            // Log complete exception details including stack trace for troubleshooting
+            _logger.LogError(ex, "Error initializing form for email {Email}. Exception type: {ExceptionType}, Message: {ExceptionMessage}, StackTrace: {StackTrace}", 
+                email, ex.GetType().Name, ex.Message, ex.StackTrace);
+            
+            // Log inner exceptions if present
+            if (ex.InnerException != null)
+            {
+                _logger.LogError("Inner exception during form initialization: {InnerExceptionType}: {InnerExceptionMessage}", 
+                    ex.InnerException.GetType().Name, ex.InnerException.Message);
+            }
+            
             return new FormSubmissionResponse { Success = false, Message = "Network error occurred" };
         }
     }
@@ -87,7 +97,17 @@ public class FormApiService : IFormApiService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error sending email verification for submission {SubmissionId}", submissionId);
+            // Log complete exception details including stack trace for troubleshooting
+            _logger.LogError(ex, "Error sending email verification for submission {SubmissionId}. Exception type: {ExceptionType}, Message: {ExceptionMessage}, StackTrace: {StackTrace}", 
+                submissionId, ex.GetType().Name, ex.Message, ex.StackTrace);
+            
+            // Log inner exceptions if present
+            if (ex.InnerException != null)
+            {
+                _logger.LogError("Inner exception during email verification send: {InnerExceptionType}: {InnerExceptionMessage}", 
+                    ex.InnerException.GetType().Name, ex.InnerException.Message);
+            }
+            
             return new EmailVerificationResponse { Success = false, Message = "Network error occurred" };
         }
     }
@@ -116,7 +136,17 @@ public class FormApiService : IFormApiService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error verifying email token for submission {SubmissionId}", submissionId);
+            // Log complete exception details including stack trace for troubleshooting
+            _logger.LogError(ex, "Error verifying email token for submission {SubmissionId}. Exception type: {ExceptionType}, Message: {ExceptionMessage}, StackTrace: {StackTrace}", 
+                submissionId, ex.GetType().Name, ex.Message, ex.StackTrace);
+            
+            // Log inner exceptions if present
+            if (ex.InnerException != null)
+            {
+                _logger.LogError("Inner exception during email token verification: {InnerExceptionType}: {InnerExceptionMessage}", 
+                    ex.InnerException.GetType().Name, ex.InnerException.Message);
+            }
+            
             return new FormSubmissionResponse { Success = false, Message = "Network error occurred" };
         }
     }
@@ -201,7 +231,19 @@ public class FormApiService : IFormApiService
             Console.WriteLine($"Exception Type: {ex.GetType().Name}");
             Console.WriteLine($"Exception Message: {ex.Message}");
             Console.WriteLine($"Stack Trace: {ex.StackTrace}");
-            _logger.LogError(ex, "Error submitting form for submission {SubmissionId}", submissionId);
+            
+            // Log complete exception details including stack trace for troubleshooting
+            _logger.LogError(ex, "Error submitting form for submission {SubmissionId}. Exception type: {ExceptionType}, Message: {ExceptionMessage}, StackTrace: {StackTrace}", 
+                submissionId, ex.GetType().Name, ex.Message, ex.StackTrace);
+            
+            // Log inner exceptions if present
+            if (ex.InnerException != null)
+            {
+                _logger.LogError("Inner exception during form submission: {InnerExceptionType}: {InnerExceptionMessage}", 
+                    ex.InnerException.GetType().Name, ex.InnerException.Message);
+                Console.WriteLine($"Inner Exception: {ex.InnerException.GetType().Name}: {ex.InnerException.Message}");
+            }
+            
             return new FormSubmissionResponse { Success = false, Message = "Network error occurred" };
         }
     }
