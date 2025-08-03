@@ -88,6 +88,24 @@ public class StartupWithoutAzureDiagnosticsTest
             Console.WriteLine("\n" + new string('=', 50));
             await ConsentValidationTest.TestConsentValidation();
 
+            // Run the foreign key constraint test
+            Console.WriteLine("\n" + new string('=', 50));
+            var foreignKeyTestResult = await FormSubmissionForeignKeyTest.TestFormSubmissionForeignKeyConstraints();
+            if (!foreignKeyTestResult)
+            {
+                Console.WriteLine("❌ Foreign key constraint test failed!");
+                Environment.Exit(1);
+            }
+
+            // Run the defensive logging test
+            Console.WriteLine("\n" + new string('=', 50));
+            var defensiveLoggingTestResult = await DefensiveLoggingTest.TestDefensiveLogging();
+            if (!defensiveLoggingTestResult)
+            {
+                Console.WriteLine("❌ Defensive logging test failed!");
+                Environment.Exit(1);
+            }
+
         }
         catch (Exception ex)
         {
