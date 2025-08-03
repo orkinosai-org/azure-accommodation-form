@@ -1,5 +1,8 @@
 """
 Azure Blob Storage service for file management
+
+This service uses blob storage configuration that mirrors the .NET
+BlobStorageSettings structure from appsettings.json.
 """
 
 import io
@@ -11,20 +14,25 @@ from azure.core.exceptions import ResourceNotFoundError
 from app.core.config import get_settings
 
 logger = logging.getLogger(__name__)
-settings = get_settings()
 
 class AzureBlobStorageService:
-    """Service for Azure Blob Storage operations"""
+    """Service for Azure Blob Storage operations using configuration that mirrors .NET BlobStorageSettings"""
     
     def __init__(self):
-        self.connection_string = settings.azure_storage_connection_string
-        self.container_name = settings.azure_storage_container_name
+        settings = get_settings()
+        self.blob_settings = settings.blob_storage_settings
+        
+        self.connection_string = self.blob_settings.connection_string
+        self.container_name = self.blob_settings.container_name
         self.blob_service_client = None
         
         if self.connection_string:
             self.blob_service_client = BlobServiceClient.from_connection_string(
                 self.connection_string
             )
+            logger.info(f"Azure Blob Storage initialized with container: {self.container_name}")
+        else:
+            logger.warning("Azure Blob Storage not configured - missing connection string")
     
     async def test_connection(self) -> bool:
         """Test Azure Blob Storage connection"""

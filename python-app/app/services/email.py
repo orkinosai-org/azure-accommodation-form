@@ -1,5 +1,8 @@
 """
 Email service for sending notifications and MFA tokens
+
+This service uses the email configuration from the settings that mirror
+the .NET EmailSettings structure from appsettings.json.
 """
 
 import smtplib
@@ -14,20 +17,25 @@ from app.core.config import get_settings
 from app.models.form import AccommodationFormData
 
 logger = logging.getLogger(__name__)
-settings = get_settings()
 
 class EmailService:
-    """Service for sending emails"""
+    """Service for sending emails using SMTP configuration that mirrors .NET EmailSettings"""
     
     def __init__(self):
-        self.smtp_server = settings.smtp_server
-        self.smtp_port = settings.smtp_port
-        self.smtp_username = settings.smtp_username
-        self.smtp_password = settings.smtp_password
-        self.smtp_use_tls = settings.smtp_use_tls
-        self.from_email = settings.from_email
-        self.from_name = settings.from_name
-        self.admin_email = settings.admin_email
+        settings = get_settings()
+        self.email_settings = settings.email_settings
+        
+        # Email server configuration
+        self.smtp_server = self.email_settings.smtp_server
+        self.smtp_port = self.email_settings.smtp_port
+        self.smtp_username = self.email_settings.smtp_username
+        self.smtp_password = self.email_settings.smtp_password
+        self.use_ssl = self.email_settings.use_ssl  # Maps to UseSsl in .NET
+        self.from_email = self.email_settings.from_email
+        self.from_name = self.email_settings.from_name
+        self.company_email = self.email_settings.company_email  # Maps to CompanyEmail in .NET
+        
+        logger.info(f"Email service initialized with SMTP server: {self.smtp_server}:{self.smtp_port}")
     
     async def _send_email(
         self,
@@ -37,7 +45,7 @@ class EmailService:
         body_html: Optional[str] = None,
         attachments: Optional[list] = None
     ) -> bool:
-        """Send email via SMTP"""
+        """Send email via SMTP using configuration that mirrors .NET EmailSettings"""
         try:
             # Create message
             msg = MIMEMultipart('alternative')
@@ -59,7 +67,7 @@ class EmailService:
             
             # Send email
             with smtplib.SMTP(self.smtp_server, self.smtp_port) as server:
-                if self.smtp_use_tls:
+                if self.use_ssl:  # Using the .NET compatible property name
                     server.starttls()
                 
                 if self.smtp_username and self.smtp_password:
@@ -133,7 +141,7 @@ Submission Details:
 
 Please find your completed application form attached to this email for your records.
 
-If you have any questions, please contact us at {self.admin_email}.
+If you have any questions, please contact us at {self.company_email or 'admin@yourdomain.com'}.
 
 Best regards,
 Azure Accommodation Team
@@ -156,7 +164,7 @@ Azure Accommodation Team
             </ul>
             
             <p>Please find your completed application form attached to this email for your records.</p>
-            <p>If you have any questions, please contact us at <a href="mailto:{self.admin_email}">{self.admin_email}</a>.</p>
+            <p>If you have any questions, please contact us at <a href="mailto:{self.company_email or 'admin@yourdomain.com'}">{self.company_email or 'admin@yourdomain.com'}</a>.</p>
             
             <hr>
             <p><em>Azure Accommodation Team</em></p>
@@ -277,7 +285,7 @@ Please review and process this application.
         )
         
         return await self._send_email(
-            self.admin_email, 
+            self.company_email or 'admin@yourdomain.com', 
             subject, 
             body_text, 
             body_html, 
