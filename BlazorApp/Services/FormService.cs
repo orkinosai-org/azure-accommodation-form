@@ -60,6 +60,9 @@ public class FormService : IFormService
 
             _context.FormSubmissions.Add(submission);
             
+            // Save submission first to get the auto-generated Id for foreign key references
+            await _context.SaveChangesAsync();
+            
             LogSubmissionAction(submission.Id, "SessionInitialized", $"Form session initialized for email: {email}");
             await _context.SaveChangesAsync();
 
@@ -76,9 +79,31 @@ public class FormService : IFormService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to initialize form session for email {Email}", email);
+            
+            // Enhanced error handling with specific failure details
+            var errorMessage = "Failed to initialize form session";
+            
+            // Provide more specific error messages based on exception type
+            if (ex is DbUpdateException dbEx)
+            {
+                if (dbEx.InnerException?.Message?.Contains("FOREIGN KEY constraint failed") == true)
+                {
+                    errorMessage = "Database constraint error occurred during session initialization";
+                    _logger.LogError("FOREIGN KEY constraint failure in InitializeFormSessionAsync - this should not happen after fix");
+                }
+                else if (dbEx.InnerException?.Message?.Contains("UNIQUE constraint failed") == true)
+                {
+                    errorMessage = "Duplicate session detected";
+                }
+                else
+                {
+                    errorMessage = "Database error occurred during session initialization";
+                }
+            }
+            
             return new FormSubmissionResponse
             {
-                Message = "Failed to initialize form session",
+                Message = errorMessage,
                 Success = false
             };
         }
@@ -519,15 +544,34 @@ public class FormService : IFormService
 
     private void LogSubmissionAction(int submissionId, string action, string? details = null)
     {
-        var log = new FormSubmissionLog
+        // Defensive check to prevent foreign key constraint failures
+        if (submissionId <= 0)
         {
-            FormSubmissionId = submissionId,
-            Action = action,
-            Details = details,
-            Timestamp = DateTime.UtcNow
-        };
+            _logger.LogError("Cannot log submission action '{Action}' - invalid submission ID: {SubmissionId}. Details: {Details}", 
+                action, submissionId, details);
+            return;
+        }
 
-        _context.FormSubmissionLogs.Add(log);
+        try
+        {
+            var log = new FormSubmissionLog
+            {
+                FormSubmissionId = submissionId,
+                Action = action,
+                Details = details,
+                Timestamp = DateTime.UtcNow
+            };
+
+            _context.FormSubmissionLogs.Add(log);
+            
+            // Log the action for debugging purposes
+            _logger.LogDebug("Logged submission action '{Action}' for submission ID {SubmissionId}", action, submissionId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to log submission action '{Action}' for submission ID {SubmissionId}. Details: {Details}", 
+                action, submissionId, details);
+        }
     }
 
     private string GenerateVerificationToken()

@@ -238,3 +238,4 @@
 /home/runner/work/azure-accommodation-form/azure-accommodation-form/Tests/bin/Debug/net8.0/Microsoft.JSInterop.WebAssembly.dll
 /home/runner/work/azure-accommodation-form/azure-accommodation-form/Tests/bin/Debug/net8.0/BlazorApp.Client.dll
 /home/runner/work/azure-accommodation-form/azure-accommodation-form/Tests/bin/Debug/net8.0/BlazorApp.Client.pdb
+/home/runner/work/azure-accommodation-form/azure-accommodation-form/Tests/bin/Debug/net8.0/Microsoft.EntityFrameworkCore.InMemory.dll
