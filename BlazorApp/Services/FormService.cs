@@ -75,20 +75,52 @@ public class FormService : IFormService
         }
         catch (Exception ex)
         {
-            // Log complete exception details including stack trace for troubleshooting
-            _logger.LogError(ex, "Failed to initialize form session for email {Email}. Exception type: {ExceptionType}, Message: {ExceptionMessage}, StackTrace: {StackTrace}", 
-                email, ex.GetType().Name, ex.Message, ex.StackTrace);
+            // Enhanced exception handling with specific DbUpdateException diagnostics
+            var errorMessage = "Failed to initialize form session";
+            var errorDetails = ex.Message;
             
-            // Log inner exceptions if present
-            if (ex.InnerException != null)
+            // Specific handling for database constraint issues
+            if (ex is DbUpdateException dbEx)
             {
-                _logger.LogError("Inner exception: {InnerExceptionType}: {InnerExceptionMessage}", 
-                    ex.InnerException.GetType().Name, ex.InnerException.Message);
+                if (dbEx.InnerException?.Message?.Contains("FOREIGN KEY constraint failed") == true)
+                {
+                    errorMessage = "Database foreign key constraint error during session initialization";
+                    errorDetails = "Foreign key constraint failure - data integrity issue detected";
+                    _logger.LogError(dbEx, "FOREIGN KEY constraint failed during form session initialization for email {Email}. SQLite Error 19 detected. Inner exception: {InnerExceptionMessage}", 
+                        email, dbEx.InnerException?.Message);
+                }
+                else if (dbEx.InnerException?.Message?.Contains("UNIQUE constraint failed") == true)
+                {
+                    errorMessage = "Database unique constraint error during session initialization";
+                    errorDetails = "Unique constraint failure - duplicate data detected";
+                    _logger.LogError(dbEx, "UNIQUE constraint failed during form session initialization for email {Email}. Inner exception: {InnerExceptionMessage}", 
+                        email, dbEx.InnerException?.Message);
+                }
+                else
+                {
+                    errorMessage = "Database error during session initialization";
+                    errorDetails = dbEx.InnerException?.Message ?? dbEx.Message;
+                    _logger.LogError(dbEx, "DbUpdateException during form session initialization for email {Email}. Inner exception: {InnerExceptionMessage}", 
+                        email, dbEx.InnerException?.Message);
+                }
+            }
+            else
+            {
+                // Log complete exception details including stack trace for troubleshooting
+                _logger.LogError(ex, "Failed to initialize form session for email {Email}. Exception type: {ExceptionType}, Message: {ExceptionMessage}, StackTrace: {StackTrace}", 
+                    email, ex.GetType().Name, ex.Message, ex.StackTrace);
+                
+                // Log inner exceptions if present
+                if (ex.InnerException != null)
+                {
+                    _logger.LogError("Inner exception: {InnerExceptionType}: {InnerExceptionMessage}", 
+                        ex.InnerException.GetType().Name, ex.InnerException.Message);
+                }
             }
             
             return new FormSubmissionResponse
             {
-                Message = "Failed to initialize form session",
+                Message = errorMessage,
                 Success = false
             };
         }
@@ -146,21 +178,53 @@ public class FormService : IFormService
         }
         catch (Exception ex)
         {
-            // Log complete exception details including stack trace for troubleshooting
-            _logger.LogError(ex, "Failed to send email verification for submission {SubmissionId}, email {Email}. Exception type: {ExceptionType}, Message: {ExceptionMessage}, StackTrace: {StackTrace}", 
-                submissionId, email, ex.GetType().Name, ex.Message, ex.StackTrace);
+            // Enhanced exception handling with specific DbUpdateException diagnostics
+            var errorMessage = "Failed to send email verification";
+            var errorDetails = ex.Message;
             
-            // Log inner exceptions if present
-            if (ex.InnerException != null)
+            // Specific handling for database constraint issues
+            if (ex is DbUpdateException dbEx)
             {
-                _logger.LogError("Inner exception during email verification: {InnerExceptionType}: {InnerExceptionMessage}", 
-                    ex.InnerException.GetType().Name, ex.InnerException.Message);
+                if (dbEx.InnerException?.Message?.Contains("FOREIGN KEY constraint failed") == true)
+                {
+                    errorMessage = "Database foreign key constraint error during email verification";
+                    errorDetails = "Foreign key constraint failure - data integrity issue detected";
+                    _logger.LogError(dbEx, "FOREIGN KEY constraint failed during email verification for submission {SubmissionId}, email {Email}. SQLite Error 19 detected. Inner exception: {InnerExceptionMessage}", 
+                        submissionId, email, dbEx.InnerException?.Message);
+                }
+                else if (dbEx.InnerException?.Message?.Contains("UNIQUE constraint failed") == true)
+                {
+                    errorMessage = "Database unique constraint error during email verification";
+                    errorDetails = "Unique constraint failure - duplicate data detected";
+                    _logger.LogError(dbEx, "UNIQUE constraint failed during email verification for submission {SubmissionId}, email {Email}. Inner exception: {InnerExceptionMessage}", 
+                        submissionId, email, dbEx.InnerException?.Message);
+                }
+                else
+                {
+                    errorMessage = "Database error during email verification";
+                    errorDetails = dbEx.InnerException?.Message ?? dbEx.Message;
+                    _logger.LogError(dbEx, "DbUpdateException during email verification for submission {SubmissionId}, email {Email}. Inner exception: {InnerExceptionMessage}", 
+                        submissionId, email, dbEx.InnerException?.Message);
+                }
+            }
+            else
+            {
+                // Log complete exception details including stack trace for troubleshooting
+                _logger.LogError(ex, "Failed to send email verification for submission {SubmissionId}, email {Email}. Exception type: {ExceptionType}, Message: {ExceptionMessage}, StackTrace: {StackTrace}", 
+                    submissionId, email, ex.GetType().Name, ex.Message, ex.StackTrace);
+                
+                // Log inner exceptions if present
+                if (ex.InnerException != null)
+                {
+                    _logger.LogError("Inner exception during email verification: {InnerExceptionType}: {InnerExceptionMessage}", 
+                        ex.InnerException.GetType().Name, ex.InnerException.Message);
+                }
             }
             
             return new EmailVerificationResponse
             {
                 Success = false,
-                Message = "An error occurred while sending verification email"
+                Message = errorMessage
             };
         }
     }
@@ -220,20 +284,52 @@ public class FormService : IFormService
         }
         catch (Exception ex)
         {
-            // Log complete exception details including stack trace for troubleshooting
-            _logger.LogError(ex, "Failed to verify email token for submission {SubmissionId}. Exception type: {ExceptionType}, Message: {ExceptionMessage}, StackTrace: {StackTrace}", 
-                submissionId, ex.GetType().Name, ex.Message, ex.StackTrace);
+            // Enhanced exception handling with specific DbUpdateException diagnostics
+            var errorMessage = "Failed to verify email token";
+            var errorDetails = ex.Message;
             
-            // Log inner exceptions if present
-            if (ex.InnerException != null)
+            // Specific handling for database constraint issues
+            if (ex is DbUpdateException dbEx)
             {
-                _logger.LogError("Inner exception during email token verification: {InnerExceptionType}: {InnerExceptionMessage}", 
-                    ex.InnerException.GetType().Name, ex.InnerException.Message);
+                if (dbEx.InnerException?.Message?.Contains("FOREIGN KEY constraint failed") == true)
+                {
+                    errorMessage = "Database foreign key constraint error during email token verification";
+                    errorDetails = "Foreign key constraint failure - data integrity issue detected";
+                    _logger.LogError(dbEx, "FOREIGN KEY constraint failed during email token verification for submission {SubmissionId}. SQLite Error 19 detected. Inner exception: {InnerExceptionMessage}", 
+                        submissionId, dbEx.InnerException?.Message);
+                }
+                else if (dbEx.InnerException?.Message?.Contains("UNIQUE constraint failed") == true)
+                {
+                    errorMessage = "Database unique constraint error during email token verification";
+                    errorDetails = "Unique constraint failure - duplicate data detected";
+                    _logger.LogError(dbEx, "UNIQUE constraint failed during email token verification for submission {SubmissionId}. Inner exception: {InnerExceptionMessage}", 
+                        submissionId, dbEx.InnerException?.Message);
+                }
+                else
+                {
+                    errorMessage = "Database error during email token verification";
+                    errorDetails = dbEx.InnerException?.Message ?? dbEx.Message;
+                    _logger.LogError(dbEx, "DbUpdateException during email token verification for submission {SubmissionId}. Inner exception: {InnerExceptionMessage}", 
+                        submissionId, dbEx.InnerException?.Message);
+                }
+            }
+            else
+            {
+                // Log complete exception details including stack trace for troubleshooting
+                _logger.LogError(ex, "Failed to verify email token for submission {SubmissionId}. Exception type: {ExceptionType}, Message: {ExceptionMessage}, StackTrace: {StackTrace}", 
+                    submissionId, ex.GetType().Name, ex.Message, ex.StackTrace);
+                
+                // Log inner exceptions if present
+                if (ex.InnerException != null)
+                {
+                    _logger.LogError("Inner exception during email token verification: {InnerExceptionType}: {InnerExceptionMessage}", 
+                        ex.InnerException.GetType().Name, ex.InnerException.Message);
+                }
             }
             
             return new FormSubmissionResponse
             {
-                Message = "An error occurred during email verification",
+                Message = errorMessage,
                 Success = false
             };
         }
@@ -345,15 +441,47 @@ public class FormService : IFormService
         }
         catch (Exception ex)
         {
-            // Log complete exception details including stack trace for troubleshooting
-            _logger.LogError(ex, "Failed to submit form for submission {SubmissionId}. Exception type: {ExceptionType}, Message: {ExceptionMessage}, StackTrace: {StackTrace}", 
-                submissionId, ex.GetType().Name, ex.Message, ex.StackTrace);
+            // Enhanced exception handling with specific DbUpdateException diagnostics
+            var errorMessage = "Failed to submit form";
+            var errorDetails = ex.Message;
             
-            // Log inner exceptions if present
-            if (ex.InnerException != null)
+            // Specific handling for database constraint issues
+            if (ex is DbUpdateException dbEx)
             {
-                _logger.LogError("Inner exception during form submission: {InnerExceptionType}: {InnerExceptionMessage}", 
-                    ex.InnerException.GetType().Name, ex.InnerException.Message);
+                if (dbEx.InnerException?.Message?.Contains("FOREIGN KEY constraint failed") == true)
+                {
+                    errorMessage = "Database foreign key constraint error during form submission";
+                    errorDetails = "Foreign key constraint failure - data integrity issue detected";
+                    _logger.LogError(dbEx, "FOREIGN KEY constraint failed during form submission for submission {SubmissionId}. SQLite Error 19 detected. Inner exception: {InnerExceptionMessage}", 
+                        submissionId, dbEx.InnerException?.Message);
+                }
+                else if (dbEx.InnerException?.Message?.Contains("UNIQUE constraint failed") == true)
+                {
+                    errorMessage = "Database unique constraint error during form submission";
+                    errorDetails = "Unique constraint failure - duplicate data detected";
+                    _logger.LogError(dbEx, "UNIQUE constraint failed during form submission for submission {SubmissionId}. Inner exception: {InnerExceptionMessage}", 
+                        submissionId, dbEx.InnerException?.Message);
+                }
+                else
+                {
+                    errorMessage = "Database error during form submission";
+                    errorDetails = dbEx.InnerException?.Message ?? dbEx.Message;
+                    _logger.LogError(dbEx, "DbUpdateException during form submission for submission {SubmissionId}. Inner exception: {InnerExceptionMessage}", 
+                        submissionId, dbEx.InnerException?.Message);
+                }
+            }
+            else
+            {
+                // Log complete exception details including stack trace for troubleshooting
+                _logger.LogError(ex, "Failed to submit form for submission {SubmissionId}. Exception type: {ExceptionType}, Message: {ExceptionMessage}, StackTrace: {StackTrace}", 
+                    submissionId, ex.GetType().Name, ex.Message, ex.StackTrace);
+                
+                // Log inner exceptions if present
+                if (ex.InnerException != null)
+                {
+                    _logger.LogError("Inner exception during form submission: {InnerExceptionType}: {InnerExceptionMessage}", 
+                        ex.InnerException.GetType().Name, ex.InnerException.Message);
+                }
             }
             
             // Update status to failed
@@ -370,14 +498,31 @@ public class FormService : IFormService
             }
             catch (Exception logEx)
             {
-                // Log the failure to update submission status with full details
-                _logger.LogError(logEx, "Failed to log submission failure for {SubmissionId}. Exception type: {ExceptionType}, Message: {ExceptionMessage}, StackTrace: {StackTrace}",
-                    submissionId, logEx.GetType().Name, logEx.Message, logEx.StackTrace);
+                // Enhanced exception handling for failure logging with DbUpdateException specifics
+                if (logEx is DbUpdateException logDbEx)
+                {
+                    if (logDbEx.InnerException?.Message?.Contains("FOREIGN KEY constraint failed") == true)
+                    {
+                        _logger.LogError(logDbEx, "FOREIGN KEY constraint failed while logging submission failure for {SubmissionId}. SQLite Error 19 detected. Inner exception: {InnerExceptionMessage}",
+                            submissionId, logDbEx.InnerException?.Message);
+                    }
+                    else
+                    {
+                        _logger.LogError(logDbEx, "DbUpdateException while logging submission failure for {SubmissionId}. Inner exception: {InnerExceptionMessage}",
+                            submissionId, logDbEx.InnerException?.Message);
+                    }
+                }
+                else
+                {
+                    // Log the failure to update submission status with full details
+                    _logger.LogError(logEx, "Failed to log submission failure for {SubmissionId}. Exception type: {ExceptionType}, Message: {ExceptionMessage}, StackTrace: {StackTrace}",
+                        submissionId, logEx.GetType().Name, logEx.Message, logEx.StackTrace);
+                }
             }
 
             return new FormSubmissionResponse
             {
-                Message = "An error occurred while processing your submission",
+                Message = errorMessage,
                 Success = false
             };
         }
