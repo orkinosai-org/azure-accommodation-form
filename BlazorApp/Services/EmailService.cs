@@ -82,7 +82,17 @@ Best regards,
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to send email verification token to {Email}", email);
+            // Log complete exception details including stack trace for troubleshooting
+            _logger.LogError(ex, "Failed to send email verification token to {Email}. Exception type: {ExceptionType}, Message: {ExceptionMessage}, StackTrace: {StackTrace}", 
+                email, ex.GetType().Name, ex.Message, ex.StackTrace);
+            
+            // Log inner exceptions if present
+            if (ex.InnerException != null)
+            {
+                _logger.LogError("Inner exception during email verification token send: {InnerExceptionType}: {InnerExceptionMessage}", 
+                    ex.InnerException.GetType().Name, ex.InnerException.Message);
+            }
+            
             return false;
         }
     }
@@ -140,7 +150,17 @@ Best regards,
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to send form submission confirmation to {Email}", email);
+            // Log complete exception details including stack trace for troubleshooting
+            _logger.LogError(ex, "Failed to send form submission confirmation to {Email}. Exception type: {ExceptionType}, Message: {ExceptionMessage}, StackTrace: {StackTrace}", 
+                email, ex.GetType().Name, ex.Message, ex.StackTrace);
+            
+            // Log inner exceptions if present
+            if (ex.InnerException != null)
+            {
+                _logger.LogError("Inner exception during form submission confirmation send: {InnerExceptionType}: {InnerExceptionMessage}", 
+                    ex.InnerException.GetType().Name, ex.InnerException.Message);
+            }
+            
             return false;
         }
     }
@@ -191,7 +211,17 @@ Regards,
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to send form submission to company email");
+            // Log complete exception details including stack trace for troubleshooting
+            _logger.LogError(ex, "Failed to send form submission to company email. Exception type: {ExceptionType}, Message: {ExceptionMessage}, StackTrace: {StackTrace}", 
+                ex.GetType().Name, ex.Message, ex.StackTrace);
+            
+            // Log inner exceptions if present
+            if (ex.InnerException != null)
+            {
+                _logger.LogError("Inner exception during form submission to company email: {InnerExceptionType}: {InnerExceptionMessage}", 
+                    ex.InnerException.GetType().Name, ex.InnerException.Message);
+            }
+            
             return false;
         }
     }

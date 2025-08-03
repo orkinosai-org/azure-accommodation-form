@@ -8,6 +8,7 @@
 @using System.ComponentModel.DataAnnotations
 @inject IFormApiService FormApiService
 @inject IJSRuntime JSRuntime
+@inject ILogger<ApplicationForm> Logger
 
 <PageTitle>Azure Accommodation Application Form</PageTitle>
 
@@ -1146,7 +1147,9 @@
             }
             catch
             {
-                // Ignore JavaScript errors in case the method isn't available
+                // Intentionally not logging JavaScript interop failures as they are expected
+                // when the DOM is not ready or JavaScript functions are not available.
+                // This is a non-critical UI enhancement and should not impact form functionality.
             }
         }
     }
@@ -1276,6 +1279,17 @@
         }
         catch (Exception ex)
         {
+            // Log the complete exception details for troubleshooting
+            Logger.LogError(ex, "Email verification failed for submission {SubmissionId}. Exception: {ExceptionType}, Message: {ExceptionMessage}", 
+                currentSubmissionId, ex.GetType().Name, ex.Message);
+            
+            // Log stack trace for development debugging
+            Console.WriteLine($"=== EMAIL VERIFICATION EXCEPTION ===");
+            Console.WriteLine($"Submission ID: {currentSubmissionId}");
+            Console.WriteLine($"Exception Type: {ex.GetType().Name}");
+            Console.WriteLine($"Exception Message: {ex.Message}");
+            Console.WriteLine($"Stack Trace: {ex.StackTrace}");
+            
             ShowError("An error occurred during verification. Please try again.");
         }
         finally
@@ -1308,6 +1322,17 @@
         }
         catch (Exception ex)
         {
+            // Log the complete exception details for troubleshooting
+            Logger.LogError(ex, "Failed to resend verification code for submission {SubmissionId}. Exception: {ExceptionType}, Message: {ExceptionMessage}", 
+                currentSubmissionId, ex.GetType().Name, ex.Message);
+            
+            // Log stack trace for development debugging
+            Console.WriteLine($"=== RESEND VERIFICATION EXCEPTION ===");
+            Console.WriteLine($"Submission ID: {currentSubmissionId}");
+            Console.WriteLine($"Exception Type: {ex.GetType().Name}");
+            Console.WriteLine($"Exception Message: {ex.Message}");
+            Console.WriteLine($"Stack Trace: {ex.StackTrace}");
+            
             ShowError("Failed to resend verification code.");
         }
         finally
@@ -1721,6 +1746,8 @@
         }
         catch
         {
+            // Intentionally not logging email format validation failures as they are expected
+            // for invalid email inputs during user typing. This is client-side validation only.
             return false;
         }
     }

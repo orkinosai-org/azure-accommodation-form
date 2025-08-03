@@ -75,7 +75,17 @@ public class FormService : IFormService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to initialize form session for email {Email}", email);
+            // Log complete exception details including stack trace for troubleshooting
+            _logger.LogError(ex, "Failed to initialize form session for email {Email}. Exception type: {ExceptionType}, Message: {ExceptionMessage}, StackTrace: {StackTrace}", 
+                email, ex.GetType().Name, ex.Message, ex.StackTrace);
+            
+            // Log inner exceptions if present
+            if (ex.InnerException != null)
+            {
+                _logger.LogError("Inner exception: {InnerExceptionType}: {InnerExceptionMessage}", 
+                    ex.InnerException.GetType().Name, ex.InnerException.Message);
+            }
+            
             return new FormSubmissionResponse
             {
                 Message = "Failed to initialize form session",
@@ -136,7 +146,17 @@ public class FormService : IFormService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to send email verification for submission {SubmissionId}", submissionId);
+            // Log complete exception details including stack trace for troubleshooting
+            _logger.LogError(ex, "Failed to send email verification for submission {SubmissionId}, email {Email}. Exception type: {ExceptionType}, Message: {ExceptionMessage}, StackTrace: {StackTrace}", 
+                submissionId, email, ex.GetType().Name, ex.Message, ex.StackTrace);
+            
+            // Log inner exceptions if present
+            if (ex.InnerException != null)
+            {
+                _logger.LogError("Inner exception during email verification: {InnerExceptionType}: {InnerExceptionMessage}", 
+                    ex.InnerException.GetType().Name, ex.InnerException.Message);
+            }
+            
             return new EmailVerificationResponse
             {
                 Success = false,
@@ -200,7 +220,17 @@ public class FormService : IFormService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to verify email token for submission {SubmissionId}", submissionId);
+            // Log complete exception details including stack trace for troubleshooting
+            _logger.LogError(ex, "Failed to verify email token for submission {SubmissionId}. Exception type: {ExceptionType}, Message: {ExceptionMessage}, StackTrace: {StackTrace}", 
+                submissionId, ex.GetType().Name, ex.Message, ex.StackTrace);
+            
+            // Log inner exceptions if present
+            if (ex.InnerException != null)
+            {
+                _logger.LogError("Inner exception during email token verification: {InnerExceptionType}: {InnerExceptionMessage}", 
+                    ex.InnerException.GetType().Name, ex.InnerException.Message);
+            }
+            
             return new FormSubmissionResponse
             {
                 Message = "An error occurred during email verification",
@@ -315,7 +345,16 @@ public class FormService : IFormService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to submit form for submission {SubmissionId}", submissionId);
+            // Log complete exception details including stack trace for troubleshooting
+            _logger.LogError(ex, "Failed to submit form for submission {SubmissionId}. Exception type: {ExceptionType}, Message: {ExceptionMessage}, StackTrace: {StackTrace}", 
+                submissionId, ex.GetType().Name, ex.Message, ex.StackTrace);
+            
+            // Log inner exceptions if present
+            if (ex.InnerException != null)
+            {
+                _logger.LogError("Inner exception during form submission: {InnerExceptionType}: {InnerExceptionMessage}", 
+                    ex.InnerException.GetType().Name, ex.InnerException.Message);
+            }
             
             // Update status to failed
             try
@@ -331,7 +370,9 @@ public class FormService : IFormService
             }
             catch (Exception logEx)
             {
-                _logger.LogError(logEx, "Failed to log submission failure for {SubmissionId}", submissionId);
+                // Log the failure to update submission status with full details
+                _logger.LogError(logEx, "Failed to log submission failure for {SubmissionId}. Exception type: {ExceptionType}, Message: {ExceptionMessage}, StackTrace: {StackTrace}",
+                    submissionId, logEx.GetType().Name, logEx.Message, logEx.StackTrace);
             }
 
             return new FormSubmissionResponse
