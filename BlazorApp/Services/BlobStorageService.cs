@@ -14,8 +14,10 @@ public class BlobStorageService : IBlobStorageService
 {
     private readonly BlobStorageSettings _settings;
     private readonly ILogger<BlobStorageService> _logger;
-    private readonly BlobServiceClient _blobServiceClient;
     private readonly IDebugConsoleHelper _debugConsole;
+    private BlobServiceClient? _blobServiceClient;
+    private bool _initializationAttempted = false;
+    private Exception? _initializationException = null;
 
     public BlobStorageService(
         IOptions<BlobStorageSettings> settings,
@@ -25,7 +27,8 @@ public class BlobStorageService : IBlobStorageService
         _settings = settings.Value;
         _logger = logger;
         _debugConsole = debugConsole;
-        _blobServiceClient = new BlobServiceClient(_settings.ConnectionString);
+        // Don't initialize BlobServiceClient in constructor to avoid startup failures
+        // Will be initialized lazily on first use with proper error handling
     }
 
     public async Task<string> UploadFormPdfAsync(byte[] pdfData, string fileName, string submissionId)
@@ -50,12 +53,20 @@ public class BlobStorageService : IBlobStorageService
                 _settings.ContainerName, maskedConnectionString);
 
             // Development storage fallback when Azurite is not available
-            if (_settings.ConnectionString == "UseDevelopmentStorage=true")
+            if (_settings.ConnectionString == "UseDevelopmentStorage=true" && _initializationException != null)
             {
+                _logger.LogInformation("Using local development storage fallback due to Azurite unavailability");
                 return await UploadToLocalDevelopmentStorageAsync(pdfData, fileName, submissionId);
             }
 
             var containerClient = await GetContainerClientAsync();
+            
+            // If container client is null, fall back to local storage
+            if (containerClient == null)
+            {
+                _logger.LogWarning("Container client unavailable, falling back to local development storage");
+                return await UploadToLocalDevelopmentStorageAsync(pdfData, fileName, submissionId);
+            }
             var blobName = $"{submissionId}/{fileName}";
             var blobClient = containerClient.GetBlobClient(blobName);
 
@@ -169,6 +180,14 @@ public class BlobStorageService : IBlobStorageService
                 _settings.ContainerName, blobName, blobUrl);
             
             var containerClient = await GetContainerClientAsync();
+            
+            // If container client is null, return false (can't delete from fallback storage via this method)
+            if (containerClient == null)
+            {
+                _logger.LogWarning("Container client unavailable, cannot delete blob from Azure Storage: {BlobUrl}", blobUrl);
+                return false;
+            }
+            
             var blobClient = containerClient.GetBlobClient(blobName);
 
             var response = await blobClient.DeleteIfExistsAsync();
@@ -217,26 +236,102 @@ public class BlobStorageService : IBlobStorageService
         }
     }
 
-    private async Task<BlobContainerClient> GetContainerClientAsync()
+    /// <summary>
+    /// Initializes the BlobServiceClient with error handling for development scenarios
+    /// </summary>
+    private async Task<BlobServiceClient?> GetBlobServiceClientAsync()
     {
-        // For development storage, we need to handle Azurite not being available
-        var containerClient = _blobServiceClient.GetBlobContainerClient(_settings.ContainerName);
+        if (_initializationAttempted && _blobServiceClient != null)
+        {
+            return _blobServiceClient;
+        }
+
+        if (_initializationAttempted && _initializationException != null)
+        {
+            // If we already tried and failed, use fallback storage
+            _logger.LogWarning("BlobServiceClient initialization previously failed, using fallback storage");
+            return null;
+        }
+
+        _initializationAttempted = true;
+
+        try
+        {
+            // Validate connection string
+            if (string.IsNullOrEmpty(_settings.ConnectionString))
+            {
+                throw new InvalidOperationException("Blob storage connection string is not configured");
+            }
+
+            // Special handling for development storage
+            if (_settings.ConnectionString == "UseDevelopmentStorage=true")
+            {
+                _logger.LogInformation("Attempting to connect to Azure Storage Emulator (Azurite)");
+                
+                // Try to create the client and test the connection
+                var testClient = new BlobServiceClient(_settings.ConnectionString);
+                
+                // Test the connection by trying to get account info
+                var accountInfo = await testClient.GetAccountInfoAsync();
+                
+                _blobServiceClient = testClient;
+                _logger.LogInformation("Successfully connected to Azure Storage Emulator");
+                return _blobServiceClient;
+            }
+            else
+            {
+                // For production/real Azure Storage
+                _blobServiceClient = new BlobServiceClient(_settings.ConnectionString);
+                _logger.LogInformation("Successfully initialized BlobServiceClient for Azure Storage");
+                return _blobServiceClient;
+            }
+        }
+        catch (Exception ex)
+        {
+            _initializationException = ex;
+            
+            if (_settings.ConnectionString == "UseDevelopmentStorage=true")
+            {
+                _logger.LogWarning(ex, "Azure Storage Emulator (Azurite) is not available. Will use local file system fallback. " +
+                    "To use Azure Storage Emulator, please install and start Azurite: https://docs.microsoft.com/en-us/azure/storage/common/storage-use-azurite");
+            }
+            else
+            {
+                _logger.LogError(ex, "Failed to initialize BlobServiceClient with connection string: {MaskedConnectionString}", 
+                    MaskConnectionString(_settings.ConnectionString));
+            }
+            
+            return null;
+        }
+    }
+    private async Task<BlobContainerClient?> GetContainerClientAsync()
+    {
+        var blobServiceClient = await GetBlobServiceClientAsync();
         
-        // Only attempt to create container if not using development storage fallback
-        if (_settings.ConnectionString != "UseDevelopmentStorage=true")
+        if (blobServiceClient == null)
+        {
+            // BlobServiceClient initialization failed, caller should use fallback
+            return null;
+        }
+        
+        var containerClient = blobServiceClient.GetBlobContainerClient(_settings.ContainerName);
+        
+        try
         {
             await containerClient.CreateIfNotExistsAsync(PublicAccessType.None);
         }
-        else
+        catch (Exception ex)
         {
-            // For development storage, try to create but don't fail if Azurite is not running
-            try
+            // If container creation fails in development mode, log but continue
+            if (_settings.ConnectionString == "UseDevelopmentStorage=true")
             {
-                await containerClient.CreateIfNotExistsAsync(PublicAccessType.None);
+                _logger.LogWarning(ex, "Failed to create container in development storage, continuing with fallback");
+                return null;
             }
-            catch (Exception ex) when (ex.Message.Contains("Connection refused") || ex.Message.Contains("127.0.0.1:10000"))
+            else
             {
-                // Azurite is not running, this will be handled in the calling method
+                // In production, this is a real error
+                _logger.LogError(ex, "Failed to create container {ContainerName}", _settings.ContainerName);
                 throw;
             }
         }
