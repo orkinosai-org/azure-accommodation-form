@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using BlazorApp.Validation;
 
 namespace BlazorApp.Models;
 
@@ -212,7 +213,7 @@ public class OccupationAgreement
 
 public class ConsentAndDeclaration
 {
-    [Required(ErrorMessage = "You must consent to the processing of your personal data to submit this form.")]
+    [MustBeTrue(ErrorMessage = "You must consent to the processing of your personal data to submit this form.")]
     [Display(Name = "I consent to the processing of my personal data")]
     public bool ConsentGiven { get; set; }
 
@@ -301,27 +302,27 @@ public class Coliving
 
 public class Declaration
 {
-    [Required(ErrorMessage = "You must declare this will be your main home.")]
+    [MustBeTrue(ErrorMessage = "You must declare this will be your main home.")]
     [Display(Name = "This will be my main home")]
     public bool MainHome { get; set; }
 
-    [Required(ErrorMessage = "You must give permission for enquiries to be made.")]
+    [MustBeTrue(ErrorMessage = "You must give permission for enquiries to be made.")]
     [Display(Name = "I give permission for enquiries to be made")]
     public bool EnquiriesPermission { get; set; }
 
-    [Required(ErrorMessage = "You must certify no outstanding county court judgements.")]
+    [MustBeTrue(ErrorMessage = "You must certify no outstanding county court judgements.")]
     [Display(Name = "I certify no outstanding county court judgements")]
     public bool CertifyNoJudgements { get; set; }
 
-    [Required(ErrorMessage = "You must certify no housing-related debt.")]
+    [MustBeTrue(ErrorMessage = "You must certify no housing-related debt.")]
     [Display(Name = "I certify no housing-related debt")]
     public bool CertifyNoHousingDebt { get; set; }
 
-    [Required(ErrorMessage = "You must certify no debt to previous landlords.")]
+    [MustBeTrue(ErrorMessage = "You must certify no debt to previous landlords.")]
     [Display(Name = "I certify no debt to previous landlords")]
     public bool CertifyNoLandlordDebt { get; set; }
 
-    [Required(ErrorMessage = "You must certify no history of property abuse.")]
+    [MustBeTrue(ErrorMessage = "You must certify no history of property abuse.")]
     [Display(Name = "I certify no history of property abuse")]
     public bool CertifyNoAbuse { get; set; }
 }

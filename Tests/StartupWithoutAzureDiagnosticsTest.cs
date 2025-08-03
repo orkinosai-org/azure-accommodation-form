@@ -84,6 +84,10 @@ public class StartupWithoutAzureDiagnosticsTest
             Console.WriteLine("\n" + new string('=', 50));
             await EnhancedDebuggingTest.RunAsync();
 
+            // Run the consent validation test
+            Console.WriteLine("\n" + new string('=', 50));
+            await ConsentValidationTest.TestConsentValidation();
+
         }
         catch (Exception ex)
         {
