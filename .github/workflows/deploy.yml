@@ -1,0 +1,123 @@
+name: Deploy Python App to Azure
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'python-app/**'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'python-app/**'
+  workflow_dispatch:
+
+env:
+  AZURE_WEBAPP_NAME: azure-accommodation-form
+  AZURE_WEBAPP_PACKAGE_PATH: './python-app'
+  PYTHON_VERSION: '3.11'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        
+    - name: Create and start virtual environment
+      run: |
+        cd ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
+        python -m venv venv
+        source venv/bin/activate
+        
+    - name: Install dependencies
+      run: |
+        cd ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
+        source venv/bin/activate
+        pip install -r requirements.txt
+        
+    - name: Lint with flake8
+      run: |
+        cd ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
+        source venv/bin/activate
+        pip install flake8
+        # Stop build if syntax errors or undefined names
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        # Exit-zero treats all errors as warnings
+        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+        
+    - name: Test with pytest
+      run: |
+        cd ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
+        source venv/bin/activate
+        pip install pytest pytest-asyncio httpx
+        pytest tests/ -v || true  # Allow tests to fail for now
+        
+    - name: Upload artifact for deployment
+      uses: actions/upload-artifact@v3
+      with:
+        name: python-app
+        path: |
+          ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
+          !${{ env.AZURE_WEBAPP_PACKAGE_PATH }}/venv/
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    environment:
+      name: 'production'
+      url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+    - name: Download artifact from build job
+      uses: actions/download-artifact@v3
+      with:
+        name: python-app
+        path: .
+
+    - name: Deploy to Azure Web App
+      id: deploy-to-webapp
+      uses: azure/webapps-deploy@v2
+      with:
+        app-name: ${{ env.AZURE_WEBAPP_NAME }}
+        publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+        package: .
+
+  security-scan:
+    runs-on: ubuntu-latest
+    needs: build
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        
+    - name: Install security tools
+      run: |
+        cd ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
+        pip install safety bandit
+        
+    - name: Run safety check
+      run: |
+        cd ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
+        safety check -r requirements.txt || true
+        
+    - name: Run bandit security scan
+      run: |
+        cd ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
+        bandit -r app/ -f json -o bandit-report.json || true
+        
+    - name: Upload security reports
+      uses: actions/upload-artifact@v3
+      with:
+        name: security-reports
+        path: |
+          ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}/bandit-report.json

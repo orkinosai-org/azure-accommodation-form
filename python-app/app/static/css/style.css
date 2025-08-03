@@ -1,0 +1,326 @@
+/* Custom CSS for Azure Accommodation Form */
+
+:root {
+    --primary-color: #007acc;
+    --secondary-color: #6c757d;
+    --success-color: #28a745;
+    --warning-color: #ffc107;
+    --danger-color: #dc3545;
+    --info-color: #17a2b8;
+    --light-color: #f8f9fa;
+    --dark-color: #343a40;
+}
+
+body {
+    background-color: #f5f7fa;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Header styling */
+header {
+    background: linear-gradient(135deg, var(--primary-color) 0%, #0056b3 100%);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Progress steps */
+.progress-steps {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 2rem 0;
+    position: relative;
+}
+
+.progress-steps::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background-color: #e9ecef;
+    z-index: 1;
+}
+
+.step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    z-index: 2;
+    background-color: #f5f7fa;
+    padding: 0 1rem;
+}
+
+.step-number {
+    width: 3rem;
+    height: 3rem;
+    border-radius: 50%;
+    background-color: #e9ecef;
+    color: var(--secondary-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+    transition: all 0.3s ease;
+}
+
+.step-label {
+    font-size: 0.875rem;
+    color: var(--secondary-color);
+    text-align: center;
+    white-space: nowrap;
+}
+
+.step.active .step-number {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.step.active .step-label {
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+.step.completed .step-number {
+    background-color: var(--success-color);
+    color: white;
+}
+
+.step.completed .step-label {
+    color: var(--success-color);
+}
+
+/* Card styling */
+.card {
+    border: none;
+    border-radius: 0.75rem;
+    margin-bottom: 2rem;
+}
+
+.card-header {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 0.75rem 0.75rem 0 0 !important;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.card-title {
+    margin: 0;
+    color: var(--dark-color);
+    font-weight: 600;
+}
+
+/* Form styling */
+.form-control {
+    border-radius: 0.5rem;
+    border: 1px solid #ced4da;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.form-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.25rem rgba(0, 122, 204, 0.25);
+}
+
+.btn {
+    border-radius: 0.5rem;
+    font-weight: 500;
+    padding: 0.75rem 1.5rem;
+    transition: all 0.15s ease-in-out;
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.btn-primary:hover {
+    background-color: #0056b3;
+    border-color: #0056b3;
+}
+
+/* Signature pad styling */
+.signature-pad {
+    border: 2px dashed #ced4da;
+    border-radius: 0.5rem;
+    background-color: white;
+    cursor: crosshair;
+    transition: border-color 0.15s ease-in-out;
+}
+
+.signature-pad:hover {
+    border-color: var(--primary-color);
+}
+
+.signature-controls {
+    margin-top: 0.5rem;
+}
+
+/* File upload styling */
+.file-upload-area {
+    border: 2px dashed #ced4da;
+    border-radius: 0.5rem;
+    padding: 2rem;
+    text-align: center;
+    background-color: #f8f9fa;
+    transition: all 0.15s ease-in-out;
+    cursor: pointer;
+}
+
+.file-upload-area:hover {
+    border-color: var(--primary-color);
+    background-color: rgba(0, 122, 204, 0.05);
+}
+
+.file-upload-area.dragover {
+    border-color: var(--primary-color);
+    background-color: rgba(0, 122, 204, 0.1);
+}
+
+/* Address history styling */
+.address-entry {
+    border: 1px solid #e9ecef;
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    background-color: white;
+}
+
+.address-entry:last-child {
+    margin-bottom: 0;
+}
+
+.address-entry h6 {
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+}
+
+/* Checkbox and radio styling */
+.form-check-input:checked {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.form-check-input:focus {
+    box-shadow: 0 0 0 0.25rem rgba(0, 122, 204, 0.25);
+}
+
+/* Alert styling */
+.alert {
+    border-radius: 0.5rem;
+    border: none;
+}
+
+.alert-info {
+    background-color: rgba(23, 162, 184, 0.1);
+    color: #0c5460;
+}
+
+.alert-success {
+    background-color: rgba(40, 167, 69, 0.1);
+    color: #155724;
+}
+
+.alert-warning {
+    background-color: rgba(255, 193, 7, 0.1);
+    color: #856404;
+}
+
+.alert-danger {
+    background-color: rgba(220, 53, 69, 0.1);
+    color: #721c24;
+}
+
+/* Loading states */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+.loading-spinner {
+    background-color: white;
+    padding: 2rem;
+    border-radius: 0.75rem;
+    text-align: center;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+/* Animation classes */
+.fade-in {
+    animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.slide-up {
+    animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .progress-steps {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .progress-steps::before {
+        display: none;
+    }
+    
+    .step {
+        background-color: transparent;
+    }
+    
+    .step-label {
+        white-space: normal;
+    }
+    
+    .card-body {
+        padding: 1rem;
+    }
+}
+
+/* Print styles */
+@media print {
+    .no-print {
+        display: none !important;
+    }
+    
+    .card {
+        box-shadow: none !important;
+        break-inside: avoid;
+    }
+    
+    .page-break {
+        page-break-before: always;
+    }
+}
+
+/* Utility classes */
+.text-primary { color: var(--primary-color) !important; }
+.bg-primary { background-color: var(--primary-color) !important; }
+.border-primary { border-color: var(--primary-color) !important; }
+
+.cursor-pointer { cursor: pointer; }
+.cursor-not-allowed { cursor: not-allowed; }
+
+.shadow-sm { box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075) !important; }
+.shadow { box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important; }
+.shadow-lg { box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.175) !important; }
