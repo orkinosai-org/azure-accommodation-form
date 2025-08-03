@@ -58,9 +58,19 @@ public class FormService : IFormService
                 Status = FormSubmissionStatus.Draft
             };
 
+            // FIXED: Create the log entry and add it to the submission's navigation property
+            // This way, EF will handle the foreign key relationship correctly
+            var log = new FormSubmissionLog
+            {
+                Action = "SessionInitialized",
+                Details = $"Form session initialized for email: {email}",
+                Timestamp = DateTime.UtcNow
+            };
+            
+            submission.Logs.Add(log);
             _context.FormSubmissions.Add(submission);
             
-            LogSubmissionAction(submission.Id, "SessionInitialized", $"Form session initialized for email: {email}");
+            // Save both submission and log in a single transaction
             await _context.SaveChangesAsync();
 
             _logger.LogInformation("Form session initialized for {Email} with submission ID {SubmissionId}", email, submissionId);
@@ -547,12 +557,19 @@ public class FormService : IFormService
                 SubmittedAt = submissionTime
             };
 
+            // FIXED: Create the initial log entry and add it to the submission's navigation property
+            var initialLog = new FormSubmissionLog
+            {
+                Action = "DirectSubmission",
+                Details = $"Form submitted directly via API from IP: {clientIpAddress}",
+                Timestamp = DateTime.UtcNow
+            };
+            
+            submission.Logs.Add(initialLog);
             _context.FormSubmissions.Add(submission);
             
-            // Save submission first to get the auto-generated Id for foreign key references
+            // Save submission and initial log in a single transaction
             await _context.SaveChangesAsync();
-            
-            LogSubmissionAction(submission.Id, "DirectSubmission", $"Form submitted directly via API from IP: {clientIpAddress}");
 
             // Generate PDF with audit trail information
             // DEBUG: Enhanced PDF generation logging for direct submission to browser console (production: remove DEBUG prefix)
@@ -705,6 +722,13 @@ public class FormService : IFormService
 
     private void LogSubmissionAction(int submissionId, string action, string? details = null)
     {
+        // FIXED: Add defensive check to ensure submission ID is valid
+        if (submissionId <= 0)
+        {
+            _logger.LogError("Cannot log action '{Action}' - invalid submission ID: {SubmissionId}", action, submissionId);
+            return;
+        }
+
         var log = new FormSubmissionLog
         {
             FormSubmissionId = submissionId,
