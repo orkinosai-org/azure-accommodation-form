@@ -80,6 +80,10 @@ public class StartupWithoutAzureDiagnosticsTest
             Console.WriteLine("\n" + new string('=', 50));
             await EmailStepValidationUXTest.TestEmailStepValidationUX();
 
+            // Run the enhanced debugging test
+            Console.WriteLine("\n" + new string('=', 50));
+            await EnhancedDebuggingTest.RunAsync();
+
         }
         catch (Exception ex)
         {
