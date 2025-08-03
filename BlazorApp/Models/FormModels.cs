@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using BlazorApp.Validation;
 
 namespace BlazorApp.Models;
 
@@ -212,28 +213,35 @@ public class OccupationAgreement
 
 public class ConsentAndDeclaration
 {
+    [MustBeTrue(ErrorMessage = "You must consent to the processing of your personal data to submit this form.")]
     [Display(Name = "I consent to the processing of my personal data")]
     public bool ConsentGiven { get; set; }
 
+    [Required(ErrorMessage = "Signature is required.")]
     [Display(Name = "Signature")]
     public string Signature { get; set; } = string.Empty;
 
+    [Required(ErrorMessage = "Date is required.")]
     [Display(Name = "Date")]
     [DataType(DataType.Date)]
     public DateTime? Date { get; set; }
 
+    [Required(ErrorMessage = "Print Name is required.")]
     [Display(Name = "Print Name")]
     public string PrintName { get; set; } = string.Empty;
 
     public Declaration Declaration { get; set; } = new();
 
+    [Required(ErrorMessage = "Declaration Signature is required.")]
     [Display(Name = "Declaration Signature")]
     public string DeclarationSignature { get; set; } = string.Empty;
 
+    [Required(ErrorMessage = "Declaration Date is required.")]
     [Display(Name = "Declaration Date")]
     [DataType(DataType.Date)]
     public DateTime? DeclarationDate { get; set; }
 
+    [Required(ErrorMessage = "Declaration Print Name is required.")]
     [Display(Name = "Declaration Print Name")]
     public string DeclarationPrintName { get; set; } = string.Empty;
 }
@@ -294,21 +302,27 @@ public class Coliving
 
 public class Declaration
 {
+    [MustBeTrue(ErrorMessage = "You must declare this will be your main home.")]
     [Display(Name = "This will be my main home")]
     public bool MainHome { get; set; }
 
+    [MustBeTrue(ErrorMessage = "You must give permission for enquiries to be made.")]
     [Display(Name = "I give permission for enquiries to be made")]
     public bool EnquiriesPermission { get; set; }
 
+    [MustBeTrue(ErrorMessage = "You must certify no outstanding county court judgements.")]
     [Display(Name = "I certify no outstanding county court judgements")]
     public bool CertifyNoJudgements { get; set; }
 
+    [MustBeTrue(ErrorMessage = "You must certify no housing-related debt.")]
     [Display(Name = "I certify no housing-related debt")]
     public bool CertifyNoHousingDebt { get; set; }
 
+    [MustBeTrue(ErrorMessage = "You must certify no debt to previous landlords.")]
     [Display(Name = "I certify no debt to previous landlords")]
     public bool CertifyNoLandlordDebt { get; set; }
 
+    [MustBeTrue(ErrorMessage = "You must certify no history of property abuse.")]
     [Display(Name = "I certify no history of property abuse")]
     public bool CertifyNoAbuse { get; set; }
 }
