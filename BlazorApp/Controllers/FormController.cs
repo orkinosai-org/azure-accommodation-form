@@ -249,6 +249,74 @@ public class FormController : ControllerBase
             return BadRequest(response);
         }
 
+        // CRITICAL VALIDATION: Check consent is given regardless of ModelState
+        if (formData?.ConsentAndDeclaration?.ConsentGiven != true)
+        {
+            _logger.LogWarning("CONSENT VALIDATION FAILED: User consent not given for submission (Request: {RequestId})", requestId);
+            Console.WriteLine($"=== CONSENT VALIDATION FAILED (Request: {requestId}) ===");
+            Console.WriteLine($"ConsentGiven value: {formData?.ConsentAndDeclaration?.ConsentGiven}");
+            
+            var consentResponse = new FormSubmissionResponse
+            {
+                Success = false,
+                Message = "You must consent to the processing of your personal data to submit this form.",
+                SubmissionId = "",
+                Status = FormSubmissionStatus.Failed,
+                Timestamp = DateTime.UtcNow
+            };
+            
+            _logger.LogInformation("Consent validation failed - API Response (Request: {RequestId}): {Response}", requestId, 
+                System.Text.Json.JsonSerializer.Serialize(consentResponse));
+            Console.WriteLine($"Consent validation failed - API Response (Request: {requestId}): {System.Text.Json.JsonSerializer.Serialize(consentResponse)}");
+            
+            return BadRequest(consentResponse);
+        }
+
+        // CRITICAL VALIDATION: Check required declaration fields
+        var declaration = formData?.ConsentAndDeclaration?.Declaration;
+        if (declaration != null)
+        {
+            var declarationErrors = new List<string>();
+            
+            if (!declaration.MainHome)
+                declarationErrors.Add("You must declare this will be your main home.");
+            if (!declaration.EnquiriesPermission)
+                declarationErrors.Add("You must give permission for enquiries to be made.");
+            if (!declaration.CertifyNoJudgements)
+                declarationErrors.Add("You must certify no outstanding county court judgements.");
+            if (!declaration.CertifyNoHousingDebt)
+                declarationErrors.Add("You must certify no housing-related debt.");
+            if (!declaration.CertifyNoLandlordDebt)
+                declarationErrors.Add("You must certify no debt to previous landlords.");
+            if (!declaration.CertifyNoAbuse)
+                declarationErrors.Add("You must certify no history of property abuse.");
+            
+            if (declarationErrors.Any())
+            {
+                _logger.LogWarning("DECLARATION VALIDATION FAILED: Required declarations not completed (Request: {RequestId})", requestId);
+                Console.WriteLine($"=== DECLARATION VALIDATION FAILED (Request: {requestId}) ===");
+                foreach (var error in declarationErrors)
+                {
+                    Console.WriteLine($"Declaration Error: {error}");
+                }
+                
+                var declarationResponse = new FormSubmissionResponse
+                {
+                    Success = false,
+                    Message = $"Please complete all required declarations: {string.Join(" ", declarationErrors)}",
+                    SubmissionId = "",
+                    Status = FormSubmissionStatus.Failed,
+                    Timestamp = DateTime.UtcNow
+                };
+                
+                _logger.LogInformation("Declaration validation failed - API Response (Request: {RequestId}): {Response}", requestId, 
+                    System.Text.Json.JsonSerializer.Serialize(declarationResponse));
+                Console.WriteLine($"Declaration validation failed - API Response (Request: {requestId}): {System.Text.Json.JsonSerializer.Serialize(declarationResponse)}");
+                
+                return BadRequest(declarationResponse);
+            }
+        }
+
         try
         {
             var clientIp = GetClientIpAddress();
@@ -471,6 +539,62 @@ public class FormController : ControllerBase
                 Success = false,
                 Message = "Form validation failed: " + string.Join("; ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage))
             });
+        }
+
+        // CRITICAL VALIDATION: Check consent is given for standard submission
+        if (request?.FormData?.ConsentAndDeclaration?.ConsentGiven != true)
+        {
+            _logger.LogWarning("CONSENT VALIDATION FAILED: User consent not given for standard submission");
+            Console.WriteLine($"=== CONSENT VALIDATION FAILED (Standard Submission) ===");
+            Console.WriteLine($"ConsentGiven value: {request?.FormData?.ConsentAndDeclaration?.ConsentGiven}");
+            
+            return BadRequest(new FormSubmissionResponse
+            {
+                Success = false,
+                Message = "You must consent to the processing of your personal data to submit this form.",
+                SubmissionId = "",
+                Status = FormSubmissionStatus.Failed,
+                Timestamp = DateTime.UtcNow
+            });
+        }
+
+        // CRITICAL VALIDATION: Check required declaration fields for standard submission
+        var declaration = request?.FormData?.ConsentAndDeclaration?.Declaration;
+        if (declaration != null)
+        {
+            var declarationErrors = new List<string>();
+            
+            if (!declaration.MainHome)
+                declarationErrors.Add("You must declare this will be your main home.");
+            if (!declaration.EnquiriesPermission)
+                declarationErrors.Add("You must give permission for enquiries to be made.");
+            if (!declaration.CertifyNoJudgements)
+                declarationErrors.Add("You must certify no outstanding county court judgements.");
+            if (!declaration.CertifyNoHousingDebt)
+                declarationErrors.Add("You must certify no housing-related debt.");
+            if (!declaration.CertifyNoLandlordDebt)
+                declarationErrors.Add("You must certify no debt to previous landlords.");
+            if (!declaration.CertifyNoAbuse)
+                declarationErrors.Add("You must certify no history of property abuse.");
+            
+            if (declarationErrors.Any())
+            {
+                _logger.LogWarning("DECLARATION VALIDATION FAILED: Required declarations not completed for standard submission");
+                Console.WriteLine($"=== DECLARATION VALIDATION FAILED (Standard Submission) ===");
+                foreach (var error in declarationErrors)
+                {
+                    Console.WriteLine($"Declaration Error: {error}");
+                }
+                
+                return BadRequest(new FormSubmissionResponse
+                {
+                    Success = false,
+                    Message = $"Please complete all required declarations: {string.Join(" ", declarationErrors)}",
+                    SubmissionId = "",
+                    Status = FormSubmissionStatus.Failed,
+                    Timestamp = DateTime.UtcNow
+                });
+            }
         }
 
         try
