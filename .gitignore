@@ -47,5 +47,14 @@ KitDocuments_Debug/
 # Test build artifacts
 Tests/bin/
 Tests/obj/
-Tests/bin/
-Tests/obj/
+
+# Python specific
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+python-app/.env
+python-app/venv/
+python-app/.venv/
+.pytest_cache/
