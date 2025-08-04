@@ -58,3 +58,13 @@ python-app/.env
 python-app/venv/
 python-app/.venv/
 .pytest_cache/
+python-app/app/models/__pycache__/__init__.cpython-312.pyc
+python-app/app/models/__pycache__/__init__.cpython-312.pyc
+python-app/app/models/__pycache__/form.cpython-312.pyc
+python-app/app/services/__pycache__/__init__.cpython-312.pyc
+python-app/app/services/__pycache__/captcha.cpython-312.pyc
+python-app/app/services/__pycache__/email.cpython-312.pyc
+python-app/app/services/__pycache__/form.cpython-312.pyc
+python-app/app/services/__pycache__/pdf.cpython-312.pyc
+python-app/app/services/__pycache__/session.cpython-312.pyc
+python-app/app/services/__pycache__/storage.cpython-312.pyc
