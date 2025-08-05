@@ -35,7 +35,16 @@ class EmailService:
         self.from_name = self.email_settings.from_name
         self.company_email = self.email_settings.company_email  # Maps to CompanyEmail in .NET
         
-        logger.info(f"Email service initialized with SMTP server: {self.smtp_server}:{self.smtp_port}")
+        # Log SMTP configuration without exposing sensitive credentials
+        logger.info(f"Email service initialized with SMTP server: {self.smtp_server}:{self.smtp_port}, user: {self.smtp_username}")
+        if not self.smtp_username:
+            logger.warning("SMTP username is not configured - email sending may fail")
+        if not self.smtp_password:
+            logger.warning("SMTP password is not configured - email sending may fail")
+        if not self.from_email:
+            logger.warning("From email address is not configured - using SMTP username as fallback")
+            # Use SMTP username as from_email if from_email is not set
+            self.from_email = self.smtp_username
     
     async def _send_email(
         self,
