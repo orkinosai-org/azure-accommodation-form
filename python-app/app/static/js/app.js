@@ -35,6 +35,10 @@ class AzureAccommodationForm {
         document.getElementById('email')?.addEventListener('input', (e) => this.validateEmailMatch());
         document.getElementById('email-confirm')?.addEventListener('input', (e) => this.validateEmailMatch());
         
+        // Math answer validation
+        document.getElementById('math-answer')?.addEventListener('input', (e) => this.validateMathAnswerInput(e));
+        document.getElementById('math-answer')?.addEventListener('blur', (e) => this.validateMathAnswerInput(e));
+        
         // Prevent copy-paste on email confirmation
         const emailConfirm = document.getElementById('email-confirm');
         if (emailConfirm) {
@@ -47,6 +51,33 @@ class AzureAccommodationForm {
         
         // MFA token formatting
         document.getElementById('mfa-token')?.addEventListener('input', (e) => this.formatMFAToken(e));
+    }
+    
+    validateMathAnswerInput(event) {
+        const input = event.target;
+        const value = input.value;
+        
+        // Remove any non-numeric characters except minus sign for negative numbers
+        const numericValue = value.replace(/[^-\d]/g, '');
+        if (numericValue !== value) {
+            input.value = numericValue;
+        }
+        
+        // Client-side validation feedback (visual only, server validates)
+        if (this.mathQuestion && numericValue) {
+            const answer = parseInt(numericValue);
+            const isCorrect = this.validateMathAnswer(this.mathQuestion, answer);
+            
+            if (isCorrect) {
+                input.classList.remove('is-invalid');
+                input.classList.add('is-valid');
+            } else {
+                input.classList.remove('is-valid');
+                input.classList.add('is-invalid');
+            }
+        } else {
+            input.classList.remove('is-valid', 'is-invalid');
+        }
     }
     
     async verifyCertificate() {
@@ -81,37 +112,79 @@ class AzureAccommodationForm {
         this.hideSection('certificate-section');
         this.showSection('email-section');
         
-        // Initialize Math CAPTCHA
-        this.initMathCaptcha();
+        // Initialize Math CAPTCHA with a small delay to ensure DOM is ready
+        setTimeout(() => {
+            this.initMathCaptcha();
+        }, 100);
     }
     
-    async initMathCaptcha() {
+    async initMathCaptcha(retryCount = 0) {
+        const maxRetries = 3;
+        const retryDelay = 1000; // 1 second
+        
         try {
+            // Ensure DOM elements exist before proceeding
+            const questionElement = document.getElementById('math-question');
+            if (!questionElement) {
+                console.warn('Math question element not found in DOM, retrying...');
+                if (retryCount < maxRetries) {
+                    setTimeout(() => this.initMathCaptcha(retryCount + 1), retryDelay);
+                    return;
+                }
+                throw new Error('Math question element not found after retries');
+            }
+            
+            // Set loading state
+            questionElement.textContent = 'Loading security question...';
+            
             const response = await fetch('/api/auth/generate-math-captcha');
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
             const result = await response.json();
             
-            if (response.ok) {
-                this.mathQuestion = result.question;
-                this.mathQuestionTimestamp = result.timestamp;
-                
-                // Update the UI with the math question
-                const questionElement = document.getElementById('math-question');
-                if (questionElement) {
-                    questionElement.textContent = result.question;
-                }
-                
-                // Clear any previous answer
-                const answerElement = document.getElementById('math-answer');
-                if (answerElement) {
-                    answerElement.value = '';
-                }
-            } else {
-                console.error('Failed to generate math captcha:', result);
-                this.showError('Failed to load security verification. Please refresh the page.');
+            // Validate response structure
+            if (!result.question || typeof result.question !== 'string') {
+                throw new Error('Invalid response: missing or invalid question');
             }
+            
+            // Update internal state
+            this.mathQuestion = result.question;
+            this.mathQuestionTimestamp = result.timestamp;
+            
+            // Update the UI with the math question
+            questionElement.textContent = result.question;
+            
+            // Clear any previous answer and ensure answer field exists
+            const answerElement = document.getElementById('math-answer');
+            if (answerElement) {
+                answerElement.value = '';
+                answerElement.focus(); // Focus on the answer field for better UX
+            }
+            
+            console.log('Math captcha loaded successfully:', result.question);
+            
         } catch (error) {
             console.error('Error initializing math captcha:', error);
-            this.showError('Failed to load security verification. Please refresh the page.');
+            
+            // Retry logic for network errors
+            if (retryCount < maxRetries && (error.name === 'TypeError' || error.message.includes('fetch'))) {
+                console.log(`Retrying math captcha initialization (${retryCount + 1}/${maxRetries})...`);
+                setTimeout(() => this.initMathCaptcha(retryCount + 1), retryDelay * (retryCount + 1));
+                return;
+            }
+            
+            // Update UI with error state
+            const questionElement = document.getElementById('math-question');
+            if (questionElement) {
+                questionElement.textContent = 'Unable to load security question';
+                questionElement.style.color = '#dc3545'; // Bootstrap danger color
+            }
+            
+            // Show user-friendly error message
+            this.showError('Failed to load security verification. Please refresh the page and try again.');
         }
     }
     
@@ -145,16 +218,36 @@ class AzureAccommodationForm {
             return;
         }
         
+        // Email format validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            this.showAlert('Please enter a valid email address.', 'warning');
+            return;
+        }
+        
         // Get Math CAPTCHA answer
-        const mathAnswer = document.getElementById('math-answer').value;
+        const mathAnswerElement = document.getElementById('math-answer');
+        const mathAnswer = mathAnswerElement ? mathAnswerElement.value : '';
         
         if (!mathAnswer || isNaN(mathAnswer)) {
-            this.showAlert('Please answer the security question.', 'warning');
+            this.showAlert('Please answer the security question with a number.', 'warning');
+            if (mathAnswerElement) {
+                mathAnswerElement.focus();
+            }
             return;
         }
         
         if (!this.mathQuestion) {
-            this.showAlert('Security question not loaded. Please refresh the page.', 'warning');
+            this.showAlert('Security question not loaded. Please wait a moment and try again.', 'warning');
+            // Try to reload the math question
+            this.initMathCaptcha();
+            return;
+        }
+        
+        // Validate math answer range (basic sanity check)
+        const answerNum = parseInt(mathAnswer);
+        if (answerNum < 1 || answerNum > 100) {
+            this.showAlert('Please enter a reasonable answer to the math question.', 'warning');
             return;
         }
         
@@ -170,7 +263,7 @@ class AzureAccommodationForm {
                     email: email,
                     email_confirm: emailConfirm,
                     math_question: this.mathQuestion,
-                    math_answer: parseInt(mathAnswer)
+                    math_answer: answerNum
                 })
             });
             
@@ -183,15 +276,18 @@ class AzureAccommodationForm {
                 this.startTokenTimer(result.expires_at);
                 this.showSuccess(result.message);
             } else {
-                this.showError(result.detail);
+                this.showError(result.detail || 'Verification failed. Please try again.');
                 
-                // Generate new math question on failure
+                // Generate new math question on failure for security
                 this.initMathCaptcha();
             }
         } catch (error) {
             this.hideLoading();
             console.error('Email verification error:', error);
-            this.showError('Failed to send verification code. Please try again.');
+            this.showError('Failed to send verification code. Please check your internet connection and try again.');
+            
+            // Generate new math question on error for security
+            this.initMathCaptcha();
         }
     }
     
@@ -255,10 +351,64 @@ class AzureAccommodationForm {
         document.getElementById('mfa-token-form').classList.add('d-none');
         document.getElementById('email-entry-form').classList.remove('d-none');
         
-        // Generate new math question
+        // Clear the MFA token field
+        const mfaTokenField = document.getElementById('mfa-token');
+        if (mfaTokenField) {
+            mfaTokenField.value = '';
+        }
+        
+        // Generate new math question for security
         await this.initMathCaptcha();
         
         this.showAlert('Please answer the security question again to resend the verification code.', 'info');
+        
+        // Focus on email field for better UX
+        const emailField = document.getElementById('email');
+        if (emailField) {
+            emailField.focus();
+        }
+    }
+    
+    validateMathAnswer(question, answer) {
+        /**
+         * Client-side validation of math answer (note: this is just for UX,
+         * server-side validation is still required for security)
+         */
+        try {
+            if (!question || typeof question !== 'string') {
+                return false;
+            }
+            
+            // Extract numbers from question format "What is X + Y?"
+            if (!question.startsWith("What is ") || !question.endsWith("?")) {
+                return false;
+            }
+            
+            const mathPart = question.slice(8, -1); // Remove "What is " and "?"
+            
+            if (!mathPart.includes(" + ")) {
+                return false;
+            }
+            
+            const parts = mathPart.split(" + ");
+            if (parts.length !== 2) {
+                return false;
+            }
+            
+            const num1 = parseInt(parts[0]);
+            const num2 = parseInt(parts[1]);
+            
+            if (isNaN(num1) || isNaN(num2)) {
+                return false;
+            }
+            
+            const correctAnswer = num1 + num2;
+            return answer === correctAnswer;
+            
+        } catch (error) {
+            console.error('Error validating math answer:', error);
+            return false;
+        }
     }
     
     startTokenTimer(expiresAt) {
