@@ -84,9 +84,13 @@ class EmailService:
     
     async def send_mfa_token(self, email: str, token: str) -> bool:
         """Send MFA verification token"""
-        subject = "Your Accommodation Form Verification Code"
-        
-        body_text = f"""
+        try:
+            # Get current settings to access MFA token expiry
+            settings = get_settings()
+            
+            subject = "Your Accommodation Form Verification Code"
+            
+            body_text = f"""
 Your verification code for the Azure Accommodation Form is: {token}
 
 This code will expire in {settings.mfa_token_expiry_minutes} minutes.
@@ -95,23 +99,27 @@ If you did not request this code, please ignore this email.
 
 Best regards,
 Azure Accommodation Form Team
-        """.strip()
-        
-        body_html = f"""
-        <html>
-        <body>
-            <h2>Verification Code</h2>
-            <p>Your verification code for the Azure Accommodation Form is:</p>
-            <h1 style="color: #007acc; font-family: monospace; letter-spacing: 2px;">{token}</h1>
-            <p>This code will expire in <strong>{settings.mfa_token_expiry_minutes} minutes</strong>.</p>
-            <p>If you did not request this code, please ignore this email.</p>
-            <hr>
-            <p><em>Azure Accommodation Form Team</em></p>
-        </body>
-        </html>
-        """
-        
-        return await self._send_email(email, subject, body_text, body_html)
+            """.strip()
+            
+            body_html = f"""
+            <html>
+            <body>
+                <h2>Verification Code</h2>
+                <p>Your verification code for the Azure Accommodation Form is:</p>
+                <h1 style="color: #007acc; font-family: monospace; letter-spacing: 2px;">{token}</h1>
+                <p>This code will expire in <strong>{settings.mfa_token_expiry_minutes} minutes</strong>.</p>
+                <p>If you did not request this code, please ignore this email.</p>
+                <hr>
+                <p><em>Azure Accommodation Form Team</em></p>
+            </body>
+            </html>
+            """
+            
+            return await self._send_email(email, subject, body_text, body_html)
+            
+        except Exception as e:
+            logger.error(f"Failed to send MFA token to {email}: {e}")
+            return False
     
     async def send_form_confirmation(
         self,
