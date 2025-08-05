@@ -169,7 +169,8 @@ class FormSubmissionRequest(BaseModel):
     """Form submission request model"""
     form_data: AccommodationFormData
     email_verification_token: str
-    captcha_token: str
+    math_question: str
+    math_answer: int
 
 class FormSubmissionResponse(BaseModel):
     """Form submission response model"""
@@ -183,7 +184,8 @@ class FormSubmissionResponse(BaseModel):
 class EmailVerificationRequest(BaseModel):
     email: EmailStr
     email_confirm: EmailStr
-    captcha_token: str
+    math_question: str
+    math_answer: int
 
 class EmailVerificationResponse(BaseModel):
     verification_id: str

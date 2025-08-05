@@ -9,6 +9,8 @@ class AzureAccommodationForm {
         this.sessionToken = null;
         this.verificationId = null;
         this.formData = {};
+        this.mathQuestion = '';
+        this.mathQuestionTimestamp = null;
         
         this.init();
     }
@@ -79,25 +81,37 @@ class AzureAccommodationForm {
         this.hideSection('certificate-section');
         this.showSection('email-section');
         
-        // Initialize CAPTCHA
-        this.initCaptcha();
+        // Initialize Math CAPTCHA
+        this.initMathCaptcha();
     }
     
-    initCaptcha() {
-        // Initialize reCAPTCHA or hCaptcha based on configuration
-        if (typeof grecaptcha !== 'undefined') {
-            grecaptcha.render('captcha-container', {
-                'sitekey': '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI', // Test key - replace with actual key
-                'theme': 'light'
-            });
-        } else {
-            // Fallback for development - show placeholder
-            document.getElementById('captcha-container').innerHTML = `
-                <div class="alert alert-info">
-                    <i class="fas fa-info-circle me-2"></i>
-                    CAPTCHA placeholder (development mode)
-                </div>
-            `;
+    async initMathCaptcha() {
+        try {
+            const response = await fetch('/api/auth/generate-math-captcha');
+            const result = await response.json();
+            
+            if (response.ok) {
+                this.mathQuestion = result.question;
+                this.mathQuestionTimestamp = result.timestamp;
+                
+                // Update the UI with the math question
+                const questionElement = document.getElementById('math-question');
+                if (questionElement) {
+                    questionElement.textContent = result.question;
+                }
+                
+                // Clear any previous answer
+                const answerElement = document.getElementById('math-answer');
+                if (answerElement) {
+                    answerElement.value = '';
+                }
+            } else {
+                console.error('Failed to generate math captcha:', result);
+                this.showError('Failed to load security verification. Please refresh the page.');
+            }
+        } catch (error) {
+            console.error('Error initializing math captcha:', error);
+            this.showError('Failed to load security verification. Please refresh the page.');
         }
     }
     
@@ -131,14 +145,17 @@ class AzureAccommodationForm {
             return;
         }
         
-        // Get CAPTCHA token
-        let captchaToken = 'development-token';
-        if (typeof grecaptcha !== 'undefined') {
-            captchaToken = grecaptcha.getResponse();
-            if (!captchaToken) {
-                this.showAlert('Please complete the CAPTCHA.', 'warning');
-                return;
-            }
+        // Get Math CAPTCHA answer
+        const mathAnswer = document.getElementById('math-answer').value;
+        
+        if (!mathAnswer || isNaN(mathAnswer)) {
+            this.showAlert('Please answer the security question.', 'warning');
+            return;
+        }
+        
+        if (!this.mathQuestion) {
+            this.showAlert('Security question not loaded. Please refresh the page.', 'warning');
+            return;
         }
         
         try {
@@ -152,7 +169,8 @@ class AzureAccommodationForm {
                 body: JSON.stringify({
                     email: email,
                     email_confirm: emailConfirm,
-                    captcha_token: captchaToken
+                    math_question: this.mathQuestion,
+                    math_answer: parseInt(mathAnswer)
                 })
             });
             
@@ -167,10 +185,8 @@ class AzureAccommodationForm {
             } else {
                 this.showError(result.detail);
                 
-                // Reset CAPTCHA if it failed
-                if (typeof grecaptcha !== 'undefined') {
-                    grecaptcha.reset();
-                }
+                // Generate new math question on failure
+                this.initMathCaptcha();
             }
         } catch (error) {
             this.hideLoading();
@@ -239,12 +255,10 @@ class AzureAccommodationForm {
         document.getElementById('mfa-token-form').classList.add('d-none');
         document.getElementById('email-entry-form').classList.remove('d-none');
         
-        // Reset CAPTCHA
-        if (typeof grecaptcha !== 'undefined') {
-            grecaptcha.reset();
-        }
+        // Generate new math question
+        await this.initMathCaptcha();
         
-        this.showAlert('Please complete the CAPTCHA again to resend the verification code.', 'info');
+        this.showAlert('Please answer the security question again to resend the verification code.', 'info');
     }
     
     startTokenTimer(expiresAt) {

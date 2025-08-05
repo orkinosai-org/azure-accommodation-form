@@ -1,85 +1,67 @@
 """
-CAPTCHA verification service
+Math CAPTCHA verification service
 """
 
-import aiohttp
+import random
 import logging
-from app.core.config import get_settings
+from typing import Tuple
 
 logger = logging.getLogger(__name__)
-settings = get_settings()
 
-class CaptchaService:
-    """Service for CAPTCHA verification"""
+class MathCaptchaService:
+    """Service for Math CAPTCHA generation and verification"""
     
     def __init__(self):
-        self.provider = settings.captcha_provider
-        self.secret_key = settings.captcha_secret_key
+        self.min_num = 1
+        self.max_num = 20
         
-    async def verify_captcha(self, token: str) -> bool:
-        """Verify CAPTCHA token"""
-        if not token:
-            return False
+    def generate_math_question(self) -> Tuple[str, int]:
+        """Generate a random math question and return the question string and correct answer"""
+        num1 = random.randint(self.min_num, self.max_num)
+        num2 = random.randint(self.min_num, self.max_num)
+        
+        question = f"What is {num1} + {num2}?"
+        correct_answer = num1 + num2
+        
+        logger.debug(f"Generated math question: {question}, answer: {correct_answer}")
+        return question, correct_answer
+    
+    def verify_math_answer(self, question: str, provided_answer: int) -> bool:
+        """Verify that the provided answer matches the question"""
+        try:
+            # Extract numbers from question format "What is X + Y?"
+            if not question.startswith("What is ") or not question.endswith("?"):
+                logger.warning(f"Invalid question format: {question}")
+                return False
+                
+            # Extract the math expression
+            math_part = question[8:-1]  # Remove "What is " and "?"
             
-        if self.provider == "recaptcha":
-            return await self._verify_recaptcha(token)
-        elif self.provider == "hcaptcha":
-            return await self._verify_hcaptcha(token)
-        else:
-            # For development/testing, allow bypass if no provider configured
-            if settings.environment == "development":
-                logger.warning("CAPTCHA verification bypassed in development mode")
-                return True
-            return False
-    
-    async def _verify_recaptcha(self, token: str) -> bool:
-        """Verify Google reCAPTCHA token"""
-        try:
-            async with aiohttp.ClientSession() as session:
-                data = {
-                    'secret': self.secret_key,
-                    'response': token
-                }
+            # Split by " + " to get the numbers
+            if " + " not in math_part:
+                logger.warning(f"Invalid math expression: {math_part}")
+                return False
                 
-                async with session.post(
-                    'https://www.google.com/recaptcha/api/siteverify',
-                    data=data
-                ) as response:
-                    result = await response.json()
-                    
-                    if result.get('success'):
-                        logger.info("reCAPTCHA verification successful")
-                        return True
-                    else:
-                        logger.warning(f"reCAPTCHA verification failed: {result.get('error-codes')}")
-                        return False
-                        
-        except Exception as e:
-            logger.error(f"reCAPTCHA verification error: {e}")
-            return False
-    
-    async def _verify_hcaptcha(self, token: str) -> bool:
-        """Verify hCaptcha token"""
-        try:
-            async with aiohttp.ClientSession() as session:
-                data = {
-                    'secret': self.secret_key,
-                    'response': token
-                }
+            parts = math_part.split(" + ")
+            if len(parts) != 2:
+                logger.warning(f"Invalid math expression parts: {parts}")
+                return False
                 
-                async with session.post(
-                    'https://hcaptcha.com/siteverify',
-                    data=data
-                ) as response:
-                    result = await response.json()
-                    
-                    if result.get('success'):
-                        logger.info("hCaptcha verification successful")
-                        return True
-                    else:
-                        logger.warning(f"hCaptcha verification failed: {result.get('error-codes')}")
-                        return False
-                        
+            num1 = int(parts[0])
+            num2 = int(parts[1])
+            correct_answer = num1 + num2
+            
+            is_correct = provided_answer == correct_answer
+            if is_correct:
+                logger.info("Math captcha verification successful")
+            else:
+                logger.warning(f"Math captcha verification failed: expected {correct_answer}, got {provided_answer}")
+                
+            return is_correct
+            
+        except ValueError as e:
+            logger.warning(f"Error parsing math question: {e}")
+            return False
         except Exception as e:
-            logger.error(f"hCaptcha verification error: {e}")
+            logger.error(f"Math captcha verification error: {e}")
             return False
