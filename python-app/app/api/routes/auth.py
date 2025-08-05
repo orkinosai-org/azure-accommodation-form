@@ -21,7 +21,7 @@ from app.models.form import (
     MFATokenResponse
 )
 from app.services.email import EmailService
-from app.services.captcha import CaptchaService
+from app.services.captcha import MathCaptchaService
 from app.services.session import SessionService
 
 router = APIRouter()
@@ -50,22 +50,34 @@ async def verify_certificate(request: Request):
         logger.warning(f"Certificate verification failed for IP: {get_current_ip(request)}")
         raise e
 
+@router.get("/generate-math-captcha")
+async def generate_math_captcha():
+    """Generate a new math captcha question"""
+    math_captcha_service = MathCaptchaService()
+    question, answer = math_captcha_service.generate_math_question()
+    
+    # Return only the question to frontend, keep answer server-side for later verification
+    return {
+        "question": question,
+        "timestamp": datetime.utcnow()
+    }
+
 @router.post("/request-email-verification", response_model=EmailVerificationResponse)
 async def request_email_verification(
     request: EmailVerificationRequest,
     http_request: Request
 ):
-    """Request email verification with CAPTCHA and MFA token"""
+    """Request email verification with Math CAPTCHA and MFA token"""
     
     # Validate certificate first
     require_certificate_auth(http_request)
     
-    # Verify CAPTCHA
-    captcha_service = CaptchaService()
-    if not await captcha_service.verify_captcha(request.captcha_token):
+    # Verify Math CAPTCHA
+    math_captcha_service = MathCaptchaService()
+    if not math_captcha_service.verify_math_answer(request.math_question, request.math_answer):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="CAPTCHA verification failed"
+            detail="Security verification failed. Please try again."
         )
     
     # Verify email confirmation matches

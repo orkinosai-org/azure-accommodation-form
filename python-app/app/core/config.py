@@ -184,9 +184,6 @@ class Settings(BaseSettings):
     
     # Legacy settings for backward compatibility
     azure_communication_connection_string: Optional[str] = os.getenv("AZURE_COMMUNICATION_CONNECTION_STRING")
-    captcha_site_key: str = os.getenv("CAPTCHA_SITE_KEY", "")
-    captcha_secret_key: str = os.getenv("CAPTCHA_SECRET_KEY", "")
-    captcha_provider: str = os.getenv("CAPTCHA_PROVIDER", "recaptcha")
     
     # MFA settings (using application_settings for token config)
     @property
