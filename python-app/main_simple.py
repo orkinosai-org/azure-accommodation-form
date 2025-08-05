@@ -79,6 +79,34 @@ async def verify_certificate_simple(request: Request):
         "client_ip": request.client.host if request.client else "unknown"
     }
 
+@app.get("/api/auth/generate-math-captcha")
+async def generate_math_captcha_simple():
+    """Simplified math captcha generation"""
+    import random
+    num1 = random.randint(1, 20)
+    num2 = random.randint(1, 20)
+    question = f"What is {num1} + {num2}?"
+    
+    return {
+        "question": question,
+        "timestamp": "2024-01-01T00:00:00Z"
+    }
+
+@app.post("/api/auth/request-email-verification")
+async def request_email_verification_simple(request: Request):
+    """Simplified email verification endpoint"""
+    import random
+    import string
+    
+    # Generate fake verification ID and return success
+    verification_id = ''.join(random.choices(string.ascii_letters + string.digits, k=32))
+    
+    return {
+        "verification_id": verification_id,
+        "message": "Verification code sent to your email (development mode - no actual email sent)",
+        "expires_at": "2024-01-01T00:10:00Z"
+    }
+
 if __name__ == "__main__":
     uvicorn.run(
         "main_simple:app",
