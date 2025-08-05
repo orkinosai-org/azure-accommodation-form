@@ -12,6 +12,10 @@ from functools import lru_cache
 from typing import Optional, Dict, Any
 from pydantic_settings import BaseSettings
 
+# Load environment variables from .env file
+from dotenv import load_dotenv
+load_dotenv()
+
 
 class LogLevel(str, Enum):
     """Log levels that map to both .NET and Python logging"""
@@ -55,14 +59,14 @@ class LoggingSettings(BaseSettings):
 class EmailSettings(BaseSettings):
     """Email/SMTP configuration that mirrors .NET EmailSettings"""
     
-    smtp_server: str = os.getenv("SMTP_SERVER", "smtp.gmail.com")
-    smtp_port: int = int(os.getenv("SMTP_PORT", "587"))
-    smtp_username: str = os.getenv("SMTP_USERNAME", "")
-    smtp_password: str = os.getenv("SMTP_PASSWORD", "")
-    use_ssl: bool = os.getenv("SMTP_USE_TLS", "true").lower() == "true"  # Maps to UseSsl in .NET
-    from_email: str = os.getenv("FROM_EMAIL", "noreply@gmail.com")
-    from_name: str = os.getenv("FROM_NAME", "Azure Accommodation Form")
-    company_email: str = os.getenv("COMPANY_EMAIL", "")  # Maps to CompanyEmail in .NET
+    smtp_server: str = "smtp.gmail.com"
+    smtp_port: int = 587
+    smtp_username: str = ""
+    smtp_password: str = ""
+    use_ssl: bool = True  # Maps to UseSsl in .NET
+    from_email: str = ""  # Removed noreply@gmail.com fallback
+    from_name: str = "Azure Accommodation Form"
+    company_email: str = ""  # Maps to CompanyEmail in .NET
     
     class Config:
         env_prefix = "EMAIL_"
@@ -144,31 +148,33 @@ class Settings(BaseSettings):
     # Backward compatibility for existing code
     @property
     def smtp_server(self) -> str:
-        return self.email_settings.smtp_server
+        return self.email_settings.smtp_server or os.getenv("SMTP_SERVER", "smtp.gmail.com")
     
     @property
     def smtp_port(self) -> int:
-        return self.email_settings.smtp_port
+        return self.email_settings.smtp_port or int(os.getenv("SMTP_PORT", "587"))
     
     @property
     def smtp_username(self) -> str:
-        return self.email_settings.smtp_username
+        return self.email_settings.smtp_username or os.getenv("SMTP_USERNAME", "")
     
     @property
     def smtp_password(self) -> str:
-        return self.email_settings.smtp_password
+        return self.email_settings.smtp_password or os.getenv("SMTP_PASSWORD", "")
     
     @property
     def smtp_use_tls(self) -> bool:
-        return self.email_settings.use_ssl
+        if self.email_settings.use_ssl:
+            return self.email_settings.use_ssl
+        return os.getenv("SMTP_USE_TLS", "true").lower() == "true"
     
     @property
     def from_email(self) -> str:
-        return self.email_settings.from_email
+        return self.email_settings.from_email or os.getenv("FROM_EMAIL", "")
     
     @property
     def from_name(self) -> str:
-        return self.email_settings.from_name
+        return self.email_settings.from_name or os.getenv("FROM_NAME", "Azure Accommodation Form")
     
     @property
     def admin_email(self) -> str:
@@ -247,6 +253,7 @@ class Settings(BaseSettings):
     
     class Config:
         env_file = ".env"
+        extra = "allow"  # Allow extra fields for environment variables
 
 
 @lru_cache()
