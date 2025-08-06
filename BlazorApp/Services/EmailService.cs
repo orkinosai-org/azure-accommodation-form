@@ -230,6 +230,13 @@ Regards,
     {
         try
         {
+            // Validate SMTP configuration before attempting to send
+            if (!ValidateSmtpConfiguration())
+            {
+                _logger.LogError("Cannot send email: SMTP configuration is incomplete");
+                return false;
+            }
+
             // DEBUG: Log email configuration to browser console (production: remove this section)
             await _debugConsole.LogGroupAsync("EMAIL DEBUG INFO");
             await _debugConsole.LogAsync($"SMTP Server: {_emailSettings.SmtpServer}");
@@ -352,5 +359,48 @@ Regards,
             _logger.LogError(ex, "Failed to send email via SMTP");
             return false;
         }
+    }
+
+    private bool ValidateSmtpConfiguration()
+    {
+        var issues = new List<string>();
+
+        if (string.IsNullOrWhiteSpace(_emailSettings.SmtpServer))
+        {
+            issues.Add("SMTP server is not configured");
+        }
+
+        if (_emailSettings.SmtpPort <= 0)
+        {
+            issues.Add("SMTP port is not configured or invalid");
+        }
+
+        if (string.IsNullOrWhiteSpace(_emailSettings.SmtpUsername))
+        {
+            issues.Add("SMTP username is not configured - email sending may fail");
+        }
+
+        if (string.IsNullOrWhiteSpace(_emailSettings.SmtpPassword))
+        {
+            issues.Add("SMTP password is not configured - email sending may fail");
+        }
+
+        if (string.IsNullOrWhiteSpace(_emailSettings.FromEmail))
+        {
+            issues.Add("From email address is not configured");
+        }
+
+        if (issues.Any())
+        {
+            foreach (var issue in issues)
+            {
+                _logger.LogWarning("SMTP Configuration Issue: {Issue}", issue);
+            }
+
+            _logger.LogError("Email sending is not possible due to missing SMTP configuration. Please ensure all required settings are configured via environment variables or appsettings.json");
+            return false;
+        }
+
+        return true;
     }
 }

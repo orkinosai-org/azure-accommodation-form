@@ -88,6 +88,18 @@ public class StartupWithoutAzureDiagnosticsTest
             Console.WriteLine("\n" + new string('=', 50));
             await ConsentValidationTest.TestConsentValidation();
 
+            // Run the SMTP configuration validation test
+            Console.WriteLine("\n" + new string('=', 50));
+            await SmtpConfigurationTest.TestSmtpConfigurationValidation();
+
+            // Run the email sending functionality test
+            Console.WriteLine("\n" + new string('=', 50));
+            await EmailSendingTest.TestEmailSendingFunctionality();
+
+            // Run email validation scenarios
+            Console.WriteLine("\n" + new string('=', 50));
+            EmailSendingTest.TestEmailValidationScenarios();
+
         }
         catch (Exception ex)
         {
