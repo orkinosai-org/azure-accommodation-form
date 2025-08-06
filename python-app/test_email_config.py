@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-CLI tool for testing email configuration from config.json
+CLI tool for testing email configuration from appsettings.json
 Usage: python test_email_config.py [email@example.com]
 """
 
@@ -16,7 +16,7 @@ from app.core.config import get_settings, load_config_from_file
 from app.services.email import EmailService
 
 async def test_email_config(test_email: str = None):
-    """Test email configuration from config.json and optionally send a test email"""
+    """Test email configuration from appsettings.json and optionally send a test email"""
     
     # Setup logging
     logging.basicConfig(level=logging.INFO)
@@ -29,11 +29,11 @@ async def test_email_config(test_email: str = None):
     # Test config file loading
     try:
         config_data = load_config_from_file()
-        print("✓ config.json file loaded successfully")
+        print("✓ appsettings.json file loaded successfully")
     except FileNotFoundError as e:
         print(f"❌ {e}")
         print("\nTo fix this:")
-        print("1. Copy config.example.json to config.json")
+        print("1. Copy appsettings.example.json to appsettings.json")
         print("2. Update EmailSettings section with your SMTP credentials")
         return
     except Exception as e:
@@ -46,7 +46,7 @@ async def test_email_config(test_email: str = None):
         print("✓ Configuration validation passed")
     except ValueError as e:
         print(f"❌ Configuration validation failed: {e}")
-        print("\nPlease update your config.json file with the required EmailSettings values.")
+        print("\nPlease update your appsettings.json file with the required EmailSettings values.")
         return
     except Exception as e:
         print(f"❌ Unexpected error loading configuration: {e}")
@@ -65,7 +65,7 @@ async def test_email_config(test_email: str = None):
         settings.email_settings.company_email
     )
     
-    print(f"Configuration Source: config.json")
+    print(f"Configuration Source: appsettings.json")
     print(f"Email Service Ready: {'✓ YES' if email_ready else '✗ NO'}")
     print(f"Missing Fields: {len(audit_info.get('missing_fields', []))}")
     print(f"Configuration Warnings: {len(audit_info.get('warnings', []))}")
@@ -73,7 +73,7 @@ async def test_email_config(test_email: str = None):
     if audit_info.get('missing_fields'):
         print("\nMISSING REQUIRED FIELDS:")
         for field in audit_info['missing_fields']:
-            print(f"  • {field['field']}: Set EmailSettings.{field['config_key']} in config.json")
+            print(f"  • {field['field']}: Set EmailSettings.{field['config_key']} in appsettings.json")
             print(f"    Example: {field['example']}")
     
     if audit_info.get('warnings'):
@@ -101,7 +101,7 @@ async def test_email_config(test_email: str = None):
 This is a test email sent from the Azure Accommodation Form CLI tool.
 
 Configuration Test Results:
-- Configuration Source: config.json file
+- Configuration Source: appsettings.json file
 - SMTP Server: {settings.email_settings.smtp_server}:{settings.email_settings.smtp_port}
 - From: {settings.email_settings.from_name} <{settings.email_settings.from_email}>
 - SSL/TLS: {"Enabled" if settings.email_settings.use_ssl else "Disabled"}
@@ -118,7 +118,7 @@ Application URL: {settings.application_settings.application_url}
                     
                     <h3>Configuration Test Results:</h3>
                     <ul>
-                        <li><strong>Configuration Source:</strong> config.json file</li>
+                        <li><strong>Configuration Source:</strong> appsettings.json file</li>
                         <li><strong>SMTP Server:</strong> {settings.email_settings.smtp_server}:{settings.email_settings.smtp_port}</li>
                         <li><strong>From:</strong> {settings.email_settings.from_name} &lt;{settings.email_settings.from_email}&gt;</li>
                         <li><strong>SSL/TLS:</strong> {"Enabled" if settings.email_settings.use_ssl else "Disabled"}</li>

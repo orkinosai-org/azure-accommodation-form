@@ -1,5 +1,5 @@
 """
-Tests to verify that the configuration system ONLY uses config.json 
+Tests to verify that the configuration system ONLY uses appsettings.json 
 and completely ignores environment variables and .env files.
 """
 
@@ -13,19 +13,19 @@ from pathlib import Path
 from app.core.config import get_settings, load_config_from_file, create_settings_from_config
 
 
-def test_config_json_file_required():
-    """Test that config.json file is required and FileNotFoundError is raised if missing"""
+def test_appsettings_json_file_required():
+    """Test that appsettings.json file is required and FileNotFoundError is raised if missing"""
     
     # Test with non-existent config file
     with pytest.raises(FileNotFoundError) as exc_info:
         load_config_from_file("nonexistent.json")
     
     assert "Configuration file 'nonexistent.json' not found" in str(exc_info.value)
-    assert "config.example.json" in str(exc_info.value)
+    assert "appsettings.example.json" in str(exc_info.value)
 
 
-def test_config_json_invalid_json():
-    """Test that invalid JSON in config file raises ValueError"""
+def test_appsettings_json_invalid_json():
+    """Test that invalid JSON in appsettings file raises ValueError"""
     
     with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
         f.write('{ invalid json content }')
@@ -98,7 +98,7 @@ def test_environment_variables_completely_ignored():
         'PORT': '9999',
     }
     
-    # Create valid config.json data 
+    # Create valid appsettings.json data 
     config_data = {
         "EmailSettings": {
             "SmtpServer": "config-smtp.example.com",
@@ -129,7 +129,7 @@ def test_environment_variables_completely_ignored():
             
             settings = get_settings()
             
-            # Verify that ONLY config.json values are used, not environment variables
+            # Verify that ONLY appsettings.json values are used, not environment variables
             assert settings.email_settings.smtp_server == "config-smtp.example.com"
             assert settings.email_settings.smtp_port == 587
             assert settings.email_settings.smtp_username == "config-user@example.com"
@@ -166,7 +166,7 @@ SMTP_SERVER=dotenv-legacy-smtp.example.com
 APPLICATION_NAME=Dotenv Application
 """
     
-    # Create valid config.json data
+    # Create valid appsettings.json data
     config_data = {
         "EmailSettings": {
             "SmtpServer": "config-smtp.example.com",
@@ -204,7 +204,7 @@ APPLICATION_NAME=Dotenv Application
             
             settings = get_settings()
             
-            # Verify that ONLY config.json values are used, not .env file values
+            # Verify that ONLY appsettings.json values are used, not .env file values
             assert settings.email_settings.smtp_server == "config-smtp.example.com"
             assert settings.email_settings.smtp_username == "config-user@example.com"
             
@@ -223,7 +223,7 @@ APPLICATION_NAME=Dotenv Application
 
 
 def test_config_audit_shows_json_source():
-    """Test that configuration audit shows config.json as the source"""
+    """Test that configuration audit shows appsettings.json as the source"""
     
     config_data = {
         "EmailSettings": {
@@ -246,8 +246,8 @@ def test_config_audit_shows_json_source():
         settings = get_settings()
         audit_info = settings.audit_configuration()
         
-        # Verify audit info shows config.json as source
-        assert audit_info["config_source"] == "config.json"
+        # Verify audit info shows appsettings.json as source
+        assert audit_info["config_source"] == "appsettings.json"
         assert len(audit_info["missing_fields"]) == 0
         assert len(audit_info["warnings"]) == 0
     

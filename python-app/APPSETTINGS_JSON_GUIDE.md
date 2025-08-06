@@ -1,8 +1,8 @@
-# Configuration Guide - JSON-Only Configuration
+# Configuration Guide - appsettings.json Configuration
 
 ## Overview
 
-The Azure Accommodation Form Python application now uses **ONLY** a `config.json` file for all configuration. Environment variables, `.env` files, and Pydantic BaseSettings are no longer used.
+The Azure Accommodation Form Python application now uses **ONLY** an `appsettings.json` file for all configuration. Environment variables, `.env` files, and Pydantic BaseSettings are no longer used.
 
 This change provides:
 - ✅ Clear, centralized configuration in one file
@@ -13,9 +13,9 @@ This change provides:
 
 ## Quick Start
 
-1. **Copy the example configuration:**
+1. **Copy the appsettings.json template:**
    ```bash
-   cp config.example.json config.json
+   cp appsettings.example.json appsettings.json
    ```
 
 2. **Update the EmailSettings section with your SMTP credentials:**
@@ -41,7 +41,7 @@ This change provides:
 
 ## Configuration File Structure
 
-The `config.json` file mirrors the structure of the Blazor app's `appsettings.json`:
+The `appsettings.json` file mirrors the structure of the Blazor app's `appsettings.json`:
 
 ```json
 {
@@ -143,7 +143,7 @@ python test_email_config.py your-email@example.com
 ```
 
 The tool will:
-- ✅ Verify `config.json` exists and is valid JSON
+- ✅ Verify `appsettings.json` exists and is valid JSON
 - ✅ Check all required email fields are present
 - ✅ Show configuration audit information
 - ✅ Optionally send a test email
@@ -151,32 +151,32 @@ The tool will:
 ## Error Handling
 
 ### Missing Configuration File
-If `config.json` is missing:
+If `appsettings.json` is missing:
 ```
-❌ Configuration file 'config.json' not found. 
-Please create it by copying from config.example.json and updating with your values.
+❌ Configuration file 'appsettings.json' not found. 
+Please create it by copying from the Blazor app's appsettings.json and updating with your values.
 ```
 
 ### Invalid JSON
-If `config.json` contains invalid JSON:
+If `appsettings.json` contains invalid JSON:
 ```
-❌ Invalid JSON in configuration file 'config.json': Expecting ',' delimiter: line 5 column 1 (char 123)
+❌ Invalid JSON in configuration file 'appsettings.json': Expecting ',' delimiter: line 5 column 1 (char 123)
 ```
 
 ### Missing Required Fields
 If required email fields are missing:
 ```
-❌ Missing required email configuration fields in config.json: SmtpUsername, SmtpPassword, FromEmail, CompanyEmail. 
-Please update your config.json file with the required EmailSettings values.
+❌ Missing required email configuration fields in appsettings.json: SmtpUsername, SmtpPassword, FromEmail, CompanyEmail. 
+Please update your appsettings.json file with the required EmailSettings values.
 ```
 
 ## Migration from Environment Variables
 
 If you previously used environment variables, here's how to migrate:
 
-### Old Environment Variables → New config.json
+### Old Environment Variables → New appsettings.json
 
-| Old Environment Variable | New config.json Location |
+| Old Environment Variable | New appsettings.json Location |
 |---------------------------|---------------------------|
 | `EMAIL_SMTP_SERVER` | `EmailSettings.SmtpServer` |
 | `EMAIL_SMTP_PORT` | `EmailSettings.SmtpPort` |
@@ -191,24 +191,24 @@ If you previously used environment variables, here's how to migrate:
 | `ENVIRONMENT` | `ServerSettings.Environment` |
 | `PORT` | `ServerSettings.Port` |
 
-**Important**: Environment variables are now completely ignored. Only `config.json` values are used.
+**Important**: Environment variables are now completely ignored. Only `appsettings.json` values are used.
 
 ## Security Considerations
 
-1. **Never commit `config.json` to version control** if it contains sensitive information
-2. Use `config.example.json` as a template with placeholder values
-3. Set appropriate file permissions on `config.json` (e.g., `600`)
+1. **Never commit `appsettings.json` to version control** if it contains sensitive information
+2. Use `the Blazor app's appsettings.json` as a template with placeholder values
+3. Set appropriate file permissions on `appsettings.json` (e.g., `600`)
 4. For production, consider using Azure Key Vault or similar secure storage
 
 ## Deployment
 
 ### Development
-1. Copy `config.example.json` to `config.json`
+1. Copy `the Blazor app's appsettings.json` to `appsettings.json`
 2. Update with your development SMTP credentials
 3. Run the application
 
 ### Production
-1. Create `config.json` with production values
+1. Create `appsettings.json` with production values
 2. Ensure secure file permissions
 3. Update `ServerSettings.Environment` to `"production"`
 4. Use strong `ServerSettings.SecretKey`
@@ -217,7 +217,7 @@ If you previously used environment variables, here's how to migrate:
 
 ### Application Won't Start
 Check the error message:
-- Missing `config.json` file → Copy from `config.example.json`
+- Missing `appsettings.json` file → Copy from `the Blazor app's appsettings.json`
 - Invalid JSON → Validate JSON syntax
 - Missing fields → Add required EmailSettings fields
 
@@ -237,7 +237,7 @@ Common issues:
 The application logs detailed configuration information at startup:
 ```
 INFO:app.core.config:=== Configuration Audit ===
-INFO:app.core.config:Configuration source: config.json file
+INFO:app.core.config:Configuration source: appsettings.json file
 INFO:app.core.config:Environment: development
 INFO:app.core.config:Email configuration values:
 INFO:app.core.config:  SMTP Server: smtp.gmail.com
@@ -270,4 +270,4 @@ This refactoring involved:
    - Comprehensive test suite
    - Configuration audit logging
 
-The application now loads configuration ONLY from `config.json` and will fail fast with clear error messages if the configuration is incomplete or missing.
+The application now loads configuration ONLY from `appsettings.json` and will fail fast with clear error messages if the configuration is incomplete or missing.
