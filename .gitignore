@@ -55,6 +55,7 @@ __pycache__/
 *.so
 .Python
 python-app/.env
+python-app/config.json
 python-app/venv/
 python-app/.venv/
 .pytest_cache/
