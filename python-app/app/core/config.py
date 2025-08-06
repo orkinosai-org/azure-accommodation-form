@@ -68,6 +68,38 @@ class EmailSettings(BaseSettings):
     from_name: str = "Azure Accommodation Form"
     company_email: str = ""  # Maps to CompanyEmail in .NET
     
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        # Implement fallback logic for backward compatibility with legacy environment variables
+        if not self.smtp_username:
+            self.smtp_username = os.getenv("SMTP_USERNAME", "")
+        if not self.smtp_password:
+            self.smtp_password = os.getenv("SMTP_PASSWORD", "")
+        if not self.from_email:
+            self.from_email = os.getenv("FROM_EMAIL", "")
+        if not self.from_name or self.from_name == "Azure Accommodation Form":
+            legacy_name = os.getenv("FROM_NAME", "")
+            if legacy_name:
+                self.from_name = legacy_name
+        if not self.company_email:
+            self.company_email = os.getenv("ADMIN_EMAIL", "")
+        if self.smtp_server == "smtp.gmail.com":  # Only fallback if using default
+            legacy_server = os.getenv("SMTP_SERVER", "")
+            if legacy_server and legacy_server != "smtp.gmail.com":
+                self.smtp_server = legacy_server
+        if self.smtp_port == 587:  # Only fallback if using default
+            legacy_port = os.getenv("SMTP_PORT", "")
+            if legacy_port:
+                try:
+                    self.smtp_port = int(legacy_port)
+                except ValueError:
+                    pass
+        # Handle TLS/SSL conversion from legacy variable
+        if self.use_ssl:  # Only check legacy if current setting is default True
+            legacy_tls = os.getenv("SMTP_USE_TLS", "").lower()
+            if legacy_tls in ["false", "0", "no"]:
+                self.use_ssl = False
+    
     class Config:
         env_prefix = "EMAIL_"
 
@@ -250,6 +282,118 @@ class Settings(BaseSettings):
                 }
             }
         }
+    
+    def audit_configuration(self, logger=None) -> Dict[str, Any]:
+        """
+        Audit configuration loading and log which sources are used for email settings.
+        Returns a dictionary with configuration audit information.
+        """
+        import logging as log
+        if logger is None:
+            logger = log.getLogger(__name__)
+        
+        audit_info = {
+            "config_sources": {},
+            "email_config": {},
+            "missing_fields": [],
+            "warnings": []
+        }
+        
+        # Check which configuration sources are available
+        env_file_exists = os.path.exists(".env")
+        audit_info["config_sources"]["env_file"] = env_file_exists
+        audit_info["config_sources"]["environment_vars"] = True  # Always available
+        
+        logger.info(f"=== Configuration Audit ===")
+        logger.info(f"Environment file (.env): {'Found' if env_file_exists else 'Not found'}")
+        logger.info(f"Environment: {self.environment}")
+        
+        # Audit email configuration
+        email_cfg = audit_info["email_config"]
+        
+        # Check which email variables are set
+        email_vars_new = {
+            "EMAIL_SMTP_SERVER": os.getenv("EMAIL_SMTP_SERVER"),
+            "EMAIL_SMTP_PORT": os.getenv("EMAIL_SMTP_PORT"), 
+            "EMAIL_SMTP_USERNAME": os.getenv("EMAIL_SMTP_USERNAME"),
+            "EMAIL_SMTP_PASSWORD": os.getenv("EMAIL_SMTP_PASSWORD"),
+            "EMAIL_FROM_EMAIL": os.getenv("EMAIL_FROM_EMAIL"),
+            "EMAIL_COMPANY_EMAIL": os.getenv("EMAIL_COMPANY_EMAIL")
+        }
+        
+        email_vars_legacy = {
+            "SMTP_SERVER": os.getenv("SMTP_SERVER"),
+            "SMTP_PORT": os.getenv("SMTP_PORT"),
+            "SMTP_USERNAME": os.getenv("SMTP_USERNAME"), 
+            "SMTP_PASSWORD": os.getenv("SMTP_PASSWORD"),
+            "FROM_EMAIL": os.getenv("FROM_EMAIL"),
+            "ADMIN_EMAIL": os.getenv("ADMIN_EMAIL")
+        }
+        
+        email_cfg["new_format_vars"] = {k: bool(v) for k, v in email_vars_new.items()}
+        email_cfg["legacy_format_vars"] = {k: bool(v) for k, v in email_vars_legacy.items()}
+        
+        # Log email configuration sources
+        new_vars_set = sum(1 for v in email_vars_new.values() if v)
+        legacy_vars_set = sum(1 for v in email_vars_legacy.values() if v)
+        
+        logger.info(f"Email configuration sources:")
+        logger.info(f"  New format (EMAIL_*): {new_vars_set}/{len(email_vars_new)} variables set")
+        logger.info(f"  Legacy format (SMTP_*, FROM_*, ADMIN_*): {legacy_vars_set}/{len(email_vars_legacy)} variables set")
+        
+        # Log actual values (non-secrets)
+        logger.info(f"Email configuration values:")
+        logger.info(f"  SMTP Server: {self.email_settings.smtp_server}")
+        logger.info(f"  SMTP Port: {self.email_settings.smtp_port}")
+        logger.info(f"  SMTP Username: {self.email_settings.smtp_username or '[NOT SET]'}")
+        logger.info(f"  SMTP Password: {'[SET]' if self.email_settings.smtp_password else '[NOT SET]'}")
+        logger.info(f"  From Email: {self.email_settings.from_email or '[NOT SET]'}")
+        logger.info(f"  From Name: {self.email_settings.from_name}")
+        logger.info(f"  Company Email: {self.email_settings.company_email or '[NOT SET]'}")
+        
+        # Check for missing required fields and provide guidance
+        required_fields = [
+            ("smtp_username", "EMAIL_SMTP_USERNAME or SMTP_USERNAME", "your-email@gmail.com"),
+            ("smtp_password", "EMAIL_SMTP_PASSWORD or SMTP_PASSWORD", "your-gmail-app-password"),
+            ("from_email", "EMAIL_FROM_EMAIL or FROM_EMAIL", "noreply@yourdomain.com"),
+            ("company_email", "EMAIL_COMPANY_EMAIL or ADMIN_EMAIL", "admin@yourdomain.com")
+        ]
+        
+        for field_name, env_var_names, example in required_fields:
+            field_value = getattr(self.email_settings, field_name)
+            if not field_value:
+                missing_info = {
+                    "field": field_name,
+                    "env_vars": env_var_names,
+                    "example": example
+                }
+                audit_info["missing_fields"].append(missing_info)
+                logger.warning(f"Missing required email field: {field_name}")
+                logger.warning(f"  Set environment variable: {env_var_names}")
+                logger.warning(f"  Example value: {example}")
+        
+        # Check for configuration warnings
+        if not self.email_settings.smtp_username and not self.email_settings.smtp_password:
+            warning = "Email service not configured - no SMTP credentials provided"
+            audit_info["warnings"].append(warning)
+            logger.warning(warning)
+        elif not self.email_settings.smtp_username:
+            warning = "SMTP username missing - email sending will fail"
+            audit_info["warnings"].append(warning)
+            logger.warning(warning)
+        elif not self.email_settings.smtp_password:
+            warning = "SMTP password missing - email sending will fail"  
+            audit_info["warnings"].append(warning)
+            logger.warning(warning)
+            
+        if not self.email_settings.from_email:
+            warning = "From email address not configured - will use SMTP username as fallback"
+            audit_info["warnings"].append(warning)
+            logger.warning(warning)
+            
+        logger.info(f"=== End Configuration Audit ===")
+        
+        return audit_info
     
     class Config:
         env_file = ".env"

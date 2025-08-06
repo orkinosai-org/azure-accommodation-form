@@ -6,8 +6,9 @@ import os
 import logging
 from datetime import datetime, timedelta
 from typing import List, Optional
-from fastapi import APIRouter, Request, HTTPException, status, Query
+from fastapi import APIRouter, Request, HTTPException, status, Query, Body
 from fastapi.responses import JSONResponse, FileResponse
+from pydantic import BaseModel, EmailStr
 
 from app.core.security import get_current_ip, require_certificate_auth
 from app.core.config import get_settings
@@ -18,6 +19,11 @@ from app.services.email import EmailService
 router = APIRouter()
 logger = logging.getLogger(__name__)
 settings = get_settings()
+
+class TestEmailRequest(BaseModel):
+    """Request model for test email endpoint"""
+    to_email: EmailStr
+    message: Optional[str] = "This is a test email from the Azure Accommodation Form application."
 
 # Admin authentication (placeholder - implement proper admin auth)
 async def verify_admin_access(request: Request):
@@ -183,3 +189,119 @@ async def resend_confirmation_email(
     logger.info(f"Confirmation email resent for submission {submission_id}")
     
     return {"message": "Confirmation email sent successfully"}
+
+@router.get("/config/email")
+async def get_email_configuration(request: Request):
+    """Get current email configuration (admin only, excludes secrets)"""
+    await verify_admin_access(request)
+    
+    # Perform configuration audit
+    audit_info = settings.audit_configuration(logger)
+    
+    return {
+        "email_config": {
+            "smtp_server": settings.email_settings.smtp_server,
+            "smtp_port": settings.email_settings.smtp_port,
+            "smtp_username": settings.email_settings.smtp_username or "[NOT SET]",
+            "smtp_password": "[SET]" if settings.email_settings.smtp_password else "[NOT SET]",
+            "use_ssl": settings.email_settings.use_ssl,
+            "from_email": settings.email_settings.from_email or "[NOT SET]",
+            "from_name": settings.email_settings.from_name,
+            "company_email": settings.email_settings.company_email or "[NOT SET]"
+        },
+        "config_audit": audit_info,
+        "ready_for_email": bool(
+            settings.email_settings.smtp_username and 
+            settings.email_settings.smtp_password and
+            settings.email_settings.from_email
+        )
+    }
+
+@router.post("/config/email/test")
+async def send_test_email(
+    test_email: TestEmailRequest,
+    request: Request
+):
+    """Send a test email to verify email configuration (admin only)"""
+    await verify_admin_access(request)
+    
+    # Check if email is configured
+    if not settings.email_settings.smtp_username or not settings.email_settings.smtp_password:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email service not configured. Please set SMTP credentials."
+        )
+    
+    try:
+        email_service = EmailService()
+        
+        # Create test email content
+        subject = "Test Email from Azure Accommodation Form"
+        
+        body_text = f"""
+This is a test email from the Azure Accommodation Form application.
+
+Configuration Details:
+- SMTP Server: {settings.email_settings.smtp_server}:{settings.email_settings.smtp_port}
+- From: {settings.email_settings.from_name} <{settings.email_settings.from_email}>
+- SSL/TLS: {"Enabled" if settings.email_settings.use_ssl else "Disabled"}
+
+Test Message: {test_email.message}
+
+If you received this email, the email configuration is working correctly.
+
+Sent at: {datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")}
+        """.strip()
+        
+        body_html = f"""
+        <html>
+        <body>
+            <h2>Test Email from Azure Accommodation Form</h2>
+            <p>This is a test email from the Azure Accommodation Form application.</p>
+            
+            <h3>Configuration Details:</h3>
+            <ul>
+                <li><strong>SMTP Server:</strong> {settings.email_settings.smtp_server}:{settings.email_settings.smtp_port}</li>
+                <li><strong>From:</strong> {settings.email_settings.from_name} &lt;{settings.email_settings.from_email}&gt;</li>
+                <li><strong>SSL/TLS:</strong> {"Enabled" if settings.email_settings.use_ssl else "Disabled"}</li>
+            </ul>
+            
+            <h3>Test Message:</h3>
+            <p><em>{test_email.message}</em></p>
+            
+            <p>If you received this email, the email configuration is working correctly.</p>
+            
+            <hr>
+            <p><small>Sent at: {datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")}</small></p>
+        </body>
+        </html>
+        """
+        
+        # Send test email using the internal _send_email method
+        success = await email_service._send_email(
+            to_email=test_email.to_email,
+            subject=subject,
+            body_text=body_text,
+            body_html=body_html
+        )
+        
+        if success:
+            logger.info(f"Test email sent successfully to {test_email.to_email}")
+            return {
+                "message": "Test email sent successfully",
+                "to_email": test_email.to_email,
+                "smtp_server": settings.email_settings.smtp_server,
+                "sent_at": datetime.utcnow().isoformat()
+            }
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to send test email. Check server logs for details."
+            )
+            
+    except Exception as e:
+        logger.error(f"Error sending test email: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to send test email: {str(e)}"
+        )
