@@ -2,7 +2,6 @@
 Main FastAPI application entry point
 """
 
-import os
 import logging
 import logging.config
 from contextlib import asynccontextmanager
@@ -12,7 +11,6 @@ from fastapi.templating import Jinja2Templates
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
-from dotenv import load_dotenv
 import uvicorn
 
 from app.api.routes import auth, form, admin
@@ -20,9 +18,6 @@ from app.core.config import get_settings
 from app.core.security import get_current_ip
 from app.services.storage import AzureBlobStorageService
 from app.services.application_insights import get_insights_service
-
-# Load environment variables
-load_dotenv()
 
 # Get settings and configure logging using .NET-style configuration
 settings = get_settings()

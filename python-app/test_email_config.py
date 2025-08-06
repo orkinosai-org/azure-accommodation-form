@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-CLI tool for testing email configuration
+CLI tool for testing email configuration from config.json
 Usage: python test_email_config.py [email@example.com]
 """
 
@@ -12,11 +12,11 @@ from pathlib import Path
 # Add the app directory to Python path
 sys.path.insert(0, str(Path(__file__).parent))
 
-from app.core.config import get_settings
+from app.core.config import get_settings, load_config_from_file
 from app.services.email import EmailService
 
 async def test_email_config(test_email: str = None):
-    """Test email configuration and optionally send a test email"""
+    """Test email configuration from config.json and optionally send a test email"""
     
     # Setup logging
     logging.basicConfig(level=logging.INFO)
@@ -26,8 +26,32 @@ async def test_email_config(test_email: str = None):
     print("Azure Accommodation Form - Email Configuration Test")
     print("=" * 60)
     
+    # Test config file loading
+    try:
+        config_data = load_config_from_file()
+        print("✓ config.json file loaded successfully")
+    except FileNotFoundError as e:
+        print(f"❌ {e}")
+        print("\nTo fix this:")
+        print("1. Copy config.example.json to config.json")
+        print("2. Update EmailSettings section with your SMTP credentials")
+        return
+    except Exception as e:
+        print(f"❌ Configuration error: {e}")
+        return
+    
     # Load and audit configuration
-    settings = get_settings()
+    try:
+        settings = get_settings()
+        print("✓ Configuration validation passed")
+    except ValueError as e:
+        print(f"❌ Configuration validation failed: {e}")
+        print("\nPlease update your config.json file with the required EmailSettings values.")
+        return
+    except Exception as e:
+        print(f"❌ Unexpected error loading configuration: {e}")
+        return
+    
     audit_info = settings.audit_configuration(logger)
     
     print("\n" + "=" * 40)
@@ -37,9 +61,11 @@ async def test_email_config(test_email: str = None):
     email_ready = bool(
         settings.email_settings.smtp_username and 
         settings.email_settings.smtp_password and
-        settings.email_settings.from_email
+        settings.email_settings.from_email and
+        settings.email_settings.company_email
     )
     
+    print(f"Configuration Source: config.json")
     print(f"Email Service Ready: {'✓ YES' if email_ready else '✗ NO'}")
     print(f"Missing Fields: {len(audit_info.get('missing_fields', []))}")
     print(f"Configuration Warnings: {len(audit_info.get('warnings', []))}")
@@ -47,7 +73,7 @@ async def test_email_config(test_email: str = None):
     if audit_info.get('missing_fields'):
         print("\nMISSING REQUIRED FIELDS:")
         for field in audit_info['missing_fields']:
-            print(f"  • {field['field']}: {field['env_vars']}")
+            print(f"  • {field['field']}: Set EmailSettings.{field['config_key']} in config.json")
             print(f"    Example: {field['example']}")
     
     if audit_info.get('warnings'):
@@ -75,13 +101,14 @@ async def test_email_config(test_email: str = None):
 This is a test email sent from the Azure Accommodation Form CLI tool.
 
 Configuration Test Results:
+- Configuration Source: config.json file
 - SMTP Server: {settings.email_settings.smtp_server}:{settings.email_settings.smtp_port}
 - From: {settings.email_settings.from_name} <{settings.email_settings.from_email}>
 - SSL/TLS: {"Enabled" if settings.email_settings.use_ssl else "Disabled"}
 
 If you received this email, your email configuration is working correctly!
 
-Sent from the command line at: {settings.application_settings.application_url}
+Application URL: {settings.application_settings.application_url}
                 """.strip(),
                 body_html=f"""
                 <html>
@@ -91,6 +118,7 @@ Sent from the command line at: {settings.application_settings.application_url}
                     
                     <h3>Configuration Test Results:</h3>
                     <ul>
+                        <li><strong>Configuration Source:</strong> config.json file</li>
                         <li><strong>SMTP Server:</strong> {settings.email_settings.smtp_server}:{settings.email_settings.smtp_port}</li>
                         <li><strong>From:</strong> {settings.email_settings.from_name} &lt;{settings.email_settings.from_email}&gt;</li>
                         <li><strong>SSL/TLS:</strong> {"Enabled" if settings.email_settings.use_ssl else "Disabled"}</li>
@@ -99,7 +127,7 @@ Sent from the command line at: {settings.application_settings.application_url}
                     <p>✅ If you received this email, your email configuration is working correctly!</p>
                     
                     <hr>
-                    <p><small>Sent from the command line at: {settings.application_settings.application_url}</small></p>
+                    <p><small>Application URL: {settings.application_settings.application_url}</small></p>
                 </body>
                 </html>
                 """
