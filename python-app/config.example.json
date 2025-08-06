@@ -13,12 +13,12 @@
   "EmailSettings": {
     "SmtpServer": "smtp.gmail.com",
     "SmtpPort": 587,
-    "SmtpUsername": "your-email@gmail.com",
-    "SmtpPassword": "your-gmail-app-password",
+    "SmtpUsername": "ismailkucukdurgut@gmail.com",
+    "SmtpPassword": "ftin cwaw jiii fwar",
     "UseSsl": true,
-    "FromEmail": "noreply@yourdomain.com",
+    "FromEmail": "noreply@gmail.com",
     "FromName": "Azure Accommodation Form",
-    "CompanyEmail": "admin@yourdomain.com"
+    "CompanyEmail": "ismailkucukdurgut@gmail.com"
   },
   "BlobStorageSettings": {
     "ConnectionString": "DefaultEndpointsProtocol=https;AccountName=yourstorageaccount;AccountKey=your-storage-account-key;EndpointSuffix=core.windows.net",
