@@ -35,7 +35,10 @@ logger = logging.getLogger(__name__)
 async def lifespan(app: FastAPI):
     """Application lifespan handler"""
     logger.info("Starting Azure Accommodation Form application...")
-    logger.info(f"Environment: {settings.environment}")
+    
+    # Audit configuration at startup
+    audit_info = settings.audit_configuration(logger)
+    
     logger.info(f"Application: {settings.application_settings.application_name}")
     logger.info(f"Application URL: {settings.application_settings.application_url}")
     
@@ -45,7 +48,9 @@ async def lifespan(app: FastAPI):
     insights_service = get_insights_service()
     insights_service.track_event("ApplicationStartup", {
         "environment": settings.environment,
-        "application_name": settings.application_settings.application_name
+        "application_name": settings.application_settings.application_name,
+        "email_configured": bool(settings.email_settings.smtp_username and settings.email_settings.smtp_password),
+        "config_warnings": len(audit_info.get("warnings", []))
     })
     
     # Test Azure Blob Storage connection if configured
@@ -58,6 +63,8 @@ async def lifespan(app: FastAPI):
         except Exception as e:
             logger.warning(f"Azure Blob Storage connection failed: {e}")
             insights_service.track_exception(e, {"service": "blob_storage"})
+    else:
+        logger.info("Azure Blob Storage not configured")
     
     # Log Application Insights configuration
     if settings.application_insights.connection_string:
@@ -65,11 +72,12 @@ async def lifespan(app: FastAPI):
     else:
         logger.info("Application Insights not configured")
     
-    # Log email configuration
-    if settings.email_settings.smtp_username:
-        logger.info(f"Email service configured with SMTP server: {settings.email_settings.smtp_server}")
+    # Email configuration summary (already logged in audit_configuration)
+    missing_email_fields = len(audit_info.get("missing_fields", []))
+    if missing_email_fields == 0:
+        logger.info("Email service fully configured and ready")
     else:
-        logger.warning("Email service not fully configured")
+        logger.warning(f"Email service has {missing_email_fields} missing required fields - see warnings above")
     
     yield
     
@@ -134,6 +142,30 @@ async def health_check():
         "service": settings.application_settings.application_name,
         "version": "1.0.0",
         "environment": settings.environment
+    }
+
+@app.get("/config-status")
+async def config_status():
+    """Basic configuration status endpoint (public, excludes secrets)"""
+    email_configured = bool(
+        settings.email_settings.smtp_username and 
+        settings.email_settings.smtp_password
+    )
+    
+    return {
+        "status": "ok",
+        "environment": settings.environment,
+        "email_service": {
+            "configured": email_configured,
+            "smtp_server": settings.email_settings.smtp_server if email_configured else "not configured",
+            "smtp_port": settings.email_settings.smtp_port if email_configured else None
+        },
+        "storage_service": {
+            "configured": bool(settings.blob_storage_settings.connection_string)
+        },
+        "application_insights": {
+            "configured": bool(settings.application_insights.connection_string)
+        }
     }
 
 @app.exception_handler(404)

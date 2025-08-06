@@ -352,21 +352,184 @@ python -m pytest tests/test_config.py -v
 
 ### Debug Configuration
 
-To debug configuration loading:
+The application now includes comprehensive configuration auditing and debugging features.
+
+#### Automatic Configuration Audit at Startup
+
+When the application starts, it automatically performs a configuration audit and logs:
+
+- Which configuration sources are available (.env file, environment variables)
+- How many email configuration variables are set (new vs. legacy format)
+- Current email configuration values (excluding secrets)
+- Missing required fields with specific guidance
+- Configuration warnings
+
+Example startup log output:
+```
+INFO: === Configuration Audit ===
+INFO: Environment file (.env): Found
+INFO: Environment: development
+INFO: Email configuration sources:
+INFO:   New format (EMAIL_*): 6/6 variables set
+INFO:   Legacy format (SMTP_*, FROM_*, ADMIN_*): 0/6 variables set
+INFO: Email configuration values:
+INFO:   SMTP Server: smtp.gmail.com
+INFO:   SMTP Port: 587
+INFO:   SMTP Username: test@example.com
+INFO:   SMTP Password: [SET]
+INFO:   From Email: noreply@example.com
+INFO:   From Name: Azure Accommodation Form
+INFO:   Company Email: admin@example.com
+INFO: === End Configuration Audit ===
+```
+
+#### CLI Configuration Testing Tool
+
+Use the included CLI tool to test email configuration:
+
+```bash
+# Test configuration only
+python test_email_config.py
+
+# Test configuration and send test email
+python test_email_config.py your-email@example.com
+```
+
+The CLI tool provides:
+- Complete configuration audit
+- Clear indication of missing fields
+- Specific guidance on how to set missing variables
+- Test email sending capability
+- Detailed error reporting
+
+#### API Endpoints for Configuration Testing
+
+##### Public Configuration Status Endpoint
+
+```bash
+curl http://localhost:8000/config-status
+```
+
+Returns basic configuration status (excludes secrets):
+```json
+{
+    "status": "ok",
+    "environment": "development",
+    "email_service": {
+        "configured": true,
+        "smtp_server": "smtp.gmail.com",
+        "smtp_port": 587
+    },
+    "storage_service": {
+        "configured": false
+    },
+    "application_insights": {
+        "configured": false
+    }
+}
+```
+
+##### Admin Email Configuration Endpoint
+
+Requires admin authentication (`X-Admin-Token` header):
+
+```bash
+curl -H "X-Admin-Token: your-admin-token" \
+     http://localhost:8000/api/admin/config/email
+```
+
+Returns detailed email configuration audit:
+```json
+{
+    "email_config": {
+        "smtp_server": "smtp.gmail.com",
+        "smtp_port": 587,
+        "smtp_username": "test@example.com",
+        "smtp_password": "[SET]",
+        "use_ssl": true,
+        "from_email": "noreply@example.com",
+        "from_name": "Azure Accommodation Form",
+        "company_email": "admin@example.com"
+    },
+    "config_audit": {
+        "config_sources": {
+            "env_file": true,
+            "environment_vars": true
+        },
+        "email_config": {
+            "new_format_vars": {
+                "EMAIL_SMTP_SERVER": true,
+                "EMAIL_SMTP_USERNAME": true,
+                // ... other variables
+            },
+            "legacy_format_vars": {
+                "SMTP_SERVER": false,
+                "SMTP_USERNAME": false,
+                // ... other variables
+            }
+        },
+        "missing_fields": [],
+        "warnings": []
+    },
+    "ready_for_email": true
+}
+```
+
+##### Admin Test Email Endpoint
+
+Send a test email (requires admin authentication):
+
+```bash
+curl -X POST \
+     -H "X-Admin-Token: your-admin-token" \
+     -H "Content-Type: application/json" \
+     -d '{"to_email": "test@example.com", "message": "Custom test message"}' \
+     http://localhost:8000/api/admin/config/email/test
+```
+
+#### Configuration Loading with Fallback Logic
+
+The email configuration system now includes intelligent fallback logic:
+
+1. **Primary**: Load from EMAIL_ prefixed environment variables
+2. **Fallback**: Load from legacy SMTP_*, FROM_*, ADMIN_* variables if EMAIL_ variables are not set
+3. **Guidance**: Provide specific error messages for missing fields
+
+This ensures backward compatibility while encouraging migration to the new format.
+
+#### Debugging Missing Configuration
+
+When email configuration is incomplete, the system provides specific guidance:
+
+```
+WARNING: Missing required email field: smtp_username
+WARNING:   Set environment variable: EMAIL_SMTP_USERNAME or SMTP_USERNAME
+WARNING:   Example value: your-email@gmail.com
+```
+
+#### Programmatic Configuration Testing
+
+For custom debugging, use the configuration audit method:
 
 ```python
 from app.core.config import get_settings
 import logging
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 settings = get_settings()
 
-# Print configuration (excluding secrets)
-print(f"Environment: {settings.environment}")
-print(f"App Name: {settings.application_settings.application_name}")
-print(f"SMTP Server: {settings.email_settings.smtp_server}")
-print(f"Storage Configured: {bool(settings.blob_storage_settings.connection_string)}")
-print(f"App Insights Configured: {bool(settings.application_insights.connection_string)}")
+# Perform configuration audit
+audit_info = settings.audit_configuration()
+
+# Check specific issues
+email_ready = bool(
+    settings.email_settings.smtp_username and 
+    settings.email_settings.smtp_password
+)
+
+print(f"Email ready: {email_ready}")
+print(f"Missing fields: {len(audit_info.get('missing_fields', []))}")
+print(f"Warnings: {len(audit_info.get('warnings', []))}")
 ```
 
 ## Additional Resources
