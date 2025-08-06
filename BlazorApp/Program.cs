@@ -55,6 +55,9 @@ public class Program
         builder.Services.Configure<ApplicationSettings>(
             builder.Configuration.GetSection("ApplicationSettings"));
 
+        // Add configuration validation service
+        builder.Services.AddSingleton<IConfigurationValidator, ConfigurationValidator>();
+
         // Register services
         builder.Services.AddScoped<IFormService, FormService>();
         builder.Services.AddScoped<IEmailService, EmailService>();
@@ -130,6 +133,10 @@ public class Program
         {
             var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
             context.Database.EnsureCreated();
+
+            // Validate configuration at startup
+            var configValidator = scope.ServiceProvider.GetRequiredService<IConfigurationValidator>();
+            configValidator.ValidateConfigurationAsync().Wait();
         }
 
         app.Run();

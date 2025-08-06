@@ -88,6 +88,10 @@ public class StartupWithoutAzureDiagnosticsTest
             Console.WriteLine("\n" + new string('=', 50));
             await ConsentValidationTest.TestConsentValidation();
 
+            // Run the SMTP configuration validation test
+            Console.WriteLine("\n" + new string('=', 50));
+            await SmtpConfigurationTest.TestSmtpConfigurationValidation();
+
         }
         catch (Exception ex)
         {
