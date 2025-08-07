@@ -66,7 +66,6 @@ async def initialize_form(request: Request):
 
 @router.post("/submit", response_model=FormSubmissionResponse)
 async def submit_form(
-    form_data: AccommodationFormData,
     request: Request
 ):
     """Submit the completed accommodation form"""
@@ -74,6 +73,131 @@ async def submit_form(
     
     client_ip = get_current_ip(request)
     session_id = request.headers.get("X-Session-Token")
+    
+    # Log incoming request for debugging
+    logger.info(f"Form submission attempt from IP: {client_ip}")
+    
+    # Parse request body manually to get better error details
+    try:
+        raw_body = await request.body()
+        body_str = raw_body.decode('utf-8')
+        logger.info(f"Raw request body: {body_str}")
+        
+        import json
+        request_data = json.loads(body_str)
+        logger.info(f"Parsed request data keys: {list(request_data.keys())}")
+        
+        # Validate form data with detailed error logging
+        try:
+            form_data = AccommodationFormData(**request_data)
+            logger.info("Form data validation successful")
+        except Exception as validation_error:
+            logger.error(f"Form validation failed: {validation_error}")
+            logger.error(f"Request data structure: {json.dumps(request_data, indent=2, default=str)}")
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=f"Form validation failed: {str(validation_error)}"
+            )
+            
+    except json.JSONDecodeError as e:
+        logger.error(f"JSON parsing failed: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid JSON in request body"
+        )
+    except Exception as e:
+        logger.error(f"Request processing failed: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Request processing error: {str(e)}"
+        )
+    
+    if not session_id:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Valid session required"
+        )
+    
+    # Verify session
+    session_service = SessionService()
+    session = await session_service.get_session(session_id)
+    
+    if not session:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired session"
+        )
+    
+    # Verify email matches session
+    if form_data.tenant_details.email != session["email"]:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Form email must match verified session email"
+        )
+    
+    # Add metadata
+    form_data.client_ip = client_ip
+    form_data.form_submitted_at = datetime.utcnow()
+    
+    try:
+        # Process form submission
+        form_service = FormService()
+        submission = await form_service.process_submission(form_data)
+        
+        # Generate PDF
+        pdf_service = PDFGenerationService()
+        pdf_buffer = await pdf_service.generate_pdf(form_data)
+        
+        # Generate filename
+        pdf_filename = await pdf_service.generate_filename(form_data)
+        
+        # Store PDF in Azure Blob Storage
+        storage_service = AzureBlobStorageService()
+        blob_url = await storage_service.upload_pdf(pdf_filename, pdf_buffer)
+        
+        # Send emails
+        email_service = EmailService()
+        
+        # Send to user
+        await email_service.send_form_confirmation(
+            to_email=form_data.tenant_details.email,
+            form_data=form_data,
+            pdf_buffer=pdf_buffer,
+            pdf_filename=pdf_filename
+        )
+        
+        # Send to admin
+        await email_service.send_admin_notification(
+            form_data=form_data,
+            pdf_buffer=pdf_buffer,
+            pdf_filename=pdf_filename,
+            blob_url=blob_url
+        )
+        
+        # Update submission record
+        await form_service.update_submission_status(
+            submission["id"],
+            "completed",
+            pdf_filename=pdf_filename,
+            blob_url=blob_url
+        )
+        
+        logger.info(f"Form submission completed: {submission['id']}")
+        
+        return FormSubmissionResponse(
+            submission_id=submission["id"],
+            status="success",
+            message="Form submitted successfully",
+            pdf_filename=pdf_filename,
+            timestamp=datetime.utcnow()
+        )
+        
+    except Exception as e:
+        logger.error(f"Form submission failed: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Form submission failed. Please try again."
+        )
     
     if not session_id:
         raise HTTPException(

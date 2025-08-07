@@ -326,8 +326,7 @@ class AzureAccommodationForm {
     }
     
     async generateFormHTML() {
-        // This would normally fetch the form schema from the server
-        // For now, we'll create a basic form structure
+        // Generate comprehensive form HTML that matches the backend model
         return `
             <div class="row">
                 <div class="col-12">
@@ -358,63 +357,177 @@ class AzureAccommodationForm {
                 <div class="row">
                     <div class="col-md-6">
                         <div class="mb-3">
+                            <label for="place_of_birth" class="form-label">Place of Birth *</label>
+                            <input type="text" class="form-control" id="place_of_birth" name="place_of_birth" required>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
                             <label for="email_readonly" class="form-label">Email Address</label>
                             <input type="email" class="form-control" id="email_readonly" readonly>
                         </div>
                     </div>
+                </div>
+                <div class="row">
                     <div class="col-md-6">
                         <div class="mb-3">
                             <label for="telephone" class="form-label">Telephone *</label>
                             <input type="tel" class="form-control" id="telephone" name="telephone" required>
                         </div>
                     </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="employers_name" class="form-label">Employer's Name *</label>
+                            <input type="text" class="form-control" id="employers_name" name="employers_name" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="gender" class="form-label">Gender *</label>
+                            <select class="form-control" id="gender" name="gender" required>
+                                <option value="">Select Gender</option>
+                                <option value="male">Male</option>
+                                <option value="female">Female</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="ni_number" class="form-label">National Insurance Number *</label>
+                            <input type="text" class="form-control" id="ni_number" name="ni_number" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="room_occupancy" class="form-label">Room Occupancy *</label>
+                            <select class="form-control" id="room_occupancy" name="room_occupancy" required>
+                                <option value="">Select Occupancy</option>
+                                <option value="just_you">Just You</option>
+                                <option value="you_and_someone_else">You and Someone Else</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="right_to_live_in_uk" name="right_to_live_in_uk">
+                                <label class="form-check-label" for="right_to_live_in_uk">
+                                    Right to Live in UK *
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="car" name="car">
+                                <label class="form-check-label" for="car">
+                                    Do you have a car?
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="bicycle" name="bicycle">
+                                <label class="form-check-label" for="bicycle">
+                                    Do you have a bicycle?
+                                </label>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-            
-            <!-- Signature Section -->
+
+            <!-- Bank Details Section -->
             <div class="form-section mb-4">
-                <h4 class="section-title">Signature</h4>
-                <div class="mb-3">
-                    <label class="form-label">Signature Type *</label>
-                    <div class="form-check">
-                        <input class="form-check-input" type="radio" name="signature_type" id="signature_typed" value="typed" checked>
-                        <label class="form-check-label" for="signature_typed">
-                            Typed Name and Date
-                        </label>
-                    </div>
-                    <div class="form-check">
-                        <input class="form-check-input" type="radio" name="signature_type" id="signature_drawn" value="drawn">
-                        <label class="form-check-label" for="signature_drawn">
-                            Draw Signature
-                        </label>
-                    </div>
-                </div>
-                
-                <div id="typed-signature-section">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="signature_name" class="form-label">Full Name *</label>
-                                <input type="text" class="form-control" id="signature_name" name="signature_name" required>
-                            </div>
+                <h4 class="section-title">2. Bank Details</h4>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="bank_name" class="form-label">Bank Name *</label>
+                            <input type="text" class="form-control" id="bank_name" name="bank_name" required>
                         </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="signature_date" class="form-label">Date *</label>
-                                <input type="date" class="form-control" id="signature_date" name="signature_date" required>
-                            </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="bank_postcode" class="form-label">Bank Postcode *</label>
+                            <input type="text" class="form-control" id="bank_postcode" name="bank_postcode" required>
                         </div>
                     </div>
                 </div>
-                
-                <div id="drawn-signature-section" class="d-none">
-                    <canvas id="signature-pad" class="signature-pad" width="500" height="200"></canvas>
-                    <div class="signature-controls">
-                        <button type="button" class="btn btn-outline-secondary btn-sm" id="clear-signature">
-                            <i class="fas fa-eraser me-1"></i> Clear
-                        </button>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="account_no" class="form-label">Account Number *</label>
+                            <input type="text" class="form-control" id="account_no" name="account_no" maxlength="8" required>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="sort_code" class="form-label">Sort Code *</label>
+                            <input type="text" class="form-control" id="sort_code" name="sort_code" placeholder="12-34-56" required>
+                        </div>
                     </div>
                 </div>
+            </div>
+
+            <!-- Address History Section -->
+            <div class="form-section mb-4">
+                <h4 class="section-title">3. Address History</h4>
+                <div id="address-history-container">
+                    <div class="address-entry mb-3 border p-3 rounded">
+                        <h6>Current Address</h6>
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="mb-3">
+                                    <label for="address_0" class="form-label">Address *</label>
+                                    <textarea class="form-control" id="address_0" name="address_0" rows="2" required></textarea>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="from_date_0" class="form-label">From Date *</label>
+                                    <input type="date" class="form-control" id="from_date_0" name="from_date_0" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="landlord_name_0" class="form-label">Landlord Name *</label>
+                                    <input type="text" class="form-control" id="landlord_name_0" name="landlord_name_0" required>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="landlord_tel_0" class="form-label">Landlord Tel *</label>
+                                    <input type="tel" class="form-control" id="landlord_tel_0" name="landlord_tel_0" required>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="landlord_email_0" class="form-label">Landlord Email *</label>
+                                    <input type="email" class="form-control" id="landlord_email_0" name="landlord_email_0" required>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Simplified form for minimal testing -->
+            <div class="form-section mb-4">
+                <h4 class="section-title">4. Quick Test Form</h4>
+                <p class="text-muted">Simplified form for testing purposes</p>
+                
+                <!-- Minimal required fields for other sections -->
+                <input type="hidden" id="contacts_data" value='{"next_of_kin":"Test Contact","relationship":"Friend","address":"Test Address","contact_number":"1234567890"}'>
+                <input type="hidden" id="medical_data" value='{"gp_practice":"Test Practice","doctor_name":"Dr. Test","doctor_address":"Test Address","doctor_telephone":"1234567890"}'>
+                <input type="hidden" id="employment_data" value='{"employer_name_address":"Test Employer","job_title":"Test Job","manager_name":"Test Manager","manager_tel":"1234567890","manager_email":"test@example.com","date_of_employment":"2023-01-01","present_salary":30000}'>
+                <input type="hidden" id="passport_data" value='{"passport_number":"TEST123456","date_of_issue":"2023-01-01","place_of_issue":"Test Location"}'>
+                <input type="hidden" id="living_data" value='{"landlord_knows":true,"reason_leaving":"Test reason","landlord_reference":true,"landlord_contact":{"name":"Test Landlord","address":"Test Address","tel":"1234567890","email":"landlord@example.com"}}'>
+                <input type="hidden" id="other_data" value='{"pets_has":false,"smoke":false,"coliving_has":false}'>
+                <input type="hidden" id="agreement_data" value='{"single_occupancy_agree":true,"hmo_terms_agree":true,"no_unlisted_occupants":true,"no_smoking":true,"kitchen_cooking_only":true}'>
+                <input type="hidden" id="consent_data" value='{"consent_given":true,"signature":"Test Signature","date":"2024-01-01","print_name":"Test Name","declaration":{"main_home":true,"enquiries_permission":true,"certify_no_judgements":true,"certify_no_housing_debt":true,"certify_no_landlord_debt":true,"certify_no_abuse":true},"declaration_signature":"Test Signature","declaration_date":"2024-01-01","declaration_print_name":"Test Name"}'>
             </div>
             
             <!-- Submit Section -->
@@ -540,17 +653,54 @@ class AzureAccommodationForm {
     }
     
     collectFormData() {
-        // This would collect all form data according to the schema
-        // For now, return basic structure
+        // Collect comprehensive form data that matches the backend model
         return {
             tenant_details: {
                 full_name: document.getElementById('full_name')?.value || '',
+                date_of_birth: document.getElementById('date_of_birth')?.value || '',
+                place_of_birth: document.getElementById('place_of_birth')?.value || '',
                 email: document.getElementById('email_readonly')?.value || '',
                 telephone: document.getElementById('telephone')?.value || '',
-                date_of_birth: document.getElementById('date_of_birth')?.value || '',
-                // Add other required fields...
-            }
-            // Add other sections...
+                employers_name: document.getElementById('employers_name')?.value || '',
+                gender: document.getElementById('gender')?.value || 'other',
+                ni_number: document.getElementById('ni_number')?.value || '',
+                car: document.getElementById('car')?.checked || false,
+                bicycle: document.getElementById('bicycle')?.checked || false,
+                right_to_live_in_uk: document.getElementById('right_to_live_in_uk')?.checked || false,
+                room_occupancy: document.getElementById('room_occupancy')?.value || 'just_you',
+                other_names_has: false,
+                other_names_details: null,
+                medical_condition_has: false,
+                medical_condition_details: null
+            },
+            bank_details: {
+                bank_name: document.getElementById('bank_name')?.value || '',
+                postcode: document.getElementById('bank_postcode')?.value || '',
+                account_no: document.getElementById('account_no')?.value || '',
+                sort_code: document.getElementById('sort_code')?.value || ''
+            },
+            address_history: [
+                {
+                    address: document.getElementById('address_0')?.value || '',
+                    from_date: document.getElementById('from_date_0')?.value || '',
+                    to_date: null, // Current address
+                    landlord_name: document.getElementById('landlord_name_0')?.value || '',
+                    landlord_tel: document.getElementById('landlord_tel_0')?.value || '',
+                    landlord_email: document.getElementById('landlord_email_0')?.value || ''
+                }
+            ],
+            contacts: JSON.parse(document.getElementById('contacts_data')?.value || '{}'),
+            medical_details: JSON.parse(document.getElementById('medical_data')?.value || '{}'),
+            employment: JSON.parse(document.getElementById('employment_data')?.value || '{}'),
+            employment_change: null,
+            passport_details: JSON.parse(document.getElementById('passport_data')?.value || '{}'),
+            current_living_arrangement: JSON.parse(document.getElementById('living_data')?.value || '{}'),
+            other_details: JSON.parse(document.getElementById('other_data')?.value || '{}'),
+            occupation_agreement: JSON.parse(document.getElementById('agreement_data')?.value || '{}'),
+            consent_and_declaration: JSON.parse(document.getElementById('consent_data')?.value || '{}'),
+            client_ip: null, // Will be set by backend
+            form_opened_at: null,
+            form_submitted_at: null
         };
     }
     
