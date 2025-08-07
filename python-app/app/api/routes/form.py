@@ -94,24 +94,42 @@ async def submit_form(
                 submission_request = FormSubmissionRequest(**request_data)
                 form_data = submission_request.form_data
                 logger.info("FormSubmissionRequest validation successful")
+                logger.info(f"Form data contains {len([k for k in form_data.dict().keys() if k not in ['client_ip', 'form_opened_at', 'form_submitted_at']])} main sections")
             except Exception as validation_error:
                 logger.error(f"FormSubmissionRequest validation failed: {validation_error}")
                 logger.error(f"Request data structure: {json.dumps(request_data, indent=2, default=str)}")
+                
+                # Provide more specific error message
+                error_details = str(validation_error)
+                if "validation error" in error_details.lower():
+                    detail_msg = f"Form validation failed - please check all required fields are filled correctly. Details: {error_details}"
+                else:
+                    detail_msg = f"Form submission validation failed: {error_details}"
+                
                 raise HTTPException(
                     status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                    detail=f"Form submission validation failed: {str(validation_error)}"
+                    detail=detail_msg
                 )
         else:
             # Fallback: try to validate as AccommodationFormData directly (legacy support)
             try:
                 form_data = AccommodationFormData(**request_data)
                 logger.info("AccommodationFormData validation successful (legacy mode)")
+                logger.info(f"Legacy form data contains {len([k for k in request_data.keys() if k not in ['client_ip', 'form_opened_at', 'form_submitted_at']])} main sections")
             except Exception as validation_error:
                 logger.error(f"Form validation failed: {validation_error}")
                 logger.error(f"Request data structure: {json.dumps(request_data, indent=2, default=str)}")
+                
+                # Provide helpful error message for missing fields
+                error_details = str(validation_error)
+                if "Field required" in error_details:
+                    detail_msg = f"Missing required form fields. Please ensure all mandatory fields are completed. Details: {error_details}"
+                else:
+                    detail_msg = f"Form validation failed: {error_details}"
+                
                 raise HTTPException(
                     status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                    detail=f"Form validation failed: {str(validation_error)}"
+                    detail=detail_msg
                 )
             
     except json.JSONDecodeError as e:
