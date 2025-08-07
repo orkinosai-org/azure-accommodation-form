@@ -14,14 +14,19 @@ from app.core.config import get_settings, load_config_from_file, create_settings
 
 
 def test_appsettings_json_file_required():
-    """Test that appsettings.json file is required and FileNotFoundError is raised if missing"""
+    """Test that appsettings.json file is required and FileNotFoundError is raised if missing and no example exists"""
     
-    # Test with non-existent config file
-    with pytest.raises(FileNotFoundError) as exc_info:
-        load_config_from_file("nonexistent.json")
-    
-    assert "Configuration file 'nonexistent.json' not found" in str(exc_info.value)
-    assert "appsettings.example.json" in str(exc_info.value)
+    # Test with non-existent config file in a directory where no example file exists
+    with tempfile.TemporaryDirectory() as temp_dir:
+        temp_config_path = os.path.join(temp_dir, "nonexistent.json")
+        
+        with pytest.raises(FileNotFoundError) as exc_info:
+            load_config_from_file(temp_config_path)
+        
+        assert "Configuration file" in str(exc_info.value)
+        assert "not found" in str(exc_info.value)
+        assert "appsettings.example.json" in str(exc_info.value)
+        assert "is also missing" in str(exc_info.value)
 
 
 def test_appsettings_json_invalid_json():

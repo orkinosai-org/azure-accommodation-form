@@ -348,13 +348,35 @@ class Settings:
 
 def load_config_from_file(config_path: str = "appsettings.json") -> Dict[str, Any]:
     """Load configuration from JSON file"""
+    import shutil
+    import logging
+    
+    logger = logging.getLogger(__name__)
     config_file = Path(config_path)
     
     if not config_file.exists():
-        raise FileNotFoundError(
-            f"Configuration file '{config_path}' not found. "
-            f"Please create it by copying from appsettings.example.json and updating with your values."
-        )
+        # Check if we can auto-copy from example file
+        example_file = config_file.parent / "appsettings.example.json"
+        
+        if example_file.exists():
+            # Auto-copy example file to create the missing config file
+            try:
+                shutil.copy2(example_file, config_file)
+                logger.warning(
+                    f"Configuration file '{config_path}' was missing. "
+                    f"Automatically copied from '{example_file.name}' to get started. "
+                    f"Please review and update the configuration with your actual values."
+                )
+            except Exception as e:
+                raise RuntimeError(
+                    f"Failed to auto-copy configuration from '{example_file.name}' to '{config_path}': {e}. "
+                    f"Please manually copy from appsettings.example.json and update with your values."
+                )
+        else:
+            raise FileNotFoundError(
+                f"Configuration file '{config_path}' not found and '{example_file.name}' is also missing. "
+                f"Please create '{config_path}' by copying from appsettings.example.json and updating with your values."
+            )
     
     try:
         with open(config_file, 'r', encoding='utf-8') as f:

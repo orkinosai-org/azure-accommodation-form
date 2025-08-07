@@ -65,18 +65,24 @@ pip install -r requirements.txt
 
 ### 2. Configuration
 
-See [CONFIGURATION.md](CONFIGURATION.md) for complete configuration guide.
+The application uses an `appsettings.json` file that mirrors the .NET Blazor application structure. 
 
+**Automatic Setup (Recommended):**
+Simply run the application and it will automatically create `appsettings.json` from the example template if it doesn't exist.
+
+**Manual Setup:**
 ```bash
-cp .env.example .env
-# Edit .env with your configuration
+cp appsettings.example.json appsettings.json
+# Edit appsettings.json with your configuration
 ```
 
 **Required settings:**
 - Email/SMTP configuration (mirrors .NET EmailSettings)
-- Azure Blob Storage connection (mirrors .NET BlobStorageSettings)
+- Azure Blob Storage connection (mirrors .NET BlobStorageSettings)  
 - Application Insights connection (mirrors .NET ApplicationInsights)
 - Logging levels (mirrors .NET Logging.LogLevel)
+
+See [APPSETTINGS_JSON_GUIDE.md](APPSETTINGS_JSON_GUIDE.md) for complete configuration guide.
 
 ### 3. Run Development Server
 
@@ -90,34 +96,47 @@ The application will be available at `http://localhost:8000`
 
 ### Email Settings
 
-Configure SMTP for email delivery:
+Configure SMTP for email delivery in `appsettings.json`:
 
-```env
-SMTP_SERVER=smtp.gmail.com
-SMTP_PORT=587
-SMTP_USERNAME=your-email@gmail.com
-SMTP_PASSWORD=your-app-password
-SMTP_USE_TLS=true
-FROM_EMAIL=noreply@yourdomain.com
-ADMIN_EMAIL=admin@yourdomain.com
+```json
+{
+  "EmailSettings": {
+    "SmtpServer": "smtp.gmail.com",
+    "SmtpPort": 587,
+    "SmtpUsername": "your-email@gmail.com",
+    "SmtpPassword": "your-app-password",
+    "UseSsl": true,
+    "FromEmail": "noreply@yourdomain.com",
+    "FromName": "Azure Accommodation Form",
+    "CompanyEmail": "admin@yourdomain.com"
+  }
+}
 ```
 
 ### Azure Blob Storage
 
-Set up Azure Blob Storage for PDF storage:
+Set up Azure Blob Storage for PDF storage in `appsettings.json`:
 
-```env
-AZURE_STORAGE_CONNECTION_STRING=DefaultEndpointsProtocol=https;AccountName=youracccount;AccountKey=yourkey;EndpointSuffix=core.windows.net
-AZURE_STORAGE_CONTAINER_NAME=form-submissions
+```json
+{
+  "BlobStorageSettings": {
+    "ConnectionString": "DefaultEndpointsProtocol=https;AccountName=youracccount;AccountKey=yourkey;EndpointSuffix=core.windows.net",
+    "ContainerName": "form-submissions"
+  }
+}
 ```
 
-### CAPTCHA
+### Application Insights
 
-Configure CAPTCHA protection:
+Configure monitoring and telemetry in `appsettings.json`:
 
-```env
-CAPTCHA_PROVIDER=recaptcha
-CAPTCHA_SITE_KEY=your-site-key
+```json
+{
+  "ApplicationInsights": {
+    "ConnectionString": "InstrumentationKey=your-key;IngestionEndpoint=https://your-region.in.applicationinsights.azure.com/"
+  }
+}
+```
 CAPTCHA_SECRET_KEY=your-secret-key
 ```
 
