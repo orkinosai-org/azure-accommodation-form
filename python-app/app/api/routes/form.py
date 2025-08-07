@@ -87,17 +87,50 @@ async def submit_form(
         request_data = json.loads(body_str)
         logger.info(f"Parsed request data keys: {list(request_data.keys())}")
         
-        # Validate form data with detailed error logging
-        try:
-            form_data = AccommodationFormData(**request_data)
-            logger.info("Form data validation successful")
-        except Exception as validation_error:
-            logger.error(f"Form validation failed: {validation_error}")
-            logger.error(f"Request data structure: {json.dumps(request_data, indent=2, default=str)}")
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=f"Form validation failed: {str(validation_error)}"
-            )
+        # First try to validate as FormSubmissionRequest if it has the right structure
+        if "form_data" in request_data:
+            # This is the proper FormSubmissionRequest structure
+            try:
+                submission_request = FormSubmissionRequest(**request_data)
+                form_data = submission_request.form_data
+                logger.info("FormSubmissionRequest validation successful")
+                logger.info(f"Form data contains {len([k for k in form_data.dict().keys() if k not in ['client_ip', 'form_opened_at', 'form_submitted_at']])} main sections")
+            except Exception as validation_error:
+                logger.error(f"FormSubmissionRequest validation failed: {validation_error}")
+                logger.error(f"Request data structure: {json.dumps(request_data, indent=2, default=str)}")
+                
+                # Provide more specific error message
+                error_details = str(validation_error)
+                if "validation error" in error_details.lower():
+                    detail_msg = f"Form validation failed - please check all required fields are filled correctly. Details: {error_details}"
+                else:
+                    detail_msg = f"Form submission validation failed: {error_details}"
+                
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail=detail_msg
+                )
+        else:
+            # Fallback: try to validate as AccommodationFormData directly (legacy support)
+            try:
+                form_data = AccommodationFormData(**request_data)
+                logger.info("AccommodationFormData validation successful (legacy mode)")
+                logger.info(f"Legacy form data contains {len([k for k in request_data.keys() if k not in ['client_ip', 'form_opened_at', 'form_submitted_at']])} main sections")
+            except Exception as validation_error:
+                logger.error(f"Form validation failed: {validation_error}")
+                logger.error(f"Request data structure: {json.dumps(request_data, indent=2, default=str)}")
+                
+                # Provide helpful error message for missing fields
+                error_details = str(validation_error)
+                if "Field required" in error_details:
+                    detail_msg = f"Missing required form fields. Please ensure all mandatory fields are completed. Details: {error_details}"
+                else:
+                    detail_msg = f"Form validation failed: {error_details}"
+                
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail=detail_msg
+                )
             
     except json.JSONDecodeError as e:
         logger.error(f"JSON parsing failed: {e}")
@@ -105,98 +138,13 @@ async def submit_form(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid JSON in request body"
         )
+    except HTTPException:
+        raise  # Re-raise HTTPExceptions
     except Exception as e:
         logger.error(f"Request processing failed: {e}")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Request processing error: {str(e)}"
-        )
-    
-    if not session_id:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Valid session required"
-        )
-    
-    # Verify session
-    session_service = SessionService()
-    session = await session_service.get_session(session_id)
-    
-    if not session:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid or expired session"
-        )
-    
-    # Verify email matches session
-    if form_data.tenant_details.email != session["email"]:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Form email must match verified session email"
-        )
-    
-    # Add metadata
-    form_data.client_ip = client_ip
-    form_data.form_submitted_at = datetime.utcnow()
-    
-    try:
-        # Process form submission
-        form_service = FormService()
-        submission = await form_service.process_submission(form_data)
-        
-        # Generate PDF
-        pdf_service = PDFGenerationService()
-        pdf_buffer = await pdf_service.generate_pdf(form_data)
-        
-        # Generate filename
-        pdf_filename = await pdf_service.generate_filename(form_data)
-        
-        # Store PDF in Azure Blob Storage
-        storage_service = AzureBlobStorageService()
-        blob_url = await storage_service.upload_pdf(pdf_filename, pdf_buffer)
-        
-        # Send emails
-        email_service = EmailService()
-        
-        # Send to user
-        await email_service.send_form_confirmation(
-            to_email=form_data.tenant_details.email,
-            form_data=form_data,
-            pdf_buffer=pdf_buffer,
-            pdf_filename=pdf_filename
-        )
-        
-        # Send to admin
-        await email_service.send_admin_notification(
-            form_data=form_data,
-            pdf_buffer=pdf_buffer,
-            pdf_filename=pdf_filename,
-            blob_url=blob_url
-        )
-        
-        # Update submission record
-        await form_service.update_submission_status(
-            submission["id"],
-            "completed",
-            pdf_filename=pdf_filename,
-            blob_url=blob_url
-        )
-        
-        logger.info(f"Form submission completed: {submission['id']}")
-        
-        return FormSubmissionResponse(
-            submission_id=submission["id"],
-            status="success",
-            message="Form submitted successfully",
-            pdf_filename=pdf_filename,
-            timestamp=datetime.utcnow()
-        )
-        
-    except Exception as e:
-        logger.error(f"Form submission failed: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Form submission failed. Please try again."
         )
     
     if not session_id:
