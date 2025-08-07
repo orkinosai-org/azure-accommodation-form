@@ -347,7 +347,16 @@ class Settings:
 
 
 def load_config_from_file(config_path: str = "appsettings.json") -> Dict[str, Any]:
-    """Load configuration from JSON file"""
+    """
+    Load configuration from JSON file.
+    
+    If the expected appsettings.json does not exist, automatically copy the config
+    from the Blazor app's appsettings.json to create appsettings.json in the Python
+    app's directory. Falls back to appsettings.example.json if Blazor config is not available.
+    
+    This ensures the Python app can start with production-ready configuration from
+    the Blazor app when the local config file is missing.
+    """
     import shutil
     import logging
     
@@ -355,28 +364,83 @@ def load_config_from_file(config_path: str = "appsettings.json") -> Dict[str, An
     config_file = Path(config_path)
     
     if not config_file.exists():
-        # Check if we can auto-copy from example file
-        example_file = config_file.parent / "appsettings.example.json"
+        # First, try to auto-copy from Blazor app's production-ready configuration
+        # Resolve path relative to python-app directory: ../BlazorApp/appsettings.json
+        blazor_config = config_file.parent / ".." / "BlazorApp" / "appsettings.json"
+        blazor_config = blazor_config.resolve()  # Resolve any .. components
         
-        if example_file.exists():
-            # Auto-copy example file to create the missing config file
+        if blazor_config.exists():
+            # Auto-copy and adapt Blazor config to create the missing config file
             try:
-                shutil.copy2(example_file, config_file)
-                logger.warning(
+                # Load Blazor configuration
+                with open(blazor_config, 'r', encoding='utf-8') as f:
+                    blazor_data = json.load(f)
+                
+                # Add Python-specific ServerSettings if not present
+                if "ServerSettings" not in blazor_data:
+                    blazor_data["ServerSettings"] = {
+                        "Environment": "production",  # Since this is from Blazor production config
+                        "SecretKey": "change-this-secret-key-in-production-make-it-long-and-random",
+                        "Host": "0.0.0.0",
+                        "Port": 8000,
+                        "AllowedHosts": ["*"],  # Inherit from Blazor's AllowedHosts if present
+                        "AllowedOrigins": ["*"],  # Set permissive for production, should be configured per deployment
+                        "SslKeyfile": None,
+                        "SslCertfile": None
+                    }
+                    
+                    # If Blazor config has AllowedHosts, use it for both AllowedHosts and AllowedOrigins
+                    if "AllowedHosts" in blazor_data and blazor_data["AllowedHosts"] != "*":
+                        if isinstance(blazor_data["AllowedHosts"], list):
+                            blazor_data["ServerSettings"]["AllowedHosts"] = blazor_data["AllowedHosts"]
+                            # Convert hosts to origins (assume HTTPS for production)
+                            blazor_data["ServerSettings"]["AllowedOrigins"] = [
+                                f"https://{host}" if not host.startswith("http") else host 
+                                for host in blazor_data["AllowedHosts"]
+                            ]
+                
+                # Write the adapted configuration
+                with open(config_file, 'w', encoding='utf-8') as f:
+                    json.dump(blazor_data, f, indent=4)
+                
+                logger.info(
                     f"Configuration file '{config_path}' was missing. "
-                    f"Automatically copied from '{example_file.name}' to get started. "
-                    f"Please review and update the configuration with your actual values."
+                    f"Automatically copied production-ready configuration from Blazor app "
+                    f"('../BlazorApp/appsettings.json') and adapted it for Python app requirements. "
+                    f"Added ServerSettings section for Python-specific configuration."
                 )
             except Exception as e:
                 raise RuntimeError(
-                    f"Failed to auto-copy configuration from '{example_file.name}' to '{config_path}': {e}. "
-                    f"Please manually copy from appsettings.example.json and update with your values."
+                    f"Failed to auto-copy and adapt configuration from Blazor app "
+                    f"('{blazor_config}') to '{config_path}': {e}. "
+                    f"Please manually copy the configuration and update as needed."
                 )
         else:
-            raise FileNotFoundError(
-                f"Configuration file '{config_path}' not found and '{example_file.name}' is also missing. "
-                f"Please create '{config_path}' by copying from appsettings.example.json and updating with your values."
-            )
+            # Fallback to example file if Blazor config is not available
+            example_file = config_file.parent / "appsettings.example.json"
+            
+            if example_file.exists():
+                # Auto-copy example file to create the missing config file
+                try:
+                    shutil.copy2(example_file, config_file)
+                    logger.warning(
+                        f"Configuration file '{config_path}' was missing and Blazor app config not found. "
+                        f"Automatically copied from '{example_file.name}' to get started. "
+                        f"Please review and update the configuration with your actual values."
+                    )
+                except Exception as e:
+                    raise RuntimeError(
+                        f"Failed to auto-copy configuration from '{example_file.name}' to '{config_path}': {e}. "
+                        f"Please manually copy from appsettings.example.json and update with your values."
+                    )
+            else:
+                raise FileNotFoundError(
+                    f"Configuration file '{config_path}' not found. "
+                    f"Unable to find Blazor app configuration at '{blazor_config}' "
+                    f"or fallback '{example_file.name}'. "
+                    f"Please create '{config_path}' by copying from the Blazor app's appsettings.json "
+                    f"or from appsettings.example.json and updating with your values."
+                )
     
     try:
         with open(config_file, 'r', encoding='utf-8') as f:
