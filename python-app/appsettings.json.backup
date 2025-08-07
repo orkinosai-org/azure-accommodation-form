@@ -1,0 +1,58 @@
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft": "Warning",
+      "Microsoft.Hosting.Lifetime": "Information"
+    },
+    "Console": {
+      "IncludeScopes": false,
+      "TimestampFormat": "HH:mm:ss "
+    }
+  },
+  "AllowedHosts": "*",
+  "ConnectionStrings": {
+    "DefaultConnection": "Data Source=FormSubmissions.db"
+  },
+  "EmailSettings": {
+    "SmtpServer": "smtp.gmail.com",
+    "SmtpPort": 587,
+    "SmtpUsername": "your-email@gmail.com",
+    "SmtpPassword": "your-gmail-app-password",
+    "UseSsl": true,
+    "FromEmail": "noreply@yourdomain.com",
+    "FromName": "Azure Accommodation Form",
+    "CompanyEmail": "admin@yourdomain.com"
+  },
+  "BlobStorageSettings": {
+    "ConnectionString": "DefaultEndpointsProtocol=https;AccountName=yourstorageaccount;AccountKey=your-storage-account-key;EndpointSuffix=core.windows.net",
+    "ContainerName": "form-submissions"
+  },
+  "ApplicationSettings": {
+    "ApplicationName": "Azure Accommodation Form",
+    "ApplicationUrl": "http://localhost:8000",
+    "TokenExpirationMinutes": 15,
+    "TokenLength": 6
+  },
+  "ApplicationInsights": {
+    "ConnectionString": "InstrumentationKey=your-key;IngestionEndpoint=https://your-region.in.applicationinsights.azure.com/",
+    "AgentExtensionVersion": "~2",
+    "XdtMode": "default"
+  },
+  "Diagnostics": {
+    "AzureBlobRetentionInDays": 2
+  },
+  "Website": {
+    "HttpLoggingRetentionDays": 2
+  },
+  "ServerSettings": {
+    "Environment": "development",
+    "SecretKey": "your-secret-key-change-in-production-make-it-long-and-random",
+    "Host": "0.0.0.0",
+    "Port": 8000,
+    "AllowedHosts": ["localhost", "127.0.0.1"],
+    "AllowedOrigins": ["http://localhost:8000", "http://127.0.0.1:8000"],
+    "SslKeyfile": null,
+    "SslCertfile": null
+  }
+}
