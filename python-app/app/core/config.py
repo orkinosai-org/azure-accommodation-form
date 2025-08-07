@@ -3,6 +3,12 @@ Configuration settings for the Azure Accommodation Form application
 
 This module loads all configuration from appsettings.json file only, matching the .NET 
 appsettings.json structure. No environment variables or .env files are used.
+
+Auto-Configuration Behavior:
+- If appsettings.json is missing, automatically copies from Blazor app's appsettings.json (preferred)
+- Falls back to appsettings.example.json if Blazor config not available
+- Adapts Blazor configuration by adding Python-specific ServerSettings section
+- Ensures compatibility between Blazor and Python app deployments
 """
 
 import json
