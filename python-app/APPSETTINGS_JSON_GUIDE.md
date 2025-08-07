@@ -13,7 +13,14 @@ This change provides:
 
 ## Quick Start
 
-1. **Copy the appsettings.json template:**
+1. **Configuration File Setup:**
+   
+   The application will automatically copy `appsettings.example.json` to `appsettings.json` when starting if `appsettings.json` is missing. This provides a working configuration with default values.
+   
+   **Option A - Automatic (Recommended):**
+   Simply start the application and it will create `appsettings.json` from the example template.
+   
+   **Option B - Manual:**
    ```bash
    cp appsettings.example.json appsettings.json
    ```
@@ -38,6 +45,17 @@ This change provides:
    ```bash
    python test_email_config.py your-email@example.com
    ```
+
+## Automatic Configuration Setup
+
+If `appsettings.json` is missing when the application starts, it will:
+
+1. **Check for `appsettings.example.json`** - If found, automatically copy it to `appsettings.json`
+2. **Log a warning** - Informing you that the file was created and needs review
+3. **Continue startup** - Using the default/example configuration values
+4. **Fail gracefully** - If neither file exists, the application will stop with a clear error message
+
+This ensures the application can start immediately with working defaults while reminding you to update the configuration with your actual values.
 
 ## Configuration File Structure
 
