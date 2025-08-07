@@ -1,7 +1,7 @@
 """
 Configuration settings for the Azure Accommodation Form application
 
-This module loads all configuration from config.json file only, matching the .NET 
+This module loads all configuration from appsettings.json file only, matching the .NET 
 appsettings.json structure. No environment variables or .env files are used.
 """
 
@@ -119,7 +119,7 @@ class ServerSettings:
 @dataclass
 class Settings:
     """
-    Main application settings class that loads configuration from config.json only.
+    Main application settings class that loads configuration from appsettings.json only.
     This mirrors the structure of appsettings.json from the .NET Blazor application.
     """
     
@@ -277,14 +277,14 @@ class Settings:
             logger = log.getLogger(__name__)
         
         audit_info = {
-            "config_source": "config.json",
+            "config_source": "appsettings.json",
             "email_config": {},
             "missing_fields": [],
             "warnings": []
         }
         
         logger.info(f"=== Configuration Audit ===")
-        logger.info(f"Configuration source: config.json file")
+        logger.info(f"Configuration source: appsettings.json file")
         logger.info(f"Environment: {self.environment}")
         
         # Audit email configuration
@@ -319,7 +319,7 @@ class Settings:
                 }
                 audit_info["missing_fields"].append(missing_info)
                 logger.warning(f"Missing required email field: {field_name}")
-                logger.warning(f"  Set in config.json: EmailSettings.{config_key}")
+                logger.warning(f"  Set in appsettings.json: EmailSettings.{config_key}")
                 logger.warning(f"  Example value: {example}")
         
         # Check for configuration warnings
@@ -346,14 +346,14 @@ class Settings:
         return audit_info
 
 
-def load_config_from_file(config_path: str = "config.json") -> Dict[str, Any]:
+def load_config_from_file(config_path: str = "appsettings.json") -> Dict[str, Any]:
     """Load configuration from JSON file"""
     config_file = Path(config_path)
     
     if not config_file.exists():
         raise FileNotFoundError(
             f"Configuration file '{config_path}' not found. "
-            f"Please create it by copying from config.example.json and updating with your values."
+            f"Please create it by copying from appsettings.example.json and updating with your values."
         )
     
     try:
@@ -460,7 +460,7 @@ def create_settings_from_config(config_data: Dict[str, Any]) -> Settings:
 
 @lru_cache()
 def get_settings() -> Settings:
-    """Get cached settings instance loaded from config.json"""
+    """Get cached settings instance loaded from appsettings.json"""
     config_data = load_config_from_file()
     
     # Validate email configuration
@@ -470,8 +470,8 @@ def get_settings() -> Settings:
     
     if missing_fields:
         raise ValueError(
-            f"Missing required email configuration fields in config.json: {', '.join(missing_fields)}. "
-            f"Please update your config.json file with the required EmailSettings values."
+            f"Missing required email configuration fields in appsettings.json: {', '.join(missing_fields)}. "
+            f"Please update your appsettings.json file with the required EmailSettings values."
         )
     
     return create_settings_from_config(config_data)
