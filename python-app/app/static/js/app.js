@@ -702,20 +702,23 @@ class AzureAccommodationForm {
                     </div>
                 </div>
                 
-                <!-- Landlord Contact Details (shown when reference is checked) -->
-                <div id="landlord-contact-section" class="border p-3 rounded" style="display: none;">
+                <!-- Landlord Contact Details (always visible for better UX) -->
+                <div id="landlord-contact-section" class="border p-3 rounded mt-3">
                     <h6>Landlord Contact Details</h6>
+                    <div class="alert alert-info alert-sm">
+                        <small><i class="fas fa-info-circle me-1"></i>Please provide your current landlord's contact information.</small>
+                    </div>
                     <div class="row">
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label for="landlord_contact_name" class="form-label">Landlord Name *</label>
-                                <input type="text" class="form-control" id="landlord_contact_name" name="landlord_contact_name">
+                                <input type="text" class="form-control" id="landlord_contact_name" name="landlord_contact_name" required>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label for="landlord_contact_tel" class="form-label">Landlord Telephone *</label>
-                                <input type="tel" class="form-control" id="landlord_contact_tel" name="landlord_contact_tel">
+                                <input type="tel" class="form-control" id="landlord_contact_tel" name="landlord_contact_tel" required>
                             </div>
                         </div>
                     </div>
@@ -723,13 +726,13 @@ class AzureAccommodationForm {
                         <div class="col-md-8">
                             <div class="mb-3">
                                 <label for="landlord_contact_address" class="form-label">Landlord Address *</label>
-                                <textarea class="form-control" id="landlord_contact_address" name="landlord_contact_address" rows="2"></textarea>
+                                <textarea class="form-control" id="landlord_contact_address" name="landlord_contact_address" rows="2" required></textarea>
                             </div>
                         </div>
                         <div class="col-md-4">
                             <div class="mb-3">
                                 <label for="landlord_contact_email" class="form-label">Landlord Email *</label>
-                                <input type="email" class="form-control" id="landlord_contact_email" name="landlord_contact_email">
+                                <input type="email" class="form-control" id="landlord_contact_email" name="landlord_contact_email" required>
                             </div>
                         </div>
                     </div>
@@ -920,10 +923,13 @@ class AzureAccommodationForm {
             <div class="form-section">
                 <div class="row">
                     <div class="col-12">
-                        <button type="submit" class="btn btn-primary btn-lg">
+                        <button type="submit" class="btn btn-secondary btn-lg" disabled>
                             <i class="fas fa-paper-plane me-2"></i>
                             Submit Application
                         </button>
+                        <div class="form-text mt-2">
+                            <small><i class="fas fa-info-circle me-1"></i>Button will be enabled when all required fields are completed correctly.</small>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -951,24 +957,6 @@ class AzureAccommodationForm {
         
         // Conditional field handlers
         
-        // Show/hide landlord contact details based on reference checkbox
-        const landlordReferenceCheckbox = document.getElementById('landlord_reference');
-        const landlordContactSection = document.getElementById('landlord-contact-section');
-        
-        if (landlordReferenceCheckbox && landlordContactSection) {
-            landlordReferenceCheckbox.addEventListener('change', function() {
-                if (this.checked) {
-                    landlordContactSection.style.display = 'block';
-                    // Make landlord contact fields required when shown
-                    this.toggleLandlordContactRequired(true);
-                } else {
-                    landlordContactSection.style.display = 'none';
-                    // Remove required when hidden
-                    this.toggleLandlordContactRequired(false);
-                }
-            }.bind(this));
-        }
-        
         // Show/hide pets details based on pets checkbox
         const petsCheckbox = document.getElementById('pets_has');
         const petsDetailsSection = document.getElementById('pets-details-section');
@@ -976,7 +964,17 @@ class AzureAccommodationForm {
         if (petsCheckbox && petsDetailsSection) {
             petsCheckbox.addEventListener('change', function() {
                 petsDetailsSection.style.display = this.checked ? 'block' : 'none';
-            });
+                const petsDetailsField = document.getElementById('pets_details');
+                if (petsDetailsField) {
+                    if (this.checked) {
+                        petsDetailsField.setAttribute('required', 'required');
+                    } else {
+                        petsDetailsField.removeAttribute('required');
+                        petsDetailsField.value = '';
+                    }
+                }
+                this.updateSubmitButtonState();
+            }.bind(this));
         }
         
         // Show/hide coliving details based on coliving checkbox
@@ -986,7 +984,17 @@ class AzureAccommodationForm {
         if (colivingCheckbox && colivingDetailsSection) {
             colivingCheckbox.addEventListener('change', function() {
                 colivingDetailsSection.style.display = this.checked ? 'block' : 'none';
-            });
+                const colivingDetailsField = document.getElementById('coliving_details');
+                if (colivingDetailsField) {
+                    if (this.checked) {
+                        colivingDetailsField.setAttribute('required', 'required');
+                    } else {
+                        colivingDetailsField.removeAttribute('required');
+                        colivingDetailsField.value = '';
+                    }
+                }
+                this.updateSubmitButtonState();
+            }.bind(this));
         }
         
         // Auto-populate signature fields when full name is entered
@@ -1014,21 +1022,9 @@ class AzureAccommodationForm {
         
         // Form validation on change for required fields
         this.addFormValidation();
-    }
-    
-    toggleLandlordContactRequired(required) {
-        const fields = ['landlord_contact_name', 'landlord_contact_tel', 'landlord_contact_address', 'landlord_contact_email'];
-        fields.forEach(fieldId => {
-            const field = document.getElementById(fieldId);
-            if (field) {
-                if (required) {
-                    field.setAttribute('required', 'required');
-                } else {
-                    field.removeAttribute('required');
-                    field.value = ''; // Clear the field when not required
-                }
-            }
-        });
+        
+        // Initial submit button state
+        setTimeout(() => this.updateSubmitButtonState(), 100);
     }
     
     addFormValidation() {
@@ -1040,6 +1036,10 @@ class AzureAccommodationForm {
                 this.validateField(field);
             }.bind(this));
             
+            field.addEventListener('input', function() {
+                this.validateField(field);
+            }.bind(this));
+            
             field.addEventListener('change', function() {
                 this.validateField(field);
             }.bind(this));
@@ -1047,30 +1047,225 @@ class AzureAccommodationForm {
     }
     
     validateField(field) {
-        const isValid = field.checkValidity();
+        let isValid = field.checkValidity();
+        let customErrorMessage = '';
         
+        // Custom validation for specific fields
+        if (field.id === 'ni_number' && field.value.trim()) {
+            isValid = this.validateNationalInsuranceNumber(field.value.trim());
+            if (!isValid) {
+                customErrorMessage = 'Please enter a valid UK National Insurance number (e.g., AB123456C)';
+            }
+        }
+        
+        if (field.type === 'email' && field.value.trim()) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(field.value.trim())) {
+                isValid = false;
+                customErrorMessage = 'Please enter a valid email address';
+            }
+        }
+        
+        if (field.type === 'tel' && field.value.trim()) {
+            const phoneRegex = /^[\+]?[0-9\s\-\(\)]{10,}$/;
+            if (!phoneRegex.test(field.value.trim())) {
+                isValid = false;
+                customErrorMessage = 'Please enter a valid telephone number';
+            }
+        }
+        
+        // Apply validation styling
         if (isValid) {
             field.classList.remove('is-invalid');
             field.classList.add('is-valid');
+            this.clearFieldError(field);
         } else {
             field.classList.remove('is-valid');
             field.classList.add('is-invalid');
+            this.setFieldError(field, customErrorMessage);
         }
+        
+        // Update submit button state
+        this.updateSubmitButtonState();
         
         return isValid;
     }
     
+    validateNationalInsuranceNumber(niNumber) {
+        // UK National Insurance number format: 2 letters, 6 digits, 1 letter
+        // Pattern: AB123456C
+        const niRegex = /^[A-CEGHJ-PR-TW-Z]{1}[A-CEGHJ-NPR-TW-Z]{1}[0-9]{6}[A-D]{1}$/i;
+        
+        if (!niRegex.test(niNumber)) {
+            return false;
+        }
+        
+        // Additional validation: certain letter combinations are not allowed
+        const invalidPrefixes = ['BG', 'GB', 'NK', 'KN', 'TN', 'NT', 'ZZ'];
+        const prefix = niNumber.substring(0, 2).toUpperCase();
+        
+        if (invalidPrefixes.includes(prefix)) {
+            return false;
+        }
+        
+        return true;
+    }
+    
+    setFieldError(field, message) {
+        if (!message) return;
+        
+        // Remove existing error message
+        this.clearFieldError(field);
+        
+        // Create error message element
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'invalid-feedback';
+        errorDiv.textContent = message;
+        errorDiv.setAttribute('data-field-error', field.id);
+        
+        // Insert after the field
+        field.parentNode.insertBefore(errorDiv, field.nextSibling);
+    }
+    
+    clearFieldError(field) {
+        const errorElement = field.parentNode.querySelector(`[data-field-error="${field.id}"]`);
+        if (errorElement) {
+            errorElement.remove();
+        }
+    }
+    
     validateForm() {
         let isValid = true;
+        const errors = [];
         const requiredFields = document.querySelectorAll('input[required], select[required], textarea[required]');
         
         requiredFields.forEach(field => {
             if (!this.validateField(field)) {
                 isValid = false;
+                const label = this.getFieldLabel(field);
+                errors.push({
+                    field: field,
+                    label: label,
+                    message: this.getFieldErrorMessage(field)
+                });
             }
         });
         
+        // Show error summary if there are errors
+        if (!isValid) {
+            this.showErrorSummary(errors);
+        } else {
+            this.hideErrorSummary();
+        }
+        
         return isValid;
+    }
+    
+    getFieldLabel(field) {
+        const label = document.querySelector(`label[for="${field.id}"]`);
+        if (label) {
+            return label.textContent.replace('*', '').trim();
+        }
+        return field.name || field.id || 'Field';
+    }
+    
+    getFieldErrorMessage(field) {
+        if (!field.value.trim() && field.required) {
+            return 'This field is required';
+        }
+        
+        if (field.id === 'ni_number' && field.value.trim()) {
+            return 'Please enter a valid UK National Insurance number';
+        }
+        
+        if (field.type === 'email' && field.value.trim()) {
+            return 'Please enter a valid email address';
+        }
+        
+        if (field.type === 'tel' && field.value.trim()) {
+            return 'Please enter a valid telephone number';
+        }
+        
+        return 'Please check this field';
+    }
+    
+    showErrorSummary(errors) {
+        // Create or update error summary
+        let errorSummary = document.getElementById('validation-error-summary');
+        
+        if (!errorSummary) {
+            errorSummary = document.createElement('div');
+            errorSummary.id = 'validation-error-summary';
+            errorSummary.className = 'alert alert-danger';
+            errorSummary.setAttribute('role', 'alert');
+            
+            // Insert before submit button
+            const submitSection = document.querySelector('.form-section:last-child');
+            if (submitSection) {
+                submitSection.parentNode.insertBefore(errorSummary, submitSection);
+            }
+        }
+        
+        // Build error summary content
+        let summaryHTML = `
+            <h5><i class="fas fa-exclamation-triangle me-2"></i>Please fix the following errors:</h5>
+            <ul class="mb-0">
+        `;
+        
+        errors.forEach(error => {
+            summaryHTML += `<li><a href="#${error.field.id}" class="alert-link">${error.label}: ${error.message}</a></li>`;
+        });
+        
+        summaryHTML += '</ul>';
+        errorSummary.innerHTML = summaryHTML;
+        
+        // Add click handlers to error links
+        errorSummary.querySelectorAll('a[href^="#"]').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const targetId = link.getAttribute('href').substring(1);
+                const targetField = document.getElementById(targetId);
+                if (targetField) {
+                    targetField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    targetField.focus();
+                }
+            });
+        });
+        
+        // Scroll to error summary
+        errorSummary.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    
+    hideErrorSummary() {
+        const errorSummary = document.getElementById('validation-error-summary');
+        if (errorSummary) {
+            errorSummary.remove();
+        }
+    }
+    
+    updateSubmitButtonState() {
+        const submitButton = document.querySelector('button[type="submit"]');
+        if (!submitButton) return;
+        
+        const requiredFields = document.querySelectorAll('input[required], select[required], textarea[required]');
+        let allValid = true;
+        
+        for (const field of requiredFields) {
+            if (!field.value.trim() || field.classList.contains('is-invalid')) {
+                allValid = false;
+                break;
+            }
+        }
+        
+        if (allValid) {
+            submitButton.disabled = false;
+            submitButton.classList.remove('btn-secondary');
+            submitButton.classList.add('btn-primary');
+        } else {
+            submitButton.disabled = true;
+            submitButton.classList.remove('btn-primary');
+            submitButton.classList.add('btn-secondary');
+        }
     }
 
     
