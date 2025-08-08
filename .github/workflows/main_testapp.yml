@@ -8,7 +8,19 @@ on:
   push:
     branches:
       - main
+    paths:
+      - 'python-app/**'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'python-app/**'
   workflow_dispatch:
+
+env:
+  AZURE_WEBAPP_NAME: testapp
+  AZURE_WEBAPP_PACKAGE_PATH: './python-app'
+  PYTHON_VERSION: '3.12'
 
 jobs:
   build:
@@ -22,40 +34,87 @@ jobs:
       - name: Set up Python version
         uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Create and start virtual environment
         run: |
+          cd ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
           python -m venv venv
           source venv/bin/activate
       
       - name: Install dependencies
-        run: pip install -r requirements.txt
+        run: |
+          cd ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
+          source venv/bin/activate
+          pip install -r requirements.txt
         
-      # Optional: Add step to run tests here (PyTest, Django test suites, etc.)
+      - name: Install testing dependencies
+        run: |
+          cd ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
+          source venv/bin/activate
+          pip install pytest pytest-asyncio httpx
+          
+      - name: Run tests with pytest
+        run: |
+          cd ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
+          source venv/bin/activate
+          echo "Running Python tests..."
+          if pytest tests/ -v --tb=short; then
+            echo "✅ All tests passed successfully"
+          else
+            echo "❌ Some tests failed - see details above"
+            echo "🔍 Test failure summary:"
+            pytest tests/ --tb=no -q || true
+            echo "📋 This will prevent deployment to production"
+            exit 1
+          fi
 
       - name: Upload artifact for deployment jobs
         uses: actions/upload-artifact@v4
         with:
           name: python-app
           path: |
-            .
-            !venv/
+            ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
+            !${{ env.AZURE_WEBAPP_PACKAGE_PATH }}/venv/
 
   deploy:
     runs-on: ubuntu-latest
     needs: build
+    environment:
+      name: 'production'
+      url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
+    if: github.ref == 'refs/heads/main'
     
     steps:
       - name: Download artifact from build job
         uses: actions/download-artifact@v4
         with:
           name: python-app
+          path: .
       
       - name: 'Deploy to Azure Web App'
         uses: azure/webapps-deploy@v3
         id: deploy-to-webapp
         with:
-          app-name: 'testapp'
+          app-name: ${{ env.AZURE_WEBAPP_NAME }}
           slot-name: 'Production'
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_0A6E1086C66D411499E8274F1B35E5AB }}
+          package: .
+        continue-on-error: false
+        
+      - name: Report deployment success
+        if: success()
+        run: |
+          echo "🚀 Deployment to ${{ env.AZURE_WEBAPP_NAME }} completed successfully!"
+          echo "📱 App URL: ${{ steps.deploy-to-webapp.outputs.webapp-url }}"
+          
+      - name: Report deployment failure
+        if: failure()
+        run: |
+          echo "❌ Deployment to ${{ env.AZURE_WEBAPP_NAME }} failed!"
+          echo "🔍 Please check the logs above for error details."
+          echo "🛠️  Common issues:"
+          echo "   - Verify Azure publish profile secret is correctly configured"
+          echo "   - Check that the Azure Web App '${{ env.AZURE_WEBAPP_NAME }}' exists"
+          echo "   - Ensure Python 3.12 is supported on the target App Service"
+          exit 1

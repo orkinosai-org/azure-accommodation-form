@@ -1,0 +1,8 @@
+# GitHub Actions workflows are owned and maintained by Copilot
+/.github/workflows/ @copilot
+
+# Python app deployment workflow specifically assigned to Copilot for maintenance
+/.github/workflows/main_testapp.yml @copilot
+
+# Azure deployment configuration
+/.github/workflows/deploy.yml @copilot
