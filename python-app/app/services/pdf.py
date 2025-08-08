@@ -29,9 +29,9 @@ class PDFGenerationService:
     
     def _setup_custom_styles(self):
         """Set up custom PDF styles"""
-        # Title style
+        # Custom Title style (renamed to avoid conflict with existing 'Title' style)
         self.styles.add(ParagraphStyle(
-            name='Title',
+            name='CustomTitle',
             parent=self.styles['Title'],
             fontSize=16,
             spaceAfter=20,
@@ -102,7 +102,7 @@ class PDFGenerationService:
             story = []
             
             # Add title
-            story.append(Paragraph("Accommodation Application Form", self.styles['Title']))
+            story.append(Paragraph("Accommodation Application Form", self.styles['CustomTitle']))
             story.append(Spacer(1, 20))
             
             # Add metadata
