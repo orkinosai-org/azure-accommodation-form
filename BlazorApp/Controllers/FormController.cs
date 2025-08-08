@@ -319,14 +319,14 @@ public class FormController : ControllerBase
 
         try
         {
-            var clientIp = GetClientIpAddress();
+            var requestMetadata = CaptureRequestMetadata();
             
             _logger.LogInformation("Processing direct form submission for {Email} from IP {ClientIp} (Request: {RequestId})", 
-                formData.TenantDetails.Email, clientIp, requestId);
-            Console.WriteLine($"Processing direct form submission for {formData.TenantDetails.Email} from IP {clientIp} (Request: {requestId})");
+                formData.TenantDetails.Email, requestMetadata.IpAddress, requestId);
+            Console.WriteLine($"Processing direct form submission for {formData.TenantDetails.Email} from IP {requestMetadata.IpAddress} (Request: {requestId})");
             
             var processingStartTime = DateTime.UtcNow;
-            var result = await _formService.ProcessFormDirectAsync(formData, clientIp);
+            var result = await _formService.ProcessFormDirectAsync(formData, requestMetadata);
             var processingDuration = DateTime.UtcNow - processingStartTime;
             
             // Enhanced response logging with timing information
@@ -599,13 +599,13 @@ public class FormController : ControllerBase
 
         try
         {
-            var clientIp = GetClientIpAddress();
+            var requestMetadata = CaptureRequestMetadata();
             
             _logger.LogInformation("Processing standard form submission for {Email} from IP {ClientIp}", 
-                request.FormData.TenantDetails.Email, clientIp);
-            Console.WriteLine($"Processing standard form submission for {request.FormData.TenantDetails.Email} from IP {clientIp}");
+                request.FormData.TenantDetails.Email, requestMetadata.IpAddress);
+            Console.WriteLine($"Processing standard form submission for {request.FormData.TenantDetails.Email} from IP {requestMetadata.IpAddress}");
             
-            var result = await _formService.SubmitFormAsync(request.SubmissionId, request.FormData, clientIp);
+            var result = await _formService.SubmitFormAsync(request.SubmissionId, request.FormData, requestMetadata);
             
             _logger.LogInformation("Standard form submission completed - Success: {Success}, Message: {Message}", 
                 result.Success, result.Message);
@@ -710,6 +710,56 @@ public class FormController : ControllerBase
         }
 
         return "Unknown";
+    }
+
+    /// <summary>
+    /// Capture comprehensive request metadata for audit and compliance purposes
+    /// </summary>
+    private RequestMetadata CaptureRequestMetadata()
+    {
+        var metadata = new RequestMetadata
+        {
+            IpAddress = GetClientIpAddress(),
+            UserAgent = Request.Headers.UserAgent.ToString(),
+            Referrer = Request.Headers.Referer.ToString(),
+            AcceptLanguage = Request.Headers.AcceptLanguage.ToString(),
+            Origin = Request.Headers.Origin.ToString(),
+            XForwardedFor = Request.Headers.ContainsKey("X-Forwarded-For") ? Request.Headers["X-Forwarded-For"].ToString() : null,
+            XRealIp = Request.Headers.ContainsKey("X-Real-IP") ? Request.Headers["X-Real-IP"].ToString() : null,
+            ContentType = Request.ContentType,
+            ContentLength = Request.ContentLength,
+            RequestTimestamp = DateTime.UtcNow,
+            Host = Request.Host.ToString(),
+            Protocol = Request.Protocol,
+            Method = Request.Method,
+            Path = Request.Path,
+            QueryString = Request.QueryString.ToString()
+        };
+
+        // Capture security-relevant headers for audit purposes
+        var securityHeaders = new[] 
+        {
+            "X-Forwarded-Proto",
+            "X-Forwarded-Host", 
+            "X-Forwarded-Port",
+            "X-Original-Host",
+            "CF-Connecting-IP", // Cloudflare
+            "True-Client-IP",   // Cloudflare
+            "CF-RAY",           // Cloudflare request ID
+            "X-Amzn-Trace-Id",  // AWS
+            "X-Azure-ClientIP", // Azure
+            "X-Azure-SocketIP"  // Azure
+        };
+
+        foreach (var headerName in securityHeaders)
+        {
+            if (Request.Headers.ContainsKey(headerName))
+            {
+                metadata.SecurityHeaders[headerName] = Request.Headers[headerName].ToString();
+            }
+        }
+
+        return metadata;
     }
 }
 
