@@ -11,8 +11,8 @@ public interface IFormService
     Task<FormSubmissionResponse> InitializeFormSessionAsync(string email);
     Task<EmailVerificationResponse> SendEmailVerificationAsync(string submissionId, string email);
     Task<FormSubmissionResponse> VerifyEmailTokenAsync(string submissionId, string token);
-    Task<FormSubmissionResponse> SubmitFormAsync(string submissionId, FormData formData, string clientIpAddress);
-    Task<FormSubmissionResponse> ProcessFormDirectAsync(FormData formData, string clientIpAddress);
+    Task<FormSubmissionResponse> SubmitFormAsync(string submissionId, FormData formData, RequestMetadata requestMetadata);
+    Task<FormSubmissionResponse> ProcessFormDirectAsync(FormData formData, RequestMetadata requestMetadata);
     Task<FormSubmissionEntity?> GetSubmissionAsync(string submissionId);
 }
 
@@ -335,7 +335,7 @@ public class FormService : IFormService
         }
     }
 
-    public async Task<FormSubmissionResponse> SubmitFormAsync(string submissionId, FormData formData, string clientIpAddress)
+    public async Task<FormSubmissionResponse> SubmitFormAsync(string submissionId, FormData formData, RequestMetadata requestMetadata)
     {
         try
         {
@@ -360,13 +360,26 @@ public class FormService : IFormService
                 };
             }
 
-            // Store form data and client IP
+            // Serialize request metadata for comprehensive audit trail
+            var requestMetadataJson = JsonSerializer.Serialize(requestMetadata, new JsonSerializerOptions { WriteIndented = true });
+
+            // Store form data and enhanced request metadata
             submission.FormDataJson = JsonSerializer.Serialize(formData, new JsonSerializerOptions { WriteIndented = true });
-            submission.ClientIpAddress = clientIpAddress;
+            submission.ClientIpAddress = requestMetadata.IpAddress;
+            submission.UserAgent = requestMetadata.UserAgent;
+            submission.Referrer = requestMetadata.Referrer;
+            submission.AcceptLanguage = requestMetadata.AcceptLanguage;
+            submission.Origin = requestMetadata.Origin;
+            submission.XForwardedFor = requestMetadata.XForwardedFor;
+            submission.XRealIp = requestMetadata.XRealIp;
+            submission.ContentType = requestMetadata.ContentType;
+            submission.ContentLength = requestMetadata.ContentLength;
+            submission.RequestMetadataJson = requestMetadataJson;
             submission.Status = FormSubmissionStatus.Submitted;
             submission.SubmittedAt = DateTime.UtcNow;
 
-            LogSubmissionAction(submission.Id, "FormSubmitted", $"Form data submitted successfully from IP: {clientIpAddress}");
+            LogSubmissionAction(submission.Id, "FormSubmitted", 
+                $"Form data submitted successfully from IP: {requestMetadata.IpAddress}, User-Agent: {requestMetadata.UserAgent}");
 
             // Generate PDF with audit trail information
             // DEBUG: Enhanced PDF generation logging to browser console (production: remove DEBUG prefix)
@@ -377,7 +390,7 @@ public class FormService : IFormService
             Console.WriteLine($"Starting PDF generation for submission {submissionId}");
             _logger.LogInformation("DEBUG - Starting PDF generation for submission {SubmissionId}", submissionId);
             
-            var pdfData = await _pdfService.GenerateFormPdfAsync(formData, submissionId, submission.SubmittedAt, clientIpAddress);
+            var pdfData = await _pdfService.GenerateFormPdfAsync(formData, submissionId, submission.SubmittedAt, requestMetadata.IpAddress);
             var fileName = _pdfService.GenerateFileName(formData, submission.SubmittedAt);
             
             submission.PdfFileName = fileName;
@@ -528,20 +541,32 @@ public class FormService : IFormService
         }
     }
 
-    public async Task<FormSubmissionResponse> ProcessFormDirectAsync(FormData formData, string clientIpAddress)
+    public async Task<FormSubmissionResponse> ProcessFormDirectAsync(FormData formData, RequestMetadata requestMetadata)
     {
         try
         {
             var submissionId = Guid.NewGuid().ToString();
             var submissionTime = DateTime.UtcNow;
             
-            // Create submission record
+            // Serialize request metadata for comprehensive audit trail
+            var requestMetadataJson = JsonSerializer.Serialize(requestMetadata, new JsonSerializerOptions { WriteIndented = true });
+            
+            // Create submission record with enhanced metadata
             var submission = new FormSubmissionEntity
             {
                 SubmissionId = submissionId,
                 UserEmail = formData.TenantDetails.Email,
                 FormDataJson = JsonSerializer.Serialize(formData, new JsonSerializerOptions { WriteIndented = true }),
-                ClientIpAddress = clientIpAddress,
+                ClientIpAddress = requestMetadata.IpAddress,
+                UserAgent = requestMetadata.UserAgent,
+                Referrer = requestMetadata.Referrer,
+                AcceptLanguage = requestMetadata.AcceptLanguage,
+                Origin = requestMetadata.Origin,
+                XForwardedFor = requestMetadata.XForwardedFor,
+                XRealIp = requestMetadata.XRealIp,
+                ContentType = requestMetadata.ContentType,
+                ContentLength = requestMetadata.ContentLength,
+                RequestMetadataJson = requestMetadataJson,
                 Status = FormSubmissionStatus.Submitted,
                 EmailVerified = false, // Direct submission bypasses email verification
                 SubmittedAt = submissionTime
@@ -552,7 +577,8 @@ public class FormService : IFormService
             // Save submission first to get the auto-generated Id for foreign key references
             await _context.SaveChangesAsync();
             
-            LogSubmissionAction(submission.Id, "DirectSubmission", $"Form submitted directly via API from IP: {clientIpAddress}");
+            LogSubmissionAction(submission.Id, "DirectSubmission", 
+                $"Form submitted directly via API from IP: {requestMetadata.IpAddress}, User-Agent: {requestMetadata.UserAgent}");
 
             // Generate PDF with audit trail information
             // DEBUG: Enhanced PDF generation logging for direct submission to browser console (production: remove DEBUG prefix)
@@ -563,7 +589,7 @@ public class FormService : IFormService
             Console.WriteLine($"Starting PDF generation for direct submission {submissionId}");
             _logger.LogInformation("DEBUG - Starting PDF generation for direct submission {SubmissionId}", submissionId);
             
-            var pdfData = await _pdfService.GenerateFormPdfAsync(formData, submissionId, submissionTime, clientIpAddress);
+            var pdfData = await _pdfService.GenerateFormPdfAsync(formData, submissionId, submissionTime, requestMetadata.IpAddress);
             var fileName = _pdfService.GenerateFileName(formData, submissionTime);
             
             submission.PdfFileName = fileName;

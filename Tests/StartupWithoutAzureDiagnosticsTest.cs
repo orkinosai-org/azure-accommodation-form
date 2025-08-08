@@ -104,6 +104,10 @@ public class StartupWithoutAzureDiagnosticsTest
             Console.WriteLine("\n" + new string('=', 50));
             await FormValidationTest.TestFormValidation();
 
+            // Run the request metadata capture test
+            Console.WriteLine("\n" + new string('=', 50));
+            await RequestMetadataCaptureTest.TestRequestMetadataCapture();
+
         }
         catch (Exception ex)
         {

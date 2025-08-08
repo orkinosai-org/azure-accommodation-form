@@ -42,6 +42,34 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.BlobStorageUrl)
                 .HasMaxLength(2000);
                 
+            entity.Property(e => e.ClientIpAddress)
+                .HasMaxLength(50);
+                
+            // Enhanced metadata fields
+            entity.Property(e => e.UserAgent)
+                .HasMaxLength(1000);
+                
+            entity.Property(e => e.Referrer)
+                .HasMaxLength(2000);
+                
+            entity.Property(e => e.AcceptLanguage)
+                .HasMaxLength(200);
+                
+            entity.Property(e => e.Origin)
+                .HasMaxLength(2000);
+                
+            entity.Property(e => e.XForwardedFor)
+                .HasMaxLength(500);
+                
+            entity.Property(e => e.XRealIp)
+                .HasMaxLength(50);
+                
+            entity.Property(e => e.ContentType)
+                .HasMaxLength(200);
+                
+            entity.Property(e => e.RequestMetadataJson)
+                .HasMaxLength(4000);
+                
             entity.Property(e => e.EmailVerificationToken)
                 .HasMaxLength(10);
         });

@@ -28,6 +28,17 @@ public class FormSubmissionEntity
     
     public string ClientIpAddress { get; set; } = string.Empty;
     
+    // Enhanced request metadata for audit and compliance
+    public string UserAgent { get; set; } = string.Empty;
+    public string? Referrer { get; set; }
+    public string? AcceptLanguage { get; set; }
+    public string? Origin { get; set; }
+    public string? XForwardedFor { get; set; }
+    public string? XRealIp { get; set; }
+    public string? ContentType { get; set; }
+    public long? ContentLength { get; set; }
+    public string RequestMetadataJson { get; set; } = string.Empty;
+    
     public FormSubmissionStatus Status { get; set; } = FormSubmissionStatus.Draft;
     
     // Email verification tracking
@@ -116,4 +127,25 @@ public class FormSubmissionRequest
     
     [Required]
     public FormData FormData { get; set; } = new();
+}
+
+// Model for structured request metadata capture
+public class RequestMetadata
+{
+    public string IpAddress { get; set; } = string.Empty;
+    public string UserAgent { get; set; } = string.Empty;
+    public string? Referrer { get; set; }
+    public string? AcceptLanguage { get; set; }
+    public string? Origin { get; set; }
+    public string? XForwardedFor { get; set; }
+    public string? XRealIp { get; set; }
+    public string? ContentType { get; set; }
+    public long? ContentLength { get; set; }
+    public DateTime RequestTimestamp { get; set; } = DateTime.UtcNow;
+    public string? Host { get; set; }
+    public string? Protocol { get; set; }
+    public string? Method { get; set; }
+    public string? Path { get; set; }
+    public string? QueryString { get; set; }
+    public Dictionary<string, string> SecurityHeaders { get; set; } = new();
 }
