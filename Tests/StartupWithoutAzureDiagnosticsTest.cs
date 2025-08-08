@@ -100,6 +100,10 @@ public class StartupWithoutAzureDiagnosticsTest
             Console.WriteLine("\n" + new string('=', 50));
             EmailSendingTest.TestEmailValidationScenarios();
 
+            // Run the form validation test
+            Console.WriteLine("\n" + new string('=', 50));
+            await FormValidationTest.TestFormValidation();
+
         }
         catch (Exception ex)
         {

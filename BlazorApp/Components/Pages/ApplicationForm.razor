@@ -668,16 +668,33 @@
                     </div>
                 </fieldset>
 
-                <button type="button" @onclick="HandleSubmitWithValidation" class="btn btn-success btn-lg" disabled="@isProcessing">
+                <button type="button" @onclick="HandleSubmitWithValidation" class="btn btn-success btn-lg" disabled="@(isProcessing || !isFormValid)">
                     @if (isProcessing)
                     {
                         <span>⏳ Submitting...</span>
+                    }
+                    else if (!isFormValid)
+                    {
+                        <span>❌ Please Fix Validation Errors</span>
                     }
                     else
                     {
                         <span>📝 Submit Application</span>
                     }
                 </button>
+                
+                @if (!isFormValid && !isProcessing)
+                {
+                    <div class="alert alert-warning mt-3">
+                        <h5>⚠️ Please fix the following validation errors before submitting:</h5>
+                        <ul class="mb-0">
+                            @foreach (var message in editContext.GetValidationMessages())
+                            {
+                                <li>@message</li>
+                            }
+                        </ul>
+                    </div>
+                }
                 
                 <!-- Alternative submit button that bypasses validation for development/testing -->
                 @if (developmentMode)
@@ -1111,6 +1128,10 @@
     // Email validation state tracking
     private bool emailSubmitAttempted = false;
     
+    // Form validation state tracking
+    private bool isFormValid = false;
+    private System.Threading.Timer? validationTimer;
+    
     // PRODUCTION MODE: Validation is now enforced
     // Set to false to enable full validation and email verification in production
     // Set to true only for development/testing when email services are not configured
@@ -1133,7 +1154,31 @@
     protected override void OnInitialized()
     {
         editContext = new EditContext(formData);
+        editContext.OnFieldChanged += OnFieldChanged;
         GenerateNewCaptcha();
+        
+        // Start validation timer for real-time validation checking
+        validationTimer = new System.Threading.Timer(CheckValidationState, null, 1000, 1000);
+    }
+    
+    private void OnFieldChanged(object? sender, FieldChangedEventArgs e)
+    {
+        // Trigger validation check when field changes
+        CheckValidationState(null);
+    }
+    
+    private void CheckValidationState(object? state)
+    {
+        if (currentStep == FormStep.FormFilling && editContext != null)
+        {
+            var wasValid = isFormValid;
+            isFormValid = editContext.Validate();
+            
+            if (wasValid != isFormValid)
+            {
+                InvokeAsync(StateHasChanged);
+            }
+        }
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -1354,19 +1399,20 @@
 
         // Perform form validation before proceeding
         bool isValid = editContext.Validate();
-        if (!isValid && !developmentMode)
+        if (!isValid)
         {
-            AddDebugMessage("❌ Form validation failed - submission cancelled", "error");
+            AddDebugMessage("❌ Form validation failed - submission blocked", "error");
             var validationMessages = editContext.GetValidationMessages();
             foreach (var message in validationMessages)
             {
                 AddDebugMessage($"Validation Error: {message}", "error");
             }
-            ShowError("Please correct the form errors before submitting.");
+            ShowError("Please correct the validation errors before submitting. Check the fields highlighted in red.");
             StateHasChanged();
             return;
         }
 
+        AddDebugMessage("✅ Form validation passed - proceeding with submission", "info");
         // Proceed with submission
         await HandleSubmit();
     }
@@ -1700,6 +1746,12 @@
     public void Dispose()
     {
         resendTimer?.Dispose();
+        validationTimer?.Dispose();
+        
+        if (editContext != null)
+        {
+            editContext.OnFieldChanged -= OnFieldChanged;
+        }
     }
 
     private void AddAddress()
