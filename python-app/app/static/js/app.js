@@ -514,25 +514,405 @@ class AzureAccommodationForm {
                 </div>
             </div>
 
-            <!-- Simplified form for minimal testing -->
+            <!-- Emergency Contacts Section -->
             <div class="form-section mb-4">
-                <h4 class="section-title">4. Quick Test Form</h4>
-                <p class="text-muted">Simplified form for testing purposes - all other sections will be populated with safe defaults</p>
+                <h4 class="section-title">4. Emergency Contacts</h4>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="next_of_kin" class="form-label">Next of Kin *</label>
+                            <input type="text" class="form-control" id="next_of_kin" name="next_of_kin" required>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="relationship" class="form-label">Relationship *</label>
+                            <input type="text" class="form-control" id="relationship" name="relationship" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-8">
+                        <div class="mb-3">
+                            <label for="contact_address" class="form-label">Address *</label>
+                            <textarea class="form-control" id="contact_address" name="contact_address" rows="2" required></textarea>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label for="contact_number" class="form-label">Contact Number *</label>
+                            <input type="tel" class="form-control" id="contact_number" name="contact_number" required>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Medical Details Section -->
+            <div class="form-section mb-4">
+                <h4 class="section-title">5. Medical Details</h4>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="gp_practice" class="form-label">GP Practice *</label>
+                            <input type="text" class="form-control" id="gp_practice" name="gp_practice" required>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="doctor_name" class="form-label">Doctor's Name *</label>
+                            <input type="text" class="form-control" id="doctor_name" name="doctor_name" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-8">
+                        <div class="mb-3">
+                            <label for="doctor_address" class="form-label">Doctor's Address *</label>
+                            <textarea class="form-control" id="doctor_address" name="doctor_address" rows="2" required></textarea>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label for="doctor_telephone" class="form-label">Doctor's Telephone *</label>
+                            <input type="tel" class="form-control" id="doctor_telephone" name="doctor_telephone" required>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Employment Details Section -->
+            <div class="form-section mb-4">
+                <h4 class="section-title">6. Employment Details</h4>
+                <div class="row">
+                    <div class="col-12">
+                        <div class="mb-3">
+                            <label for="employer_name_address" class="form-label">Employer Name & Address *</label>
+                            <textarea class="form-control" id="employer_name_address" name="employer_name_address" rows="3" required></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="job_title" class="form-label">Job Title *</label>
+                            <input type="text" class="form-control" id="job_title" name="job_title" required>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="manager_name" class="form-label">Manager's Name *</label>
+                            <input type="text" class="form-control" id="manager_name" name="manager_name" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label for="manager_tel" class="form-label">Manager's Telephone *</label>
+                            <input type="tel" class="form-control" id="manager_tel" name="manager_tel" required>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label for="manager_email" class="form-label">Manager's Email *</label>
+                            <input type="email" class="form-control" id="manager_email" name="manager_email" required>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label for="date_of_employment" class="form-label">Date of Employment *</label>
+                            <input type="date" class="form-control" id="date_of_employment" name="date_of_employment" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="present_salary" class="form-label">Present Salary (£) *</label>
+                            <input type="number" class="form-control" id="present_salary" name="present_salary" min="0" step="1000" required>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="employment_change" class="form-label">Are circumstances likely to change?</label>
+                            <textarea class="form-control" id="employment_change" name="employment_change" rows="2" placeholder="Optional - explain any expected changes"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Passport Details Section -->
+            <div class="form-section mb-4">
+                <h4 class="section-title">7. Passport Details</h4>
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label for="passport_number" class="form-label">Passport Number *</label>
+                            <input type="text" class="form-control" id="passport_number" name="passport_number" required>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label for="passport_date_of_issue" class="form-label">Date of Issue *</label>
+                            <input type="date" class="form-control" id="passport_date_of_issue" name="passport_date_of_issue" required>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label for="passport_place_of_issue" class="form-label">Place of Issue *</label>
+                            <input type="text" class="form-control" id="passport_place_of_issue" name="passport_place_of_issue" required>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Current Living Arrangement Section -->
+            <div class="form-section mb-4">
+                <h4 class="section-title">8. Current Living Arrangement</h4>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="notice_end_date" class="form-label">Notice End Date</label>
+                            <input type="date" class="form-control" id="notice_end_date" name="notice_end_date">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="reason_leaving" class="form-label">Reason for Leaving *</label>
+                            <input type="text" class="form-control" id="reason_leaving" name="reason_leaving" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="landlord_knows" name="landlord_knows">
+                            <label class="form-check-label" for="landlord_knows">
+                                Does your landlord know you are leaving? *
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="landlord_reference" name="landlord_reference">
+                            <label class="form-check-label" for="landlord_reference">
+                                Will landlord provide a reference? *
+                            </label>
+                        </div>
+                    </div>
+                </div>
                 
-                <!-- Hidden fields with proper JSON structure for required sections -->
-                <input type="hidden" id="contacts_data" value='{"next_of_kin":"Emergency Contact","relationship":"Friend","address":"Emergency Contact Address, London, SW1A 1AA","contact_number":"07000000000"}'>
-                <input type="hidden" id="medical_data" value='{"gp_practice":"Default GP Practice","doctor_name":"Dr. Default","doctor_address":"Default Medical Address, London, SW1A 1BB","doctor_telephone":"02000000000"}'>
-                <input type="hidden" id="employment_data" value='{"employer_name_address":"Default Employer Ltd, Business Address, London, SW1A 1CC","job_title":"Default Position","manager_name":"Default Manager","manager_tel":"02000000001","manager_email":"manager@example.com","date_of_employment":"2023-01-01","present_salary":30000}'>
-                <input type="hidden" id="passport_data" value='{"passport_number":"DEFAULT123456","date_of_issue":"2023-01-01","place_of_issue":"London"}'>
-                <input type="hidden" id="living_data" value='{"landlord_knows":true,"notice_end_date":null,"reason_leaving":"Seeking new accommodation","landlord_reference":true,"landlord_contact":{"name":"Current Landlord","address":"Current Landlord Address, London, SW1A 1DD","tel":"02000000002","email":"current@landlord.com"}}'>
-                <input type="hidden" id="other_data" value='{"pets_has":false,"pets_details":null,"smoke":false,"coliving_has":false,"coliving_details":null}'>
-                <input type="hidden" id="agreement_data" value='{"single_occupancy_agree":true,"hmo_terms_agree":true,"no_unlisted_occupants":true,"no_smoking":true,"kitchen_cooking_only":true}'>
-                <input type="hidden" id="consent_data" value='{"consent_given":true,"signature":"Digital Signature","date":"2024-01-01","print_name":"Default Name","declaration":{"main_home":true,"enquiries_permission":true,"certify_no_judgements":true,"certify_no_housing_debt":true,"certify_no_landlord_debt":true,"certify_no_abuse":true},"declaration_signature":"Digital Signature","declaration_date":"2024-01-01","declaration_print_name":"Default Name"}'>
+                <!-- Landlord Contact Details (shown when reference is checked) -->
+                <div id="landlord-contact-section" class="border p-3 rounded" style="display: none;">
+                    <h6>Landlord Contact Details</h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="landlord_contact_name" class="form-label">Landlord Name *</label>
+                                <input type="text" class="form-control" id="landlord_contact_name" name="landlord_contact_name">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="landlord_contact_tel" class="form-label">Landlord Telephone *</label>
+                                <input type="tel" class="form-control" id="landlord_contact_tel" name="landlord_contact_tel">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="mb-3">
+                                <label for="landlord_contact_address" class="form-label">Landlord Address *</label>
+                                <textarea class="form-control" id="landlord_contact_address" name="landlord_contact_address" rows="2"></textarea>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="landlord_contact_email" class="form-label">Landlord Email *</label>
+                                <input type="email" class="form-control" id="landlord_contact_email" name="landlord_contact_email">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Other Details Section -->
+            <div class="form-section mb-4">
+                <h4 class="section-title">9. Other Details</h4>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="smoke" name="smoke">
+                            <label class="form-check-label" for="smoke">
+                                Do you smoke?
+                            </label>
+                        </div>
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="pets_has" name="pets_has">
+                            <label class="form-check-label" for="pets_has">
+                                Do you have pets?
+                            </label>
+                        </div>
+                        <div id="pets-details-section" style="display: none;">
+                            <div class="mb-3">
+                                <label for="pets_details" class="form-label">Pet Details</label>
+                                <textarea class="form-control" id="pets_details" name="pets_details" rows="2" placeholder="Please describe your pets"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="coliving_has" name="coliving_has">
+                            <label class="form-check-label" for="coliving_has">
+                                Do you have co-living preferences?
+                            </label>
+                        </div>
+                        <div id="coliving-details-section" style="display: none;">
+                            <div class="mb-3">
+                                <label for="coliving_details" class="form-label">Co-living Details</label>
+                                <textarea class="form-control" id="coliving_details" name="coliving_details" rows="2" placeholder="Please describe your preferences"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Occupation Agreement Section -->
+            <div class="form-section mb-4">
+                <h4 class="section-title">10. Occupation Agreement</h4>
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Please read and agree to the following terms and conditions:
+                </div>
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" id="single_occupancy_agree" name="single_occupancy_agree" required>
+                    <label class="form-check-label" for="single_occupancy_agree">
+                        I agree to single occupancy terms *
+                    </label>
+                </div>
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" id="hmo_terms_agree" name="hmo_terms_agree" required>
+                    <label class="form-check-label" for="hmo_terms_agree">
+                        I agree to HMO terms and conditions *
+                    </label>
+                </div>
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" id="no_unlisted_occupants" name="no_unlisted_occupants" required>
+                    <label class="form-check-label" for="no_unlisted_occupants">
+                        I will not allow unlisted occupants *
+                    </label>
+                </div>
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" id="no_smoking_agree" name="no_smoking_agree" required>
+                    <label class="form-check-label" for="no_smoking_agree">
+                        I agree to the no smoking policy *
+                    </label>
+                </div>
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" id="kitchen_cooking_only" name="kitchen_cooking_only" required>
+                    <label class="form-check-label" for="kitchen_cooking_only">
+                        I agree to use the kitchen for cooking only *
+                    </label>
+                </div>
+            </div>
+
+            <!-- Consent & Declaration Section -->
+            <div class="form-section mb-4">
+                <h4 class="section-title">11. Consent & Declaration</h4>
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Please read carefully and complete all declaration fields.
+                </div>
                 
-                <div class="alert alert-success">
-                    <i class="fas fa-check-circle me-2"></i>
-                    All hidden sections are populated with valid default values to ensure successful form submission.
-                    Fill out the visible fields above and click Submit to test the form.
+                <!-- Data Processing Consent -->
+                <div class="form-check mb-4">
+                    <input class="form-check-input" type="checkbox" id="consent_given" name="consent_given" required>
+                    <label class="form-check-label" for="consent_given">
+                        I consent to the processing of my personal data in accordance with data protection regulations *
+                    </label>
+                </div>
+
+                <!-- Signature Section -->
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label for="signature" class="form-label">Signature *</label>
+                            <input type="text" class="form-control" id="signature" name="signature" placeholder="Type your full name" required>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label for="signature_date" class="form-label">Date *</label>
+                            <input type="date" class="form-control" id="signature_date" name="signature_date" required>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label for="print_name" class="form-label">Print Name *</label>
+                            <input type="text" class="form-control" id="print_name" name="print_name" required>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Declaration Checkboxes -->
+                <h6 class="mt-4">Declaration</h6>
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" id="main_home" name="main_home" required>
+                    <label class="form-check-label" for="main_home">
+                        This will be my main home *
+                    </label>
+                </div>
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" id="enquiries_permission" name="enquiries_permission" required>
+                    <label class="form-check-label" for="enquiries_permission">
+                        I give permission for enquiries to be made about me *
+                    </label>
+                </div>
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" id="certify_no_judgements" name="certify_no_judgements" required>
+                    <label class="form-check-label" for="certify_no_judgements">
+                        I certify I have no outstanding county court judgements *
+                    </label>
+                </div>
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" id="certify_no_housing_debt" name="certify_no_housing_debt" required>
+                    <label class="form-check-label" for="certify_no_housing_debt">
+                        I certify I have no housing-related debt *
+                    </label>
+                </div>
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" id="certify_no_landlord_debt" name="certify_no_landlord_debt" required>
+                    <label class="form-check-label" for="certify_no_landlord_debt">
+                        I certify I have no debt to previous landlords *
+                    </label>
+                </div>
+                <div class="form-check mb-4">
+                    <input class="form-check-input" type="checkbox" id="certify_no_abuse" name="certify_no_abuse" required>
+                    <label class="form-check-label" for="certify_no_abuse">
+                        I certify I have no history of property abuse *
+                    </label>
+                </div>
+
+                <!-- Declaration Signature -->
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label for="declaration_signature" class="form-label">Declaration Signature *</label>
+                            <input type="text" class="form-control" id="declaration_signature" name="declaration_signature" placeholder="Type your full name" required>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label for="declaration_date" class="form-label">Declaration Date *</label>
+                            <input type="date" class="form-control" id="declaration_date" name="declaration_date" required>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label for="declaration_print_name" class="form-label">Declaration Print Name *</label>
+                            <input type="text" class="form-control" id="declaration_print_name" name="declaration_print_name" required>
+                        </div>
+                    </div>
                 </div>
             </div>
             
@@ -557,16 +937,74 @@ class AzureAccommodationForm {
             emailField.value = document.getElementById('email').value;
         }
         
-        // Set default signature date
+        // Set default dates to today
         const signatureDateField = document.getElementById('signature_date');
+        const declarationDateField = document.getElementById('declaration_date');
+        const today = new Date().toISOString().split('T')[0];
+        
         if (signatureDateField) {
-            signatureDateField.value = new Date().toISOString().split('T')[0];
+            signatureDateField.value = today;
+        }
+        if (declarationDateField) {
+            declarationDateField.value = today;
         }
         
-        // Signature type toggle
-        document.querySelectorAll('input[name="signature_type"]').forEach(radio => {
-            radio.addEventListener('change', () => this.toggleSignatureType());
-        });
+        // Conditional field handlers
+        
+        // Show/hide landlord contact details based on reference checkbox
+        const landlordReferenceCheckbox = document.getElementById('landlord_reference');
+        const landlordContactSection = document.getElementById('landlord-contact-section');
+        
+        if (landlordReferenceCheckbox && landlordContactSection) {
+            landlordReferenceCheckbox.addEventListener('change', function() {
+                if (this.checked) {
+                    landlordContactSection.style.display = 'block';
+                    // Make landlord contact fields required when shown
+                    this.toggleLandlordContactRequired(true);
+                } else {
+                    landlordContactSection.style.display = 'none';
+                    // Remove required when hidden
+                    this.toggleLandlordContactRequired(false);
+                }
+            }.bind(this));
+        }
+        
+        // Show/hide pets details based on pets checkbox
+        const petsCheckbox = document.getElementById('pets_has');
+        const petsDetailsSection = document.getElementById('pets-details-section');
+        
+        if (petsCheckbox && petsDetailsSection) {
+            petsCheckbox.addEventListener('change', function() {
+                petsDetailsSection.style.display = this.checked ? 'block' : 'none';
+            });
+        }
+        
+        // Show/hide coliving details based on coliving checkbox
+        const colivingCheckbox = document.getElementById('coliving_has');
+        const colivingDetailsSection = document.getElementById('coliving-details-section');
+        
+        if (colivingCheckbox && colivingDetailsSection) {
+            colivingCheckbox.addEventListener('change', function() {
+                colivingDetailsSection.style.display = this.checked ? 'block' : 'none';
+            });
+        }
+        
+        // Auto-populate signature fields when full name is entered
+        const fullNameField = document.getElementById('full_name');
+        const signatureField = document.getElementById('signature');
+        const printNameField = document.getElementById('print_name');
+        const declarationSignatureField = document.getElementById('declaration_signature');
+        const declarationPrintNameField = document.getElementById('declaration_print_name');
+        
+        if (fullNameField) {
+            fullNameField.addEventListener('input', function() {
+                const name = this.value;
+                if (signatureField && !signatureField.value) signatureField.value = name;
+                if (printNameField && !printNameField.value) printNameField.value = name;
+                if (declarationSignatureField && !declarationSignatureField.value) declarationSignatureField.value = name;
+                if (declarationPrintNameField && !declarationPrintNameField.value) declarationPrintNameField.value = name;
+            });
+        }
         
         // Form submission
         document.getElementById('accommodation-form').addEventListener('submit', (e) => {
@@ -574,59 +1012,76 @@ class AzureAccommodationForm {
             this.submitForm();
         });
         
-        // Initialize signature pad if needed
-        this.initSignaturePad();
+        // Form validation on change for required fields
+        this.addFormValidation();
     }
     
-    toggleSignatureType() {
-        const typedSection = document.getElementById('typed-signature-section');
-        const drawnSection = document.getElementById('drawn-signature-section');
-        const isTyped = document.getElementById('signature_typed').checked;
+    toggleLandlordContactRequired(required) {
+        const fields = ['landlord_contact_name', 'landlord_contact_tel', 'landlord_contact_address', 'landlord_contact_email'];
+        fields.forEach(fieldId => {
+            const field = document.getElementById(fieldId);
+            if (field) {
+                if (required) {
+                    field.setAttribute('required', 'required');
+                } else {
+                    field.removeAttribute('required');
+                    field.value = ''; // Clear the field when not required
+                }
+            }
+        });
+    }
+    
+    addFormValidation() {
+        // Add real-time validation for required fields
+        const requiredFields = document.querySelectorAll('input[required], select[required], textarea[required]');
         
-        if (isTyped) {
-            typedSection.classList.remove('d-none');
-            drawnSection.classList.add('d-none');
+        requiredFields.forEach(field => {
+            field.addEventListener('blur', function() {
+                this.validateField(field);
+            }.bind(this));
+            
+            field.addEventListener('change', function() {
+                this.validateField(field);
+            }.bind(this));
+        });
+    }
+    
+    validateField(field) {
+        const isValid = field.checkValidity();
+        
+        if (isValid) {
+            field.classList.remove('is-invalid');
+            field.classList.add('is-valid');
         } else {
-            typedSection.classList.add('d-none');
-            drawnSection.classList.remove('d-none');
+            field.classList.remove('is-valid');
+            field.classList.add('is-invalid');
         }
+        
+        return isValid;
     }
     
-    initSignaturePad() {
-        // Initialize signature pad functionality
-        const canvas = document.getElementById('signature-pad');
-        const clearBtn = document.getElementById('clear-signature');
+    validateForm() {
+        let isValid = true;
+        const requiredFields = document.querySelectorAll('input[required], select[required], textarea[required]');
         
-        if (canvas) {
-            const ctx = canvas.getContext('2d');
-            let isDrawing = false;
-            
-            canvas.addEventListener('mousedown', (e) => {
-                isDrawing = true;
-                ctx.beginPath();
-                const rect = canvas.getBoundingClientRect();
-                ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
-            });
-            
-            canvas.addEventListener('mousemove', (e) => {
-                if (!isDrawing) return;
-                const rect = canvas.getBoundingClientRect();
-                ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
-                ctx.stroke();
-            });
-            
-            canvas.addEventListener('mouseup', () => {
-                isDrawing = false;
-            });
-            
-            clearBtn?.addEventListener('click', () => {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-            });
-        }
+        requiredFields.forEach(field => {
+            if (!this.validateField(field)) {
+                isValid = false;
+            }
+        });
+        
+        return isValid;
     }
+
     
     async submitForm() {
         try {
+            // Validate form first
+            if (!this.validateForm()) {
+                this.showAlert('Please fill in all required fields correctly before submitting.', 'danger');
+                return;
+            }
+            
             this.showLoading('Submitting application...');
             this.updateStep(4);
             
@@ -667,7 +1122,7 @@ class AzureAccommodationForm {
     }
     
     collectFormData() {
-        // Collect comprehensive form data that matches the backend model
+        // Collect comprehensive form data from all visible form fields
         return {
             tenant_details: {
                 full_name: document.getElementById('full_name')?.value || '',
@@ -676,15 +1131,15 @@ class AzureAccommodationForm {
                 email: document.getElementById('email_readonly')?.value || document.getElementById('email')?.value || '',
                 telephone: document.getElementById('telephone')?.value || '',
                 employers_name: document.getElementById('employers_name')?.value || '',
-                gender: document.getElementById('gender')?.value || 'other',
+                gender: document.getElementById('gender')?.value || '',
                 ni_number: document.getElementById('ni_number')?.value || '',
                 car: document.getElementById('car')?.checked || false,
                 bicycle: document.getElementById('bicycle')?.checked || false,
                 right_to_live_in_uk: document.getElementById('right_to_live_in_uk')?.checked || false,
-                room_occupancy: document.getElementById('room_occupancy')?.value || 'just_you',
-                other_names_has: false,
+                room_occupancy: document.getElementById('room_occupancy')?.value || '',
+                other_names_has: false, // Not implemented in current form
                 other_names_details: null,
-                medical_condition_has: false,
+                medical_condition_has: false, // Not implemented in current form
                 medical_condition_details: null
             },
             bank_details: {
@@ -703,92 +1158,80 @@ class AzureAccommodationForm {
                     landlord_email: document.getElementById('landlord_email_0')?.value || ''
                 }
             ],
-            contacts: this.parseHiddenFieldData('contacts_data', {
-                next_of_kin: "Emergency Contact",
-                relationship: "Friend",
-                address: "Emergency Contact Address",
-                contact_number: "07000000000"
-            }),
-            medical_details: this.parseHiddenFieldData('medical_data', {
-                gp_practice: "Default GP Practice",
-                doctor_name: "Dr. Default",
-                doctor_address: "Default Medical Address",
-                doctor_telephone: "02000000000"
-            }),
-            employment: this.parseHiddenFieldData('employment_data', {
-                employer_name_address: document.getElementById('employers_name')?.value || "Default Employer",
-                job_title: "Default Position",
-                manager_name: "Default Manager",
-                manager_tel: "02000000001",
-                manager_email: "manager@example.com",
-                date_of_employment: "2023-01-01",
-                present_salary: 30000
-            }),
-            employment_change: null,
-            passport_details: this.parseHiddenFieldData('passport_data', {
-                passport_number: "DEFAULT123",
-                date_of_issue: "2023-01-01",
-                place_of_issue: "London"
-            }),
-            current_living_arrangement: this.parseHiddenFieldData('living_data', {
-                landlord_knows: true,
-                notice_end_date: null,
-                reason_leaving: "Seeking new accommodation",
-                landlord_reference: true,
+            contacts: {
+                next_of_kin: document.getElementById('next_of_kin')?.value || '',
+                relationship: document.getElementById('relationship')?.value || '',
+                address: document.getElementById('contact_address')?.value || '',
+                contact_number: document.getElementById('contact_number')?.value || ''
+            },
+            medical_details: {
+                gp_practice: document.getElementById('gp_practice')?.value || '',
+                doctor_name: document.getElementById('doctor_name')?.value || '',
+                doctor_address: document.getElementById('doctor_address')?.value || '',
+                doctor_telephone: document.getElementById('doctor_telephone')?.value || ''
+            },
+            employment: {
+                employer_name_address: document.getElementById('employer_name_address')?.value || '',
+                job_title: document.getElementById('job_title')?.value || '',
+                manager_name: document.getElementById('manager_name')?.value || '',
+                manager_tel: document.getElementById('manager_tel')?.value || '',
+                manager_email: document.getElementById('manager_email')?.value || '',
+                date_of_employment: document.getElementById('date_of_employment')?.value || '',
+                present_salary: parseFloat(document.getElementById('present_salary')?.value) || 0
+            },
+            employment_change: document.getElementById('employment_change')?.value || null,
+            passport_details: {
+                passport_number: document.getElementById('passport_number')?.value || '',
+                date_of_issue: document.getElementById('passport_date_of_issue')?.value || '',
+                place_of_issue: document.getElementById('passport_place_of_issue')?.value || ''
+            },
+            current_living_arrangement: {
+                landlord_knows: document.getElementById('landlord_knows')?.checked || false,
+                notice_end_date: document.getElementById('notice_end_date')?.value || null,
+                reason_leaving: document.getElementById('reason_leaving')?.value || '',
+                landlord_reference: document.getElementById('landlord_reference')?.checked || false,
                 landlord_contact: {
-                    name: "Current Landlord",
-                    address: "Current Landlord Address",
-                    tel: "02000000002",
-                    email: "current@landlord.com"
+                    name: document.getElementById('landlord_contact_name')?.value || '',
+                    address: document.getElementById('landlord_contact_address')?.value || '',
+                    tel: document.getElementById('landlord_contact_tel')?.value || '',
+                    email: document.getElementById('landlord_contact_email')?.value || ''
                 }
-            }),
-            other_details: this.parseHiddenFieldData('other_data', {
-                pets_has: false,
-                pets_details: null,
-                smoke: false,
-                coliving_has: false,
-                coliving_details: null
-            }),
-            occupation_agreement: this.parseHiddenFieldData('agreement_data', {
-                single_occupancy_agree: true,
-                hmo_terms_agree: true,
-                no_unlisted_occupants: true,
-                no_smoking: true,
-                kitchen_cooking_only: true
-            }),
-            consent_and_declaration: this.parseHiddenFieldData('consent_data', {
-                consent_given: true,
-                signature: document.getElementById('full_name')?.value || "Digital Signature",
-                date: new Date().toISOString().split('T')[0],
-                print_name: document.getElementById('full_name')?.value || "Default Name",
+            },
+            other_details: {
+                pets_has: document.getElementById('pets_has')?.checked || false,
+                pets_details: document.getElementById('pets_details')?.value || null,
+                smoke: document.getElementById('smoke')?.checked || false,
+                coliving_has: document.getElementById('coliving_has')?.checked || false,
+                coliving_details: document.getElementById('coliving_details')?.value || null
+            },
+            occupation_agreement: {
+                single_occupancy_agree: document.getElementById('single_occupancy_agree')?.checked || false,
+                hmo_terms_agree: document.getElementById('hmo_terms_agree')?.checked || false,
+                no_unlisted_occupants: document.getElementById('no_unlisted_occupants')?.checked || false,
+                no_smoking: document.getElementById('no_smoking_agree')?.checked || false,
+                kitchen_cooking_only: document.getElementById('kitchen_cooking_only')?.checked || false
+            },
+            consent_and_declaration: {
+                consent_given: document.getElementById('consent_given')?.checked || false,
+                signature: document.getElementById('signature')?.value || '',
+                date: document.getElementById('signature_date')?.value || '',
+                print_name: document.getElementById('print_name')?.value || '',
                 declaration: {
-                    main_home: true,
-                    enquiries_permission: true,
-                    certify_no_judgements: true,
-                    certify_no_housing_debt: true,
-                    certify_no_landlord_debt: true,
-                    certify_no_abuse: true
+                    main_home: document.getElementById('main_home')?.checked || false,
+                    enquiries_permission: document.getElementById('enquiries_permission')?.checked || false,
+                    certify_no_judgements: document.getElementById('certify_no_judgements')?.checked || false,
+                    certify_no_housing_debt: document.getElementById('certify_no_housing_debt')?.checked || false,
+                    certify_no_landlord_debt: document.getElementById('certify_no_landlord_debt')?.checked || false,
+                    certify_no_abuse: document.getElementById('certify_no_abuse')?.checked || false
                 },
-                declaration_signature: document.getElementById('full_name')?.value || "Digital Signature",
-                declaration_date: new Date().toISOString().split('T')[0],
-                declaration_print_name: document.getElementById('full_name')?.value || "Default Name"
-            }),
+                declaration_signature: document.getElementById('declaration_signature')?.value || '',
+                declaration_date: document.getElementById('declaration_date')?.value || '',
+                declaration_print_name: document.getElementById('declaration_print_name')?.value || ''
+            },
             client_ip: null, // Will be set by backend
             form_opened_at: null,
             form_submitted_at: null
         };
-    }
-    
-    parseHiddenFieldData(fieldId, defaultValue) {
-        try {
-            const element = document.getElementById(fieldId);
-            if (element && element.value) {
-                return JSON.parse(element.value);
-            }
-        } catch (e) {
-            console.warn(`Failed to parse ${fieldId}:`, e);
-        }
-        return defaultValue;
     }
     
     showSubmissionSuccess(result) {
