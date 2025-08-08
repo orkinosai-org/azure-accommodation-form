@@ -4,6 +4,8 @@
 
 The Azure Accommodation Form API provides endpoints for processing accommodation form submissions. The API handles the complete workflow from form submission to PDF generation, email notifications, and Azure Blob Storage archival.
 
+**Enhanced Metadata Capture**: As of the latest version, the API now captures comprehensive request metadata for audit, compliance, and analytics purposes. This includes IP addresses, browser information, HTTP headers, and security-relevant data.
+
 ## Base URL
 
 - Development: `https://localhost:5001`
@@ -12,6 +14,27 @@ The Azure Accommodation Form API provides endpoints for processing accommodation
 ## Authentication
 
 Currently, the API does not require authentication. All endpoints are publicly accessible.
+
+## Request Metadata Capture
+
+**NEW**: The API now automatically captures and stores comprehensive request metadata with each form submission for audit and compliance purposes:
+
+### Captured Metadata Fields:
+- **IP Address**: Client IP address (with proxy header support)
+- **User-Agent**: Browser and device information
+- **HTTP Headers**: Accept-Language, Origin, Referrer
+- **Proxy Information**: X-Forwarded-For, X-Real-IP headers
+- **Security Headers**: CF-RAY, X-Amzn-Trace-Id, Azure headers
+- **Request Details**: Method, Path, Protocol, Host, Query String
+- **Timestamps**: Request timestamp and submission timestamp
+- **Content Information**: Content-Type and Content-Length
+
+### Proxy and Load Balancer Support:
+The API properly handles requests through:
+- Cloudflare (CF-RAY, CF-Connecting-IP)
+- AWS Application Load Balancer (X-Amzn-Trace-Id)
+- Azure Application Gateway (X-Azure-ClientIP)
+- Standard proxy headers (X-Forwarded-For, X-Real-IP)
 
 ## Endpoints
 
@@ -200,6 +223,20 @@ Get the current status and details of a form submission.
   "emailVerified": true,
   "pdfFileName": "John_Doe_Application_Form_15012024_1040.pdf",
   "blobStorageUrl": "https://yourstorageaccount.blob.core.windows.net/form-submissions/12345678-1234-1234-1234-123456789012/John_Doe_Application_Form_15012024_1040.pdf",
+  "requestMetadata": {
+    "ipAddress": "203.0.113.195",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+    "referrer": "https://example.com/accommodation-form",
+    "acceptLanguage": "en-US,en;q=0.9,fr;q=0.8",
+    "origin": "https://example.com",
+    "xForwardedFor": "203.0.113.195, 70.41.3.18",
+    "contentType": "application/json",
+    "requestTimestamp": "2024-01-15T10:40:00Z",
+    "securityHeaders": {
+      "CF-RAY": "72a1b2c3d4e5f6g7-SJC",
+      "X-Amzn-Trace-Id": "Root=1-61f5a2b4-3456789012345678"
+    }
+  },
   "logs": [
     {
       "action": "SessionInitialized",
@@ -212,9 +249,10 @@ Get the current status and details of a form submission.
       "timestamp": "2024-01-15T10:31:00Z"
     },
     {
-      "action": "EmailVerified",
-      "details": "Email successfully verified",
-      "timestamp": "2024-01-15T10:35:00Z"
+      "action": "DirectSubmission",
+      "details": "Form submitted directly via API from IP: 203.0.113.195, User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+      "timestamp": "2024-01-15T10:40:00Z"
+    },
     },
     {
       "action": "FormSubmitted",
@@ -401,3 +439,35 @@ Before using the API, ensure the following are configured:
 3. **Database Connection** - For submission tracking
 
 See the main README.md for detailed configuration instructions.
+
+## Data Privacy and Security
+
+### Request Metadata Collection
+
+The API automatically collects comprehensive request metadata for audit, compliance, and security purposes:
+
+**Purpose**: The metadata is collected to:
+- Maintain audit trails for compliance requirements
+- Detect and prevent fraudulent submissions
+- Analyze usage patterns for security monitoring
+- Support troubleshooting and technical support
+
+**Data Collected**:
+- IP addresses and proxy information
+- Browser and device information (User-Agent)
+- HTTP headers (language preferences, referrer, origin)
+- Request timing and technical details
+- Security headers from CDNs and load balancers
+
+**Data Retention**: 
+- Request metadata is stored alongside form submissions
+- Data is retained according to your organization's data retention policy
+- No personally identifiable information is extracted from metadata
+
+**Security Measures**:
+- All metadata is stored encrypted at rest in Azure Blob Storage
+- Database access is restricted and logged
+- Metadata is only accessible through authenticated admin interfaces
+- Comprehensive audit logging of all data access
+
+**Compliance**: The metadata collection supports compliance with regulations requiring audit trails and security monitoring while respecting user privacy.
