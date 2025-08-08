@@ -668,33 +668,47 @@
                     </div>
                 </fieldset>
 
-                <button type="button" @onclick="HandleSubmitWithValidation" class="btn btn-success btn-lg" disabled="@(isProcessing || !isFormValid)">
-                    @if (isProcessing)
+                <!-- Submit Button Area with Validation Errors -->
+                <div class="submit-section" id="submit-section">
+                    <!-- Validation Summary Near Submit Button -->
+                    @if (editContext.GetValidationMessages().Any())
                     {
-                        <span>⏳ Submitting...</span>
+                        <div class="alert alert-danger mb-4" id="bottom-validation-summary">
+                            <h5><i class="fas fa-exclamation-triangle"></i> Please Fix These Errors Before Submitting</h5>
+                            <p class="mb-2">The following issues need to be corrected:</p>
+                            <ul class="mb-0">
+                                @foreach (var message in editContext.GetValidationMessages())
+                                {
+                                    <li>@message</li>
+                                }
+                            </ul>
+                            <hr class="my-3">
+                            <div class="d-flex align-items-center">
+                                <button type="button" class="btn btn-outline-primary btn-sm" @onclick="ScrollToTop">
+                                    <i class="fas fa-arrow-up"></i> Go to Top to Fix Errors
+                                </button>
+                                <small class="text-muted ms-3">
+                                    <i class="fas fa-info-circle"></i> You can also scroll up to see errors highlighted next to each field
+                                </small>
+                            </div>
+                        </div>
                     }
-                    else if (!isFormValid)
-                    {
-                        <span>❌ Please Fix Validation Errors</span>
-                    }
-                    else
-                    {
-                        <span>📝 Submit Application</span>
-                    }
-                </button>
-                
-                @if (!isFormValid && !isProcessing)
-                {
-                    <div class="alert alert-warning mt-3">
-                        <h5>⚠️ Please fix the following validation errors before submitting:</h5>
-                        <ul class="mb-0">
-                            @foreach (var message in editContext.GetValidationMessages())
-                            {
-                                <li>@message</li>
-                            }
-                        </ul>
-                    </div>
-                }
+                    
+                    <button type="button" @onclick="HandleSubmitWithValidation" class="btn btn-success btn-lg" disabled="@(isProcessing || !isFormValid)">
+                        @if (isProcessing)
+                        {
+                            <span><i class="fas fa-spinner fa-spin"></i> Submitting...</span>
+                        }
+                        else if (!isFormValid)
+                        {
+                            <span><i class="fas fa-times"></i> Please Fix Validation Errors</span>
+                        }
+                        else
+                        {
+                            <span><i class="fas fa-paper-plane"></i> Submit Application</span>
+                        }
+                    </button>
+                </div>
                 
                 <!-- Alternative submit button that bypasses validation for development/testing -->
                 @if (developmentMode)
@@ -1083,6 +1097,97 @@
     .debug-entry.info {
         background-color: rgba(40, 167, 69, 0.1);
     }
+
+    /* Submit section improvements */
+    .submit-section {
+        margin-top: 30px;
+        padding: 20px;
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        background-color: #f8f9fa;
+    }
+
+    #bottom-validation-summary {
+        border-left: 5px solid #dc3545;
+        background-color: #f8d7da;
+        border-color: #f5c6cb;
+        margin-bottom: 20px;
+    }
+
+    #bottom-validation-summary h5 {
+        color: #721c24;
+        margin-bottom: 10px;
+        font-weight: 600;
+    }
+
+    #bottom-validation-summary ul {
+        margin-bottom: 15px;
+    }
+
+    #bottom-validation-summary li {
+        margin-bottom: 5px;
+        font-weight: 500;
+    }
+
+    /* Animation for highlighting validation summary */
+    @@keyframes highlight-flash {
+        0% { background-color: #f8d7da; }
+        25% { background-color: #f1c40f; }
+        50% { background-color: #f8d7da; }
+        75% { background-color: #f1c40f; }
+        100% { background-color: #f8d7da; }
+    }
+
+    /* Animation for highlighting invalid fields */
+    @@keyframes field-highlight {
+        0% { border-color: #dc3545; box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25); }
+        50% { border-color: #f1c40f; box-shadow: 0 0 0 0.4rem rgba(241, 196, 15, 0.5); }
+        100% { border-color: #dc3545; box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25); }
+    }
+
+    /* Enhanced button styling */
+    .btn-success.btn-lg {
+        padding: 15px 30px;
+        font-size: 18px;
+        font-weight: 600;
+        border-radius: 8px;
+        width: 100%;
+        margin-top: 10px;
+    }
+
+    .btn-success:disabled {
+        background-color: #6c757d;
+        border-color: #6c757d;
+        cursor: not-allowed;
+    }
+
+    /* Alert improvements */
+    .alert {
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .alert h5 {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    /* Form validation message styling */
+    .validation-message {
+        color: #dc3545;
+        font-size: 0.875em;
+        margin-top: 5px;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .validation-message::before {
+        content: "⚠️";
+        font-size: 0.8em;
+    }
 </style>
 
 <script>
@@ -1102,6 +1207,44 @@
         if (confirmEmailField) {
             window.disablePaste(confirmEmailField);
         }
+    };
+
+    window.scrollToTop = () => {
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
+        
+        // Highlight the validation summary at the top after scrolling
+        setTimeout(() => {
+            const topValidationSummary = document.querySelector('.validation-summary');
+            if (topValidationSummary) {
+                topValidationSummary.style.animation = 'highlight-flash 2s ease-in-out';
+                setTimeout(() => {
+                    topValidationSummary.style.animation = '';
+                }, 2000);
+            }
+        }, 500);
+    };
+
+    window.scrollToTopOnValidationFailure = () => {
+        // Auto-scroll to top when validation fails
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
+        
+        // Focus on the first invalid field after scrolling
+        setTimeout(() => {
+            const firstInvalidField = document.querySelector('.validation-message + input, .validation-message + select, .validation-message + textarea');
+            if (firstInvalidField) {
+                firstInvalidField.focus();
+                firstInvalidField.style.animation = 'field-highlight 1s ease-in-out';
+                setTimeout(() => {
+                    firstInvalidField.style.animation = '';
+                }, 1000);
+            }
+        }, 500);
     };
 </script>
 
@@ -1408,6 +1551,10 @@
                 AddDebugMessage($"Validation Error: {message}", "error");
             }
             ShowError("Please correct the validation errors before submitting. Check the fields highlighted in red.");
+            
+            // Auto-scroll to top so user can see validation errors
+            await ScrollToTopOnValidationFailure();
+            
             StateHasChanged();
             return;
         }
@@ -1415,6 +1562,32 @@
         AddDebugMessage("✅ Form validation passed - proceeding with submission", "info");
         // Proceed with submission
         await HandleSubmit();
+    }
+
+    private async Task ScrollToTop()
+    {
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("scrollToTop");
+        }
+        catch (Exception ex)
+        {
+            // Log but don't throw - scrolling is a UX enhancement, not critical functionality
+            AddDebugMessage($"Scroll to top failed: {ex.Message}", "warning");
+        }
+    }
+
+    private async Task ScrollToTopOnValidationFailure()
+    {
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("scrollToTopOnValidationFailure");
+        }
+        catch (Exception ex)
+        {
+            // Log but don't throw - scrolling is a UX enhancement, not critical functionality
+            AddDebugMessage($"Auto-scroll on validation failure failed: {ex.Message}", "warning");
+        }
     }
 
     private async Task HandleSubmit()
