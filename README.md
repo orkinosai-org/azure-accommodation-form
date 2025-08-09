@@ -195,6 +195,12 @@ The application provides identical functionality across all sections:
 └── form_schema.json            # JSON schema for form data
 ```
 
+### GitHub Actions Workflows
+
+- **`build-deployment-package.yml`** - Automated deployment package creation
+- **`deploy.yml`** - Python app deployment (existing)  
+- **`main_testapp.yml`** - Test app deployment (existing)
+
 ## Backend Integration
 
 The form generates JSON data that is processed by the Blazor backend:
@@ -224,11 +230,31 @@ The form generates JSON data that is processed by the Blazor backend:
 
 Deploy to Azure App Service with .NET 8 runtime. The application includes SignalR support for interactive features.
 
+### Automated Deployment Package Creation
+
+The repository includes a GitHub Actions workflow that automatically creates deployment-ready packages on each push to main:
+
+1. **Triggers automatically** on push to main branch
+2. **Builds both applications** (Blazor and Python) for production
+3. **Creates deployment package** with configuration templates
+4. **Generates ZIP file** for easy client transfer
+5. **Available as artifact** from GitHub Actions runs
+
+**To use the deployment package:**
+1. Navigate to Actions tab in GitHub
+2. Find latest "Build Deployment Package" workflow run
+3. Download the `deployment-package-zip` artifact
+4. Follow instructions in `DEPLOYMENT.md` for Azure setup
+
+### Manual Deployment
+
 **Required Configuration:**
 1. Set up Azure Blob Storage account
 2. Configure SMTP email settings (Gmail, Outlook, or custom SMTP)
 3. Set environment variables for production secrets
 4. Update `appsettings.json` or use Azure App Service configuration
+
+**See [DEPLOYMENT.md](DEPLOYMENT.md) for complete step-by-step deployment instructions.**
 
 ## Security & Privacy
 

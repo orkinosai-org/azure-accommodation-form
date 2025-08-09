@@ -70,3 +70,9 @@ python-app/app/services/__pycache__/form.cpython-312.pyc
 python-app/app/services/__pycache__/pdf.cpython-312.pyc
 python-app/app/services/__pycache__/session.cpython-312.pyc
 python-app/app/services/__pycache__/storage.cpython-312.pyc
+
+# Deployment artifacts
+deployment_package/
+deployment_package.zip
+temp_blazor_build/
+*.deployment
