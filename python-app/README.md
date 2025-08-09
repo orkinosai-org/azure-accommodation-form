@@ -149,6 +149,42 @@ SSL_KEYFILE=/path/to/private.key
 SSL_CERTFILE=/path/to/certificate.crt
 ```
 
+## Azure Deployment
+
+### Automated GitHub Actions Deployment
+
+The application includes automated deployment to Azure Web Apps via GitHub Actions. The deployment configuration is managed through `appsettings.json`:
+
+```json
+{
+  "DeploymentSettings": {
+    "AzureWebAppName": "your-azure-webapp-name",
+    "PythonVersion": "3.12",
+    "AzurePublishProfileSecret": "AZURE_WEBAPP_PUBLISH_PROFILE",
+    "Environment": "production"
+  }
+}
+```
+
+### Quick Deployment Setup
+
+1. **Create Azure Web App** with Python 3.12 runtime
+2. **Download publish profile** from Azure Portal
+3. **Add GitHub Secret** with your publish profile content
+4. **Update appsettings.json** with your Azure Web App name
+5. **Push to main branch** - deployment happens automatically!
+
+📖 **See [AZURE_DEPLOYMENT_CONFIG.md](AZURE_DEPLOYMENT_CONFIG.md) for detailed deployment configuration guide**
+
+### Multiple Environment Support
+
+Easily deploy to different Azure Web Apps by updating the `DeploymentSettings` section:
+- ✅ Development/Testing environments
+- ✅ Staging environments  
+- ✅ Production environments
+- ✅ Automatic Python 3.12 runtime configuration
+- ✅ Environment-specific secrets management
+
 ## API Endpoints
 
 ### Authentication
