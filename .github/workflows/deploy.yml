@@ -12,21 +12,58 @@ on:
   workflow_dispatch:
 
 env:
-  AZURE_WEBAPP_NAME: azure-accommodation-form
   AZURE_WEBAPP_PACKAGE_PATH: './python-app'
-  PYTHON_VERSION: '3.11'
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    outputs:
+      azure-webapp-name: ${{ steps.read-config.outputs.azure-webapp-name }}
+      python-version: ${{ steps.read-config.outputs.python-version }}
+      azure-publish-profile-secret: ${{ steps.read-config.outputs.azure-publish-profile-secret }}
     
     steps:
     - uses: actions/checkout@v4
     
+    - name: Read configuration from appsettings.json
+      id: read-config
+      run: |
+        cd ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
+        # Extract deployment settings from appsettings.json
+        AZURE_WEBAPP_NAME=$(python -c "
+        import json
+        with open('appsettings.json', 'r') as f:
+            config = json.load(f)
+        print(config.get('DeploymentSettings', {}).get('AzureWebAppName', 'azure-accommodation-form'))
+        ")
+        
+        PYTHON_VERSION=$(python -c "
+        import json
+        with open('appsettings.json', 'r') as f:
+            config = json.load(f)
+        print(config.get('DeploymentSettings', {}).get('PythonVersion', '3.12'))
+        ")
+        
+        AZURE_PUBLISH_PROFILE_SECRET=$(python -c "
+        import json
+        with open('appsettings.json', 'r') as f:
+            config = json.load(f)
+        print(config.get('DeploymentSettings', {}).get('AzurePublishProfileSecret', 'AZURE_WEBAPP_PUBLISH_PROFILE'))
+        ")
+        
+        echo "azure-webapp-name=$AZURE_WEBAPP_NAME" >> $GITHUB_OUTPUT
+        echo "python-version=$PYTHON_VERSION" >> $GITHUB_OUTPUT
+        echo "azure-publish-profile-secret=$AZURE_PUBLISH_PROFILE_SECRET" >> $GITHUB_OUTPUT
+        
+        echo "📋 Configuration loaded from appsettings.json:"
+        echo "  Azure Web App Name: $AZURE_WEBAPP_NAME"
+        echo "  Python Version: $PYTHON_VERSION"
+        echo "  Publish Profile Secret: $AZURE_PUBLISH_PROFILE_SECRET"
+    
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
-        python-version: ${{ env.PYTHON_VERSION }}
+        python-version: ${{ steps.read-config.outputs.python-version }}
         
     - name: Create and start virtual environment
       run: |
@@ -84,8 +121,8 @@ jobs:
       id: deploy-to-webapp
       uses: azure/webapps-deploy@v3
       with:
-        app-name: ${{ env.AZURE_WEBAPP_NAME }}
-        publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+        app-name: ${{ needs.build.outputs.azure-webapp-name }}
+        publish-profile: ${{ secrets[needs.build.outputs.azure-publish-profile-secret] }}
         package: .
 
   security-scan:
@@ -98,7 +135,7 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
-        python-version: ${{ env.PYTHON_VERSION }}
+        python-version: ${{ needs.build.outputs.python-version }}
         
     - name: Install security tools
       run: |

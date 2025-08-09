@@ -123,6 +123,15 @@ class ServerSettings:
 
 
 @dataclass
+class DeploymentSettings:
+    """Deployment-specific settings for Azure App Service"""
+    azure_webapp_name: str = "azure-accommodation-form"
+    python_version: str = "3.12"
+    azure_publish_profile_secret: str = "AZURE_WEBAPP_PUBLISH_PROFILE"
+    environment: str = "production"
+
+
+@dataclass
 class Settings:
     """
     Main application settings class that loads configuration from appsettings.json only.
@@ -138,6 +147,7 @@ class Settings:
     diagnostics: DiagnosticsSettings
     website: WebsiteSettings
     server_settings: ServerSettings
+    deployment_settings: DeploymentSettings
     
     # Properties for backward compatibility
     @property
@@ -538,6 +548,15 @@ def create_settings_from_config(config_data: Dict[str, Any]) -> Settings:
         ssl_certfile=server_data.get("SslCertfile")
     )
     
+    # Deployment settings
+    deploy_data = config_data.get("DeploymentSettings", {})
+    deployment_settings = DeploymentSettings(
+        azure_webapp_name=deploy_data.get("AzureWebAppName", "azure-accommodation-form"),
+        python_version=deploy_data.get("PythonVersion", "3.12"),
+        azure_publish_profile_secret=deploy_data.get("AzurePublishProfileSecret", "AZURE_WEBAPP_PUBLISH_PROFILE"),
+        environment=deploy_data.get("Environment", "production")
+    )
+    
     return Settings(
         logging=logging_settings,
         email_settings=email_settings,
@@ -546,7 +565,8 @@ def create_settings_from_config(config_data: Dict[str, Any]) -> Settings:
         application_insights=application_insights,
         diagnostics=diagnostics,
         website=website,
-        server_settings=server_settings
+        server_settings=server_settings,
+        deployment_settings=deployment_settings
     )
 
 
