@@ -1,0 +1,260 @@
+name: Build Deployment Package
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+env:
+  DEPLOYMENT_PACKAGE_DIR: 'deployment_package'
+  
+jobs:
+  build-deployment-package:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Setup .NET 8
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+        
+    - name: Setup Python 3.12
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+        
+    - name: Create deployment package directory
+      run: |
+        mkdir -p ${{ env.DEPLOYMENT_PACKAGE_DIR }}
+        echo "📦 Created deployment package directory: ${{ env.DEPLOYMENT_PACKAGE_DIR }}"
+        
+    - name: Build Blazor application for production
+      run: |
+        echo "🔨 Building Blazor application..."
+        cd BlazorApp
+        dotnet restore
+        dotnet publish --configuration Release --output ../temp_blazor_build --no-restore
+        echo "✅ Blazor application built successfully"
+        
+    - name: Copy Blazor application to deployment package
+      run: |
+        echo "📁 Copying Blazor application to deployment package..."
+        mkdir -p ${{ env.DEPLOYMENT_PACKAGE_DIR }}/blazor-app
+        cp -r temp_blazor_build/* ${{ env.DEPLOYMENT_PACKAGE_DIR }}/blazor-app/
+        
+        # Create example configuration file without secrets
+        cp BlazorApp/appsettings.Example.json ${{ env.DEPLOYMENT_PACKAGE_DIR }}/blazor-app/appsettings.Production.json
+        
+        echo "✅ Blazor application copied to deployment package"
+        
+    - name: Prepare Python application for deployment
+      run: |
+        echo "🐍 Preparing Python application..."
+        mkdir -p ${{ env.DEPLOYMENT_PACKAGE_DIR }}/python-app
+        
+        # Copy Python application files (excluding virtual environments and cache)
+        cp -r python-app/* ${{ env.DEPLOYMENT_PACKAGE_DIR }}/python-app/
+        
+        # Remove development files and cache
+        find ${{ env.DEPLOYMENT_PACKAGE_DIR }}/python-app -name "__pycache__" -type d -exec rm -rf {} + || true
+        find ${{ env.DEPLOYMENT_PACKAGE_DIR }}/python-app -name "*.pyc" -delete || true
+        rm -rf ${{ env.DEPLOYMENT_PACKAGE_DIR }}/python-app/venv || true
+        rm -rf ${{ env.DEPLOYMENT_PACKAGE_DIR }}/python-app/.venv || true
+        rm -f ${{ env.DEPLOYMENT_PACKAGE_DIR }}/python-app/.env || true
+        
+        # Create example configuration file without secrets
+        if [ -f python-app/appsettings.example.json ]; then
+          cp python-app/appsettings.example.json ${{ env.DEPLOYMENT_PACKAGE_DIR }}/python-app/appsettings.production.json
+        fi
+        
+        echo "✅ Python application prepared for deployment"
+        
+    - name: Create deployment configuration templates
+      run: |
+        echo "⚙️ Creating deployment configuration templates..."
+        
+        # Create environment variables template for Blazor
+        cat > ${{ env.DEPLOYMENT_PACKAGE_DIR }}/blazor-app/environment-variables.template << 'EOF'
+        # Azure Blob Storage Configuration
+        BlobStorageSettings__ConnectionString=DefaultEndpointsProtocol=https;AccountName=YOUR_STORAGE_ACCOUNT;AccountKey=YOUR_STORAGE_KEY;EndpointSuffix=core.windows.net
+        BlobStorageSettings__ContainerName=form-submissions
+        
+        # Email Configuration
+        EmailSettings__SmtpServer=smtp.gmail.com
+        EmailSettings__SmtpPort=587
+        EmailSettings__SmtpUsername=YOUR_EMAIL@gmail.com
+        EmailSettings__SmtpPassword=YOUR_APP_PASSWORD
+        EmailSettings__UseSsl=true
+        EmailSettings__FromEmail=noreply@yourdomain.com
+        EmailSettings__FromName=Azure Accommodation Form
+        EmailSettings__CompanyEmail=admin@yourdomain.com
+        
+        # Database Configuration (SQL Server for production)
+        ConnectionStrings__DefaultConnection=Server=YOUR_DB_SERVER.database.windows.net;Database=YOUR_DB_NAME;User Id=YOUR_DB_USER;Password=YOUR_DB_PASSWORD;Encrypt=True;TrustServerCertificate=False;
+        EOF
+        
+        # Create environment variables template for Python
+        cat > ${{ env.DEPLOYMENT_PACKAGE_DIR }}/python-app/.env.template << 'EOF'
+        # Azure Configuration
+        AZURE_STORAGE_CONNECTION_STRING=DefaultEndpointsProtocol=https;AccountName=YOUR_STORAGE_ACCOUNT;AccountKey=YOUR_STORAGE_KEY;EndpointSuffix=core.windows.net
+        AZURE_COMMUNICATION_CONNECTION_STRING=endpoint=https://YOUR_COMMUNICATION_SERVICE.communication.azure.com/;accesskey=YOUR_ACCESS_KEY
+        
+        # Email Configuration
+        SMTP_SERVER=smtp.gmail.com
+        SMTP_PORT=587
+        SMTP_USERNAME=YOUR_EMAIL@gmail.com
+        SMTP_PASSWORD=YOUR_APP_PASSWORD
+        FROM_EMAIL=noreply@yourdomain.com
+        COMPANY_EMAIL=admin@yourdomain.com
+        
+        # Application Configuration
+        SECRET_KEY=your-secret-key-here
+        DEBUG=False
+        ENVIRONMENT=production
+        EOF
+        
+        echo "✅ Configuration templates created"
+        
+    - name: Create startup scripts
+      run: |
+        echo "🚀 Creating startup scripts..."
+        
+        # Create startup script for Blazor
+        cat > ${{ env.DEPLOYMENT_PACKAGE_DIR }}/blazor-app/startup.sh << 'EOF'
+        #!/bin/bash
+        echo "Starting Blazor application..."
+        
+        # Set environment variables from Azure App Service Configuration
+        export ASPNETCORE_ENVIRONMENT=Production
+        export ASPNETCORE_URLS=http://0.0.0.0:8080
+        
+        # Start the application
+        dotnet BlazorApp.dll
+        EOF
+        chmod +x ${{ env.DEPLOYMENT_PACKAGE_DIR }}/blazor-app/startup.sh
+        
+        # Create startup script for Python
+        cat > ${{ env.DEPLOYMENT_PACKAGE_DIR }}/python-app/startup.sh << 'EOF'
+        #!/bin/bash
+        echo "Starting Python application..."
+        
+        # Install dependencies
+        pip install -r requirements.txt
+        
+        # Start the application with Gunicorn
+        gunicorn main:app --bind 0.0.0.0:8000 --workers 4 --timeout 120
+        EOF
+        chmod +x ${{ env.DEPLOYMENT_PACKAGE_DIR }}/python-app/startup.sh
+        
+        echo "✅ Startup scripts created"
+        
+    - name: Create deployment documentation
+      run: |
+        echo "📚 Creating deployment documentation..."
+        
+        # Create README for the deployment package
+        cat > ${{ env.DEPLOYMENT_PACKAGE_DIR }}/README.md << 'EOF'
+        # Azure Accommodation Form - Deployment Package
+        
+        This package contains both the Blazor (.NET 8) and Python (FastAPI) implementations of the Azure Accommodation Form application.
+        
+        ## Package Contents
+        
+        - `blazor-app/` - .NET 8 Blazor Server application (recommended)
+        - `python-app/` - Python FastAPI application (alternative)
+        - `DEPLOYMENT.md` - Detailed deployment instructions
+        
+        ## Quick Start
+        
+        1. Choose either the Blazor or Python implementation
+        2. Follow the instructions in `DEPLOYMENT.md`
+        3. Configure environment variables using the provided templates
+        4. Deploy to Azure Web App
+        
+        ## Configuration
+        
+        Both applications require:
+        - Azure Blob Storage for file storage
+        - SMTP email configuration for notifications
+        - Environment variables for secrets (see templates)
+        
+        See `DEPLOYMENT.md` for detailed setup instructions.
+        EOF
+        
+        echo "✅ Deployment documentation created"
+        
+    - name: Clean up temporary files
+      run: |
+        echo "🧹 Cleaning up temporary files..."
+        rm -rf temp_blazor_build
+        echo "✅ Cleanup completed"
+        
+    - name: Create deployment package summary
+      run: |
+        echo "📊 Deployment Package Summary"
+        echo "================================"
+        echo "Package directory: ${{ env.DEPLOYMENT_PACKAGE_DIR }}"
+        echo ""
+        echo "Contents:"
+        find ${{ env.DEPLOYMENT_PACKAGE_DIR }} -type f | head -20
+        echo ""
+        echo "Package size:"
+        du -sh ${{ env.DEPLOYMENT_PACKAGE_DIR }}
+        echo ""
+        echo "Blazor app files:"
+        find ${{ env.DEPLOYMENT_PACKAGE_DIR }}/blazor-app -name "*.dll" -o -name "*.exe" | wc -l
+        echo "Python app files:"
+        find ${{ env.DEPLOYMENT_PACKAGE_DIR }}/python-app -name "*.py" | wc -l
+        
+    - name: Create deployment ZIP file
+      run: |
+        echo "📦 Creating deployment ZIP file..."
+        cd ${{ env.DEPLOYMENT_PACKAGE_DIR }}
+        zip -r ../deployment_package.zip . -x "*.git*" "*.DS_Store*"
+        cd ..
+        
+        echo "✅ Deployment ZIP created: deployment_package.zip"
+        echo "ZIP file size: $(du -sh deployment_package.zip)"
+        
+    - name: Upload deployment package artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: azure-accommodation-form-deployment-package
+        path: |
+          deployment_package.zip
+          ${{ env.DEPLOYMENT_PACKAGE_DIR }}/
+        retention-days: 30
+        
+    - name: Upload deployment ZIP only
+      uses: actions/upload-artifact@v4
+      with:
+        name: deployment-package-zip
+        path: deployment_package.zip
+        retention-days: 90
+        
+    - name: Show deployment instructions
+      run: |
+        echo ""
+        echo "🎉 Deployment package created successfully!"
+        echo "=========================================="
+        echo ""
+        echo "📥 Download the 'deployment-package-zip' artifact from this workflow run"
+        echo "📁 Extract the ZIP file to get the complete deployment package"
+        echo "📖 Follow the instructions in DEPLOYMENT.md for Azure setup"
+        echo ""
+        echo "The package contains:"
+        echo "  • Blazor (.NET 8) application - Production ready"
+        echo "  • Python (FastAPI) application - Alternative implementation" 
+        echo "  • Configuration templates without secrets"
+        echo "  • Startup scripts for Azure Web App"
+        echo "  • Complete deployment documentation"
+        echo ""
+        echo "Next steps:"
+        echo "  1. Download and extract the deployment package"
+        echo "  2. Read DEPLOYMENT.md for detailed instructions"
+        echo "  3. Set up Azure resources (Web App, Blob Storage, etc.)"
+        echo "  4. Configure environment variables"
+        echo "  5. Deploy using Azure CLI or portal"
