@@ -2,6 +2,25 @@
 
 This project provides a secure, user-friendly web application for accommodation applications, built with **Blazor (.NET 8 LTS)**.
 
+## 📦 Quick Deployment
+
+**For clients who want to deploy the application:**
+
+```bash
+# Create a deployment package with safe configuration
+./build_deployment_package.sh
+# or
+python3 create_deployment_package.py
+```
+
+This creates `deployment_package.zip` containing:
+- ✅ Ready-to-deploy application files
+- ✅ Safe configuration templates (no real secrets)
+- ✅ Client-friendly setup instructions
+- ✅ Both Blazor (.NET 8) and Python implementations
+
+The package includes detailed instructions for editing configuration files and deploying to Azure.
+
 ## Project Goals
 
 - Replace paper/email form submission with a secure web app.
