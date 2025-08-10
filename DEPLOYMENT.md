@@ -4,11 +4,7 @@ This guide provides step-by-step instructions for deploying the Azure Accommodat
 
 ## Overview
 
-The application is available in two implementations:
-- **Blazor (.NET 8)** - Recommended server-side implementation
-- **Python (FastAPI)** - Alternative implementation
-
-Both provide identical functionality for processing accommodation application forms with PDF generation, email notifications, and Azure Blob Storage integration.
+The application is built with **Python (FastAPI)** and provides functionality for processing accommodation application forms with PDF generation, email notifications, and Azure Blob Storage integration.
 
 ## Prerequisites
 
@@ -16,38 +12,18 @@ Before deployment, ensure you have:
 
 1. **Azure Subscription** with appropriate permissions
 2. **Azure CLI** installed and configured
-3. **Deployment package** downloaded from GitHub Actions artifacts
-4. **Email account** for SMTP notifications (Gmail, Outlook, etc.)
+3. **Email account** for SMTP notifications (Gmail, Outlook, etc.)
 
-## Step 1: Download and Extract Deployment Package
+## Step 1: Clone Repository
 
-1. Navigate to the GitHub repository's Actions tab
-2. Find the latest "Build Deployment Package" workflow run
-3. Download the `deployment-package-zip` artifact
-4. Extract the ZIP file to a local directory
+Clone the repository to get the Python application:
 
-The package contains:
-```
-deployment_package/
-├── blazor-app/              # .NET 8 Blazor application
-├── python-app/              # Python FastAPI application  
-├── README.md                # Package overview
-└── DEPLOYMENT.md           # This file
+```bash
+git clone https://github.com/orkinosai-org/azure-accommodation-form.git
+cd azure-accommodation-form/python-app
 ```
 
-## Step 2: Choose Implementation
-
-### Option A: Blazor (.NET 8) - Recommended
-
-**Advantages:**
-- Server-side rendering for better performance
-- Built-in validation with C# models
-- Type-safe development
-- Excellent Azure integration
-
-**Requirements:**
-- Azure Web App with .NET 8 runtime
-- Windows or Linux hosting plan
+## Step 2: Python FastAPI Implementation
 
 ### Option B: Python (FastAPI) - Alternative
 

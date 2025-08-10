@@ -1,6 +1,0 @@
-# Test build artifacts
-Tests/bin/
-Tests/obj/
-
-# Test output files
-/tmp/audit_trail_test/

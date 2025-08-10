@@ -6,7 +6,7 @@
 ## Current Status
 ✅ **Azure Web App is DEPLOYED and ACCESSIBLE**
 
-The application is currently running a Blazor/.NET frontend. When the Python FastAPI deployment completes, it will be replaced with the Python application.
+The application is currently running the Python FastAPI backend.
 
 ## Configuration Summary
 The deployment uses configuration values from `python-app/appsettings.json`:
