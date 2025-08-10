@@ -1,6 +1,6 @@
 # Azure Accommodation Application Form
 
-This project provides a secure, user-friendly web application for accommodation applications, built with **Blazor (.NET 8 LTS)**.
+This project provides a secure, user-friendly web application for accommodation applications, built with **Python (FastAPI)**.
 
 ## Project Goals
 
@@ -11,49 +11,45 @@ This project provides a secure, user-friendly web application for accommodation 
 
 ## Implementation
 
-### Blazor Server (.NET 8 LTS)
-Modern server-side implementation with interactive components and **full backend API**.
+### Python FastAPI Backend
+Modern, high-performance Python web framework with automatic API documentation.
 
 **Features:**
-- Server-side rendering for better performance and SEO
-- Interactive server components via SignalR
-- Built-in validation with C# models
-- Type-safe development with .NET
+- Fast, modern Python web framework
+- Automatic API documentation with OpenAPI/Swagger
+- Built-in validation with Pydantic models
 - **Complete backend API for form processing**
-- **PDF generation using QuestPDF**
-- **SMTP email integration with MailKit**
+- **PDF generation using ReportLab**
+- **SMTP email integration**
 - **Azure Blob Storage integration**
 - Ready for Azure App Service deployment
 
 **Setup:**
 ```bash
-cd BlazorApp
-dotnet restore
-dotnet build  
-dotnet run
+cd python-app
+pip install -r requirements.txt
+python main.py
 ```
-The app will be available at [http://localhost:5260](http://localhost:5260)
+The app will be available at [http://localhost:8000](http://localhost:8000)
 
-📖 See [BlazorApp/MIGRATION.md](BlazorApp/MIGRATION.md) for implementation details.
+📖 See [python-app/README.md](python-app/README.md) for implementation details.
 
 ## Backend API
 
-The Blazor implementation includes a complete backend API that processes form submissions by:
+The Python implementation includes a complete backend API that processes form submissions by:
 
 1. **Receiving form data** via RESTful API endpoints
-2. **Generating PDF** from submitted form data using QuestPDF
+2. **Generating PDF** from submitted form data using ReportLab
 3. **Sending PDF via SMTP email** to both the user and admin
 4. **Saving PDF to Azure Blob Storage** for archival
 5. **Logging all operations** with comprehensive error handling
 
 ### API Endpoints
 
-- `POST /api/form/initialize` - Initialize a new form session
-- `POST /api/form/send-verification` - Send email verification token
-- `POST /api/form/verify-email` - Verify email using token
-- `POST /api/form/submit` - Submit form (requires email verification)
-- `POST /api/form/submit-direct` - Submit form directly (no email verification required)
-- `GET /api/form/{submissionId}/status` - Get submission status
+- `POST /submit-form` - Submit form directly
+- `GET /health` - Health check endpoint
+- `GET /docs` - Interactive API documentation (Swagger UI)
+- `GET /redoc` - Alternative API documentation
 
 ### Configuration
 
@@ -87,28 +83,27 @@ The backend can be configured via `appsettings.json` or environment variables:
 
 #### Environment Variables
 All settings can be overridden using environment variables:
-- `EmailSettings__SmtpServer`
-- `EmailSettings__SmtpUsername`
-- `EmailSettings__SmtpPassword`
-- `EmailSettings__CompanyEmail`
-- `BlobStorageSettings__ConnectionString`
-- `BlobStorageSettings__ContainerName`
+- `SMTP_SERVER`
+- `SMTP_USERNAME`
+- `SMTP_PASSWORD`
+- `COMPANY_EMAIL`
+- `AZURE_STORAGE_CONNECTION_STRING`
 
 ### Usage Example
 
 **Direct Form Submission:**
 ```bash
-curl -X POST https://your-app.azurewebsites.net/api/form/submit-direct \
+curl -X POST https://your-app.azurewebsites.net/submit-form \
   -H "Content-Type: application/json" \
   -d '{
-    "tenantDetails": {
-      "fullName": "John Doe",
+    "tenant_details": {
+      "full_name": "John Doe",
       "email": "john@example.com",
       "telephone": "+1234567890",
-      "dateOfBirth": "1990-01-01"
+      "date_of_birth": "1990-01-01"
     },
-    "bankDetails": { ... },
-    "addressHistory": [ ... ],
+    "bank_details": { ... },
+    "address_history": [ ... ],
     ...
   }'
 ```
@@ -116,25 +111,23 @@ curl -X POST https://your-app.azurewebsites.net/api/form/submit-direct \
 **Response:**
 ```json
 {
-  "submissionId": "12345678-1234-1234-1234-123456789012",
-  "status": "Completed",
+  "submission_id": "12345678-1234-1234-1234-123456789012",
+  "status": "success",
   "message": "Form submitted and processed successfully",
-  "success": true,
   "timestamp": "2024-01-15T10:30:00Z"
 }
 ```
 
 ## Technology Stack
 
-### Blazor Implementation
-- **Frontend:** Blazor Server with Interactive Server Components
-- **Backend:** .NET 8, C# models with validation attributes  
-- **PDF Generation:** QuestPDF
-- **Email:** MailKit/MimeKit for SMTP
+### Python Implementation
+- **Backend:** FastAPI with Pydantic models for validation
+- **PDF Generation:** ReportLab
+- **Email:** SMTP integration
 - **Storage:** Azure Blob Storage
-- **Database:** Entity Framework Core (SQLite dev, SQL Server prod)
+- **Database:** JSON-based storage with Azure integration
 - **Hosting:** Azure App Service
-- **Real-time:** SignalR for interactive features
+- **Documentation:** Automatic OpenAPI/Swagger generation
 
 ## Form Structure
 
@@ -162,33 +155,26 @@ The application provides identical functionality across all sections:
 
 ## Available Scripts
 
-### Blazor (.NET 8)
-- `dotnet run` - Start the development server
-- `dotnet build` - Build the application
-- `dotnet test` - Run tests (if any)
-- `dotnet publish` - Build for production deployment
+### Python (FastAPI)
+- `python main.py` - Start the development server
+- `uvicorn main:app --reload` - Start with auto-reload for development
+- `pytest tests/` - Run tests
+- `gunicorn main:app` - Production server with Gunicorn
 
 ## Project Structure
 
 ```
 ./
-├── BlazorApp/                    # .NET 8 Blazor implementation
-│   ├── Components/
-│   │   ├── Pages/Home.razor     # Main form component
-│   │   └── Layout/              # Layout components
-│   ├── Controllers/
-│   │   └── FormController.cs    # API endpoints
-│   ├── Services/
-│   │   ├── FormService.cs       # Form processing logic
-│   │   ├── PdfGenerationService.cs # QuestPDF integration
-│   │   ├── EmailService.cs      # SMTP email service
-│   │   └── BlobStorageService.cs # Azure Blob Storage
-│   ├── Models/FormModels.cs     # C# form models with validation
-│   ├── Data/ApplicationDbContext.cs # Entity Framework context
-│   ├── Program.cs               # Application entry point
-│   ├── appsettings.json         # Development configuration
-│   ├── appsettings.Example.json # Production configuration example
-│   └── MIGRATION.md             # Migration documentation
+├── python-app/                   # Python FastAPI implementation
+│   ├── app/
+│   │   ├── models/              # Pydantic models
+│   │   ├── services/            # Business logic services
+│   │   └── utils/               # Utility functions
+│   ├── tests/                   # Test files
+│   ├── main.py                  # Application entry point
+│   ├── requirements.txt         # Python dependencies
+│   ├── appsettings.json         # Configuration
+│   └── README.md               # Python app documentation
 ├── docs/                        # Documentation
 │   ├── requirements.md          # Project requirements
 │   └── form_fields.md          # Form structure details
@@ -197,23 +183,22 @@ The application provides identical functionality across all sections:
 
 ### GitHub Actions Workflows
 
-- **`build-deployment-package.yml`** - Automated deployment package creation
-- **`deploy.yml`** - Python app deployment (existing)  
-- **`main_testapp.yml`** - Test app deployment (existing)
+- **`deploy.yml`** - Python app deployment
+- **`main_testapp.yml`** - Test app deployment
 
 ## Backend Integration
 
-The form generates JSON data that is processed by the Blazor backend:
+The form generates JSON data that is processed by the Python backend:
 
 ```json
 {
-  "TenantDetails": {
-    "FullName": "...",
-    "Email": "...",
+  "tenant_details": {
+    "full_name": "...",
+    "email": "...",
     // ... other fields
   },
-  "BankDetails": { ... },
-  "AddressHistory": [ ... ],
+  "bank_details": { ... },
+  "address_history": [ ... ],
   // ... other sections
 }
 ```
@@ -222,29 +207,12 @@ The form generates JSON data that is processed by the Blazor backend:
 
 - See [docs/form_fields.md](docs/form_fields.md) for the complete form structure
 - The form schema is defined in [form_schema.json](form_schema.json)
-- For Blazor-specific details, see [BlazorApp/MIGRATION.md](BlazorApp/MIGRATION.md)
+- For Python-specific details, see [python-app/README.md](python-app/README.md)
 - **No database dependency for form data** - submissions are stored as JSON and archived as PDFs in Azure Blob Storage
-- Entity Framework is used only for tracking submission status and logs
 
 ## Deployment
 
-Deploy to Azure App Service with .NET 8 runtime. The application includes SignalR support for interactive features.
-
-### Automated Deployment Package Creation
-
-The repository includes a GitHub Actions workflow that automatically creates deployment-ready packages on each push to main:
-
-1. **Triggers automatically** on push to main branch
-2. **Builds both applications** (Blazor and Python) for production
-3. **Creates deployment package** with configuration templates
-4. **Generates ZIP file** for easy client transfer
-5. **Available as artifact** from GitHub Actions runs
-
-**To use the deployment package:**
-1. Navigate to Actions tab in GitHub
-2. Find latest "Build Deployment Package" workflow run
-3. Download the `deployment-package-zip` artifact
-4. Follow instructions in `DEPLOYMENT.md` for Azure setup
+Deploy to Azure App Service with Python 3.12 runtime. The application includes comprehensive logging and error handling.
 
 ### Manual Deployment
 
@@ -260,7 +228,6 @@ The repository includes a GitHub Actions workflow that automatically creates dep
 
 - **No sensitive data stored in database** - only submission metadata and logs
 - **PDF files encrypted in transit and at rest** in Azure Blob Storage
-- **Email verification** ensures form submissions are from valid email addresses
 - **Comprehensive logging** for audit trails
 - **Configuration via environment variables** for secure secret management
 

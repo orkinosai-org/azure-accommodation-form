@@ -14,20 +14,22 @@ Debug logging has been added to all key services to provide visibility into:
 
 All debug output is visible in:
 - **Console output** (for immediate visibility during development)
-- **ILogger output** (appears in VS2022 Output window and structured logs)
-- **Browser console** (via JavaScript interop for real-time debugging)
-- **Local PDF files** (saved in `KitDocuments_Debug` directory)
+- **Application logs** (appears in console and structured logs)
+- **Local PDF files** (saved in `debug_output` directory)
 
-## New: Browser Console Integration
+## Debug Logging
 
-A new `DebugConsoleHelper` service has been implemented that uses JavaScript interop to send debug logs directly to the browser console. This provides real-time visibility of debug information during form submissions and API calls.
+Debug logging has been added to all key services to provide visibility into:
+- Configuration values used for email and blob storage
+- Email message details before sending
+- Blob upload details before uploading
+- Local PDF copies for debugging
 
-### DebugConsoleHelper Features
-- **LogAsync()** - Send general debug messages to browser console
-- **LogInfoAsync()** - Send info-level messages (blue in most browsers)
-- **LogWarningAsync()** - Send warning messages (yellow in most browsers)  
-- **LogErrorAsync()** - Send error messages (red in most browsers)
-- **LogGroupAsync()** - Start a collapsible group in browser console
+### Debug Logging Features
+- **Log()** - Send general debug messages to console
+- **LogInfo()** - Send info-level messages
+- **LogWarning()** - Send warning messages  
+- **LogError()** - Send error messages
 - **LogGroupEndAsync()** - End a console group
 
 All browser console messages are prefixed with `[DEBUG timestamp]` for easy identification.
