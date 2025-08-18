@@ -24,15 +24,23 @@ def get_current_ip(request: Request) -> str:
     forwarded_for = request.headers.get("X-Forwarded-For")
     if forwarded_for:
         # Take the first IP in the chain
-        return forwarded_for.split(",")[0].strip()
+        ip = forwarded_for.split(",")[0].strip()
+        # Remove port number if present
+        return ip.split(":")[0] if ":" in ip and not "::" in ip else ip
     
     # Check for real IP header
     real_ip = request.headers.get("X-Real-IP")
     if real_ip:
-        return real_ip
+        # Remove port number if present
+        return real_ip.split(":")[0] if ":" in real_ip and not "::" in real_ip else real_ip
     
     # Fallback to client host
-    return request.client.host if request.client else "unknown"
+    client_host = request.client.host if request.client else "unknown"
+    if client_host != "unknown":
+        # Remove port number if present, but preserve IPv6 addresses
+        return client_host.split(":")[0] if ":" in client_host and not "::" in client_host else client_host
+    
+    return client_host
 
 def generate_mfa_token() -> str:
     """Generate a random MFA token"""

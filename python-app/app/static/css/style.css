@@ -365,6 +365,19 @@ header {
     margin-bottom: 1.5rem;
     border: 1px solid #e9ecef;
     box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Form section error state */
+.form-section.has-error {
+    border: 2px solid var(--danger-color);
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.1);
+    background-color: #fff5f5;
+}
+
+.form-section.has-error .section-title {
+    color: var(--danger-color);
+    border-bottom-color: var(--danger-color);
 }
 
 .section-title {
@@ -373,6 +386,7 @@ header {
     padding-bottom: 0.5rem;
     border-bottom: 2px solid var(--primary-color);
     font-weight: 600;
+    transition: color 0.3s ease, border-bottom-color 0.3s ease;
 }
 
 /* Form validation states */
