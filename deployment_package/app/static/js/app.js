@@ -1050,11 +1050,11 @@ class AzureAccommodationForm {
         let isValid = field.checkValidity();
         let customErrorMessage = '';
         
-        // Custom validation for specific fields
+        // Custom validation for specific fields with user-friendly messages
         if (field.id === 'ni_number' && field.value.trim()) {
             isValid = this.validateNationalInsuranceNumber(field.value.trim());
             if (!isValid) {
-                customErrorMessage = 'Please enter a valid UK National Insurance number (e.g., AB123456C)';
+                customErrorMessage = 'Please check your National Insurance number format (example: AB123456C)';
             }
         }
         
@@ -1062,7 +1062,7 @@ class AzureAccommodationForm {
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             if (!emailRegex.test(field.value.trim())) {
                 isValid = false;
-                customErrorMessage = 'Please enter a valid email address';
+                customErrorMessage = 'Please enter a valid email address like example@email.com';
             }
         }
         
@@ -1070,8 +1070,14 @@ class AzureAccommodationForm {
             const phoneRegex = /^[\+]?[0-9\s\-\(\)]{10,}$/;
             if (!phoneRegex.test(field.value.trim())) {
                 isValid = false;
-                customErrorMessage = 'Please enter a valid telephone number';
+                customErrorMessage = 'Please enter a valid phone number with at least 10 digits';
             }
+        }
+        
+        // Required field validation with user-friendly message
+        if (!field.value.trim() && field.required) {
+            isValid = false;
+            customErrorMessage = 'This information is required';
         }
         
         // Apply validation styling
@@ -1085,10 +1091,28 @@ class AzureAccommodationForm {
             this.setFieldError(field, customErrorMessage);
         }
         
+        // Update section highlighting
+        this.updateSectionValidation(field);
+        
         // Update submit button state
         this.updateSubmitButtonState();
         
         return isValid;
+    }
+    
+    updateSectionValidation(field) {
+        // Find the form section containing this field
+        const formSection = field.closest('.form-section');
+        if (!formSection) return;
+        
+        // Check if any fields in this section have validation errors
+        const invalidFields = formSection.querySelectorAll('.is-invalid');
+        
+        if (invalidFields.length > 0) {
+            formSection.classList.add('has-error');
+        } else {
+            formSection.classList.remove('has-error');
+        }
     }
     
     validateNationalInsuranceNumber(niNumber) {
@@ -1171,22 +1195,22 @@ class AzureAccommodationForm {
     
     getFieldErrorMessage(field) {
         if (!field.value.trim() && field.required) {
-            return 'This field is required';
+            return 'This information is required';
         }
         
         if (field.id === 'ni_number' && field.value.trim()) {
-            return 'Please enter a valid UK National Insurance number';
+            return 'Please check your National Insurance number format';
         }
         
         if (field.type === 'email' && field.value.trim()) {
-            return 'Please enter a valid email address';
+            return 'Please enter a valid email address like example@email.com';
         }
         
         if (field.type === 'tel' && field.value.trim()) {
-            return 'Please enter a valid telephone number';
+            return 'Please enter a valid phone number with at least 10 digits';
         }
         
-        return 'Please check this field';
+        return 'Please check this information';
     }
     
     showErrorSummary(errors) {
