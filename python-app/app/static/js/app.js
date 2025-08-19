@@ -377,8 +377,19 @@ class AzureAccommodationForm {
                     </div>
                     <div class="col-md-6">
                         <div class="mb-3">
-                            <label for="employers_name" class="form-label">Employer's Name *</label>
-                            <input type="text" class="form-control" id="employers_name" name="employers_name" required>
+                            <label class="form-label">Right to Live in UK *</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="right_to_live_in_uk" id="right_to_live_in_uk_yes" value="true" required>
+                                <label class="form-check-label" for="right_to_live_in_uk_yes">
+                                    Yes
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="right_to_live_in_uk" id="right_to_live_in_uk_no" value="false" required>
+                                <label class="form-check-label" for="right_to_live_in_uk_no">
+                                    No
+                                </label>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -415,12 +426,6 @@ class AzureAccommodationForm {
                     <div class="col-md-6">
                         <div class="mb-3">
                             <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="right_to_live_in_uk" name="right_to_live_in_uk">
-                                <label class="form-check-label" for="right_to_live_in_uk">
-                                    Right to Live in UK *
-                                </label>
-                            </div>
-                            <div class="form-check">
                                 <input class="form-check-input" type="checkbox" id="car" name="car">
                                 <label class="form-check-label" for="car">
                                     Do you have a car?
@@ -449,8 +454,8 @@ class AzureAccommodationForm {
                     </div>
                     <div class="col-md-6">
                         <div class="mb-3">
-                            <label for="bank_postcode" class="form-label">Bank Postcode *</label>
-                            <input type="text" class="form-control" id="bank_postcode" name="bank_postcode" required>
+                            <label for="bank_branch_address" class="form-label">Bank Branch Address *</label>
+                            <textarea class="form-control" id="bank_branch_address" name="bank_branch_address" rows="2" required></textarea>
                         </div>
                     </div>
                 </div>
@@ -472,7 +477,7 @@ class AzureAccommodationForm {
 
             <!-- Address History Section -->
             <div class="form-section mb-4">
-                <h4 class="section-title">3. Address History</h4>
+                <h4 class="section-title">3. Address History (Last five years)</h4>
                 <div id="address-history-container">
                     <div class="address-entry mb-3 border p-3 rounded">
                         <h6>Current Address</h6>
@@ -493,20 +498,168 @@ class AzureAccommodationForm {
                         <div class="row">
                             <div class="col-md-4">
                                 <div class="mb-3">
-                                    <label for="landlord_name_0" class="form-label">Landlord Name *</label>
+                                    <label for="landlord_name_0" class="form-label">Landlord/Agent Name *</label>
                                     <input type="text" class="form-control" id="landlord_name_0" name="landlord_name_0" required>
                                 </div>
                             </div>
                             <div class="col-md-4">
                                 <div class="mb-3">
-                                    <label for="landlord_tel_0" class="form-label">Landlord Tel *</label>
+                                    <label for="landlord_tel_0" class="form-label">Landlord/Agent Tel *</label>
                                     <input type="tel" class="form-control" id="landlord_tel_0" name="landlord_tel_0" required>
                                 </div>
                             </div>
                             <div class="col-md-4">
                                 <div class="mb-3">
-                                    <label for="landlord_email_0" class="form-label">Landlord Email *</label>
+                                    <label for="landlord_email_0" class="form-label">Landlord/Agent Email *</label>
                                     <input type="email" class="form-control" id="landlord_email_0" name="landlord_email_0" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Does landlord know you are leaving? *</label>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="landlord_knows_0" id="landlord_knows_0_yes" value="true" required>
+                                        <label class="form-check-label" for="landlord_knows_0_yes">Yes</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="landlord_knows_0" id="landlord_knows_0_no" value="false" required>
+                                        <label class="form-check-label" for="landlord_knows_0_no">No</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Will landlord give reference? *</label>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="landlord_reference_0" id="landlord_reference_0_yes" value="true" required>
+                                        <label class="form-check-label" for="landlord_reference_0_yes">Yes</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="landlord_reference_0" id="landlord_reference_0_no" value="false" required>
+                                        <label class="form-check-label" for="landlord_reference_0_no">No</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="notice_end_date_0" class="form-label">Notice End Date</label>
+                                    <input type="date" class="form-control" id="notice_end_date_0" name="notice_end_date_0">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="reason_leaving_0" class="form-label">Reason for wanting to leave *</label>
+                                    <textarea class="form-control" id="reason_leaving_0" name="reason_leaving_0" rows="2" required></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Previous Address 1 -->
+                    <div class="address-entry mb-3 border p-3 rounded">
+                        <h6>Previous Address 1</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="address_1" class="form-label">Address</label>
+                                    <textarea class="form-control" id="address_1" name="address_1" rows="2"></textarea>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label for="from_date_1" class="form-label">From Date</label>
+                                    <input type="date" class="form-control" id="from_date_1" name="from_date_1">
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label for="to_date_1" class="form-label">To Date</label>
+                                    <input type="date" class="form-control" id="to_date_1" name="to_date_1">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="landlord_name_1" class="form-label">Landlord/Agent Name</label>
+                                    <input type="text" class="form-control" id="landlord_name_1" name="landlord_name_1">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="landlord_tel_1" class="form-label">Landlord/Agent Tel</label>
+                                    <input type="tel" class="form-control" id="landlord_tel_1" name="landlord_tel_1">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="landlord_email_1" class="form-label">Landlord/Agent Email</label>
+                                    <input type="email" class="form-control" id="landlord_email_1" name="landlord_email_1">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label for="reason_leaving_1" class="form-label">Reason for leaving</label>
+                                    <textarea class="form-control" id="reason_leaving_1" name="reason_leaving_1" rows="2"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Previous Address 2 -->
+                    <div class="address-entry mb-3 border p-3 rounded">
+                        <h6>Previous Address 2</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="address_2" class="form-label">Address</label>
+                                    <textarea class="form-control" id="address_2" name="address_2" rows="2"></textarea>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label for="from_date_2" class="form-label">From Date</label>
+                                    <input type="date" class="form-control" id="from_date_2" name="from_date_2">
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label for="to_date_2" class="form-label">To Date</label>
+                                    <input type="date" class="form-control" id="to_date_2" name="to_date_2">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="landlord_name_2" class="form-label">Landlord/Agent Name</label>
+                                    <input type="text" class="form-control" id="landlord_name_2" name="landlord_name_2">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="landlord_tel_2" class="form-label">Landlord/Agent Tel</label>
+                                    <input type="tel" class="form-control" id="landlord_tel_2" name="landlord_tel_2">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="landlord_email_2" class="form-label">Landlord/Agent Email</label>
+                                    <input type="email" class="form-control" id="landlord_email_2" name="landlord_email_2">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label for="reason_leaving_2" class="form-label">Reason for leaving</label>
+                                    <textarea class="form-control" id="reason_leaving_2" name="reason_leaving_2" rows="2"></textarea>
                                 </div>
                             </div>
                         </div>
@@ -584,6 +737,20 @@ class AzureAccommodationForm {
             <div class="form-section mb-4">
                 <h4 class="section-title">6. Employment Details</h4>
                 <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="employers_name" class="form-label">Employer's Name *</label>
+                            <input type="text" class="form-control" id="employers_name" name="employers_name" required>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="job_title" class="form-label">Job Title *</label>
+                            <input type="text" class="form-control" id="job_title" name="job_title" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
                     <div class="col-12">
                         <div class="mb-3">
                             <label for="employer_name_address" class="form-label">Employer Name & Address *</label>
@@ -592,12 +759,6 @@ class AzureAccommodationForm {
                     </div>
                 </div>
                 <div class="row">
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label for="job_title" class="form-label">Job Title *</label>
-                            <input type="text" class="form-control" id="job_title" name="job_title" required>
-                        </div>
-                    </div>
                     <div class="col-md-6">
                         <div class="mb-3">
                             <label for="manager_name" class="form-label">Manager's Name *</label>
@@ -666,114 +827,104 @@ class AzureAccommodationForm {
                 </div>
             </div>
 
-            <!-- Current Living Arrangement Section -->
-            <div class="form-section mb-4">
-                <h4 class="section-title">8. Current Living Arrangement</h4>
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label for="notice_end_date" class="form-label">Notice End Date</label>
-                            <input type="date" class="form-control" id="notice_end_date" name="notice_end_date">
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label for="reason_leaving" class="form-label">Reason for Leaving *</label>
-                            <input type="text" class="form-control" id="reason_leaving" name="reason_leaving" required>
-                        </div>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="form-check mb-3">
-                            <input class="form-check-input" type="checkbox" id="landlord_knows" name="landlord_knows">
-                            <label class="form-check-label" for="landlord_knows">
-                                Does your landlord know you are leaving? *
-                            </label>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="form-check mb-3">
-                            <input class="form-check-input" type="checkbox" id="landlord_reference" name="landlord_reference">
-                            <label class="form-check-label" for="landlord_reference">
-                                Will landlord provide a reference? *
-                            </label>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Landlord Contact Details (always visible for better UX) -->
-                <div id="landlord-contact-section" class="border p-3 rounded mt-3">
-                    <h6>Landlord Contact Details</h6>
-                    <div class="alert alert-info alert-sm">
-                        <small><i class="fas fa-info-circle me-1"></i>Please provide your current landlord's contact information.</small>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="landlord_contact_name" class="form-label">Landlord Name *</label>
-                                <input type="text" class="form-control" id="landlord_contact_name" name="landlord_contact_name" required>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="landlord_contact_tel" class="form-label">Landlord Telephone *</label>
-                                <input type="tel" class="form-control" id="landlord_contact_tel" name="landlord_contact_tel" required>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-8">
-                            <div class="mb-3">
-                                <label for="landlord_contact_address" class="form-label">Landlord Address *</label>
-                                <textarea class="form-control" id="landlord_contact_address" name="landlord_contact_address" rows="2" required></textarea>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="mb-3">
-                                <label for="landlord_contact_email" class="form-label">Landlord Email *</label>
-                                <input type="email" class="form-control" id="landlord_contact_email" name="landlord_contact_email" required>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
             <!-- Other Details Section -->
             <div class="form-section mb-4">
-                <h4 class="section-title">9. Other Details</h4>
+                <h4 class="section-title">8. Other Details</h4>
                 <div class="row">
                     <div class="col-md-6">
-                        <div class="form-check mb-3">
-                            <input class="form-check-input" type="checkbox" id="smoke" name="smoke">
-                            <label class="form-check-label" for="smoke">
-                                Do you smoke?
-                            </label>
+                        <!-- Smoking Question -->
+                        <div class="mb-3">
+                            <label class="form-label">Do you smoke? *</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="smoke" id="smoke_yes" value="true" required>
+                                <label class="form-check-label" for="smoke_yes">Yes</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="smoke" id="smoke_no" value="false" required>
+                                <label class="form-check-label" for="smoke_no">No</label>
+                            </div>
                         </div>
-                        <div class="form-check mb-3">
-                            <input class="form-check-input" type="checkbox" id="pets_has" name="pets_has">
-                            <label class="form-check-label" for="pets_has">
-                                Do you have pets?
-                            </label>
+                        <div id="smoke-details-section" style="display: none;">
+                            <div class="mb-3">
+                                <label for="smoke_details" class="form-label">Please specify</label>
+                                <textarea class="form-control" id="smoke_details" name="smoke_details" rows="2" placeholder="Please specify smoking details"></textarea>
+                            </div>
+                        </div>
+
+                        <!-- Vaping Question -->
+                        <div class="mb-3">
+                            <label class="form-label">Do you vape? *</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="vaping" id="vaping_yes" value="true" required>
+                                <label class="form-check-label" for="vaping_yes">Yes</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="vaping" id="vaping_no" value="false" required>
+                                <label class="form-check-label" for="vaping_no">No</label>
+                            </div>
+                        </div>
+                        <div id="vaping-details-section" style="display: none;">
+                            <div class="mb-3">
+                                <label for="vaping_details" class="form-label">Please specify</label>
+                                <textarea class="form-control" id="vaping_details" name="vaping_details" rows="2" placeholder="Please specify vaping details"></textarea>
+                            </div>
+                        </div>
+
+                        <!-- Pets Question -->
+                        <div class="mb-3">
+                            <label class="form-label">Do you have pets? *</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="pets_has" id="pets_has_yes" value="true" required>
+                                <label class="form-check-label" for="pets_has_yes">Yes</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="pets_has" id="pets_has_no" value="false" required>
+                                <label class="form-check-label" for="pets_has_no">No</label>
+                            </div>
                         </div>
                         <div id="pets-details-section" style="display: none;">
                             <div class="mb-3">
-                                <label for="pets_details" class="form-label">Pet Details</label>
-                                <textarea class="form-control" id="pets_details" name="pets_details" rows="2" placeholder="Please describe your pets"></textarea>
+                                <label for="pets_details" class="form-label">Pet Details *</label>
+                                <textarea class="form-control" id="pets_details" name="pets_details" rows="2" placeholder="Please describe your pets" required></textarea>
                             </div>
                         </div>
                     </div>
                     <div class="col-md-6">
-                        <div class="form-check mb-3">
-                            <input class="form-check-input" type="checkbox" id="coliving_has" name="coliving_has">
-                            <label class="form-check-label" for="coliving_has">
-                                Do you have co-living preferences?
-                            </label>
+                        <!-- Co-living Question -->
+                        <div class="mb-3">
+                            <label class="form-label">Do you have co-living preferences? *</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="coliving_has" id="coliving_has_yes" value="true" required>
+                                <label class="form-check-label" for="coliving_has_yes">Yes</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="coliving_has" id="coliving_has_no" value="false" required>
+                                <label class="form-check-label" for="coliving_has_no">No</label>
+                            </div>
                         </div>
                         <div id="coliving-details-section" style="display: none;">
                             <div class="mb-3">
-                                <label for="coliving_details" class="form-label">Co-living Details</label>
-                                <textarea class="form-control" id="coliving_details" name="coliving_details" rows="2" placeholder="Please describe your preferences"></textarea>
+                                <label for="coliving_details" class="form-label">Co-living Details *</label>
+                                <textarea class="form-control" id="coliving_details" name="coliving_details" rows="2" placeholder="Please describe your preferences" required></textarea>
+                            </div>
+                        </div>
+
+                        <!-- Medical condition question -->
+                        <div class="mb-3">
+                            <label class="form-label">Do you have any medical conditions other residents need to know about? *</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="medical_condition_has" id="medical_condition_has_yes" value="true" required>
+                                <label class="form-check-label" for="medical_condition_has_yes">Yes</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="medical_condition_has" id="medical_condition_has_no" value="false" required>
+                                <label class="form-check-label" for="medical_condition_has_no">No</label>
+                            </div>
+                        </div>
+                        <div id="medical-condition-details-section" style="display: none;">
+                            <div class="mb-3">
+                                <label for="medical_condition_details" class="form-label">Please specify *</label>
+                                <textarea class="form-control" id="medical_condition_details" name="medical_condition_details" rows="2" placeholder="Please provide details" required></textarea>
                             </div>
                         </div>
                     </div>
@@ -782,46 +933,76 @@ class AzureAccommodationForm {
 
             <!-- Occupation Agreement Section -->
             <div class="form-section mb-4">
-                <h4 class="section-title">10. Occupation Agreement</h4>
+                <h4 class="section-title">9. Occupation Agreement</h4>
                 <div class="alert alert-info">
                     <i class="fas fa-info-circle me-2"></i>
                     Please read and agree to the following terms and conditions:
                 </div>
-                <div class="form-check mb-3">
-                    <input class="form-check-input" type="checkbox" id="single_occupancy_agree" name="single_occupancy_agree" required>
-                    <label class="form-check-label" for="single_occupancy_agree">
-                        I agree to single occupancy terms *
-                    </label>
+                
+                <div class="mb-3">
+                    <label class="form-label">Do you agree to single occupancy terms? *</label>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="single_occupancy_agree" id="single_occupancy_agree_yes" value="true" required>
+                        <label class="form-check-label" for="single_occupancy_agree_yes">Yes</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="single_occupancy_agree" id="single_occupancy_agree_no" value="false" required>
+                        <label class="form-check-label" for="single_occupancy_agree_no">No</label>
+                    </div>
                 </div>
-                <div class="form-check mb-3">
-                    <input class="form-check-input" type="checkbox" id="hmo_terms_agree" name="hmo_terms_agree" required>
-                    <label class="form-check-label" for="hmo_terms_agree">
-                        I agree to HMO terms and conditions *
-                    </label>
+                
+                <div class="mb-3">
+                    <label class="form-label">Do you agree to HMO terms and conditions? *</label>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="hmo_terms_agree" id="hmo_terms_agree_yes" value="true" required>
+                        <label class="form-check-label" for="hmo_terms_agree_yes">Yes</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="hmo_terms_agree" id="hmo_terms_agree_no" value="false" required>
+                        <label class="form-check-label" for="hmo_terms_agree_no">No</label>
+                    </div>
                 </div>
-                <div class="form-check mb-3">
-                    <input class="form-check-input" type="checkbox" id="no_unlisted_occupants" name="no_unlisted_occupants" required>
-                    <label class="form-check-label" for="no_unlisted_occupants">
-                        I will not allow unlisted occupants *
-                    </label>
+                
+                <div class="mb-3">
+                    <label class="form-label">Do you agree not to allow unlisted occupants? *</label>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="no_unlisted_occupants" id="no_unlisted_occupants_yes" value="true" required>
+                        <label class="form-check-label" for="no_unlisted_occupants_yes">Yes</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="no_unlisted_occupants" id="no_unlisted_occupants_no" value="false" required>
+                        <label class="form-check-label" for="no_unlisted_occupants_no">No</label>
+                    </div>
                 </div>
-                <div class="form-check mb-3">
-                    <input class="form-check-input" type="checkbox" id="no_smoking_agree" name="no_smoking_agree" required>
-                    <label class="form-check-label" for="no_smoking_agree">
-                        I agree to the no smoking policy *
-                    </label>
+                
+                <div class="mb-3">
+                    <label class="form-label">Do you agree to the no smoking policy? *</label>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="no_smoking_agree" id="no_smoking_agree_yes" value="true" required>
+                        <label class="form-check-label" for="no_smoking_agree_yes">Yes</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="no_smoking_agree" id="no_smoking_agree_no" value="false" required>
+                        <label class="form-check-label" for="no_smoking_agree_no">No</label>
+                    </div>
                 </div>
-                <div class="form-check mb-3">
-                    <input class="form-check-input" type="checkbox" id="kitchen_cooking_only" name="kitchen_cooking_only" required>
-                    <label class="form-check-label" for="kitchen_cooking_only">
-                        I agree to use the kitchen for cooking only *
-                    </label>
+                
+                <div class="mb-3">
+                    <label class="form-label">Do you agree to use the kitchen for cooking only? *</label>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="kitchen_cooking_only" id="kitchen_cooking_only_yes" value="true" required>
+                        <label class="form-check-label" for="kitchen_cooking_only_yes">Yes</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="kitchen_cooking_only" id="kitchen_cooking_only_no" value="false" required>
+                        <label class="form-check-label" for="kitchen_cooking_only_no">No</label>
+                    </div>
                 </div>
             </div>
 
             <!-- Consent & Declaration Section -->
             <div class="form-section mb-4">
-                <h4 class="section-title">11. Consent & Declaration</h4>
+                <h4 class="section-title">10. Consent & Declaration</h4>
                 <div class="alert alert-warning">
                     <i class="fas fa-exclamation-triangle me-2"></i>
                     Please read carefully and complete all declaration fields.
@@ -889,10 +1070,16 @@ class AzureAccommodationForm {
                         I certify I have no debt to previous landlords *
                     </label>
                 </div>
-                <div class="form-check mb-4">
+                <div class="form-check mb-2">
                     <input class="form-check-input" type="checkbox" id="certify_no_abuse" name="certify_no_abuse" required>
                     <label class="form-check-label" for="certify_no_abuse">
                         I certify I have no history of property abuse *
+                    </label>
+                </div>
+                <div class="form-check mb-4">
+                    <input class="form-check-input" type="checkbox" id="certify_no_alcohol_substance_abuse" name="certify_no_alcohol_substance_abuse" required>
+                    <label class="form-check-label" for="certify_no_alcohol_substance_abuse">
+                        I certify I have no history of alcohol or substance abuse *
                     </label>
                 </div>
 
@@ -955,47 +1142,116 @@ class AzureAccommodationForm {
             declarationDateField.value = today;
         }
         
-        // Conditional field handlers
+        // Conditional field handlers for radio button groups
         
-        // Show/hide pets details based on pets checkbox
-        const petsCheckbox = document.getElementById('pets_has');
+        // Show/hide pets details based on pets radio buttons
+        const petsRadios = document.querySelectorAll('input[name="pets_has"]');
         const petsDetailsSection = document.getElementById('pets-details-section');
         
-        if (petsCheckbox && petsDetailsSection) {
-            petsCheckbox.addEventListener('change', function() {
-                petsDetailsSection.style.display = this.checked ? 'block' : 'none';
-                const petsDetailsField = document.getElementById('pets_details');
-                if (petsDetailsField) {
-                    if (this.checked) {
-                        petsDetailsField.setAttribute('required', 'required');
-                    } else {
-                        petsDetailsField.removeAttribute('required');
-                        petsDetailsField.value = '';
+        petsRadios.forEach(radio => {
+            radio.addEventListener('change', function() {
+                const showDetails = document.querySelector('input[name="pets_has"]:checked')?.value === 'true';
+                if (petsDetailsSection) {
+                    petsDetailsSection.style.display = showDetails ? 'block' : 'none';
+                    const petsDetailsField = document.getElementById('pets_details');
+                    if (petsDetailsField) {
+                        if (showDetails) {
+                            petsDetailsField.setAttribute('required', 'required');
+                        } else {
+                            petsDetailsField.removeAttribute('required');
+                            petsDetailsField.value = '';
+                        }
                     }
                 }
                 this.updateSubmitButtonState();
             }.bind(this));
-        }
+        });
         
-        // Show/hide coliving details based on coliving checkbox
-        const colivingCheckbox = document.getElementById('coliving_has');
+        // Show/hide smoking details based on smoking radio buttons
+        const smokingRadios = document.querySelectorAll('input[name="smoke"]');
+        const smokingDetailsSection = document.getElementById('smoke-details-section');
+        
+        smokingRadios.forEach(radio => {
+            radio.addEventListener('change', function() {
+                const showDetails = document.querySelector('input[name="smoke"]:checked')?.value === 'true';
+                if (smokingDetailsSection) {
+                    smokingDetailsSection.style.display = showDetails ? 'block' : 'none';
+                    const smokingDetailsField = document.getElementById('smoke_details');
+                    if (smokingDetailsField) {
+                        if (!showDetails) {
+                            smokingDetailsField.value = '';
+                        }
+                    }
+                }
+                this.updateSubmitButtonState();
+            }.bind(this));
+        });
+        
+        // Show/hide vaping details based on vaping radio buttons
+        const vapingRadios = document.querySelectorAll('input[name="vaping"]');
+        const vapingDetailsSection = document.getElementById('vaping-details-section');
+        
+        vapingRadios.forEach(radio => {
+            radio.addEventListener('change', function() {
+                const showDetails = document.querySelector('input[name="vaping"]:checked')?.value === 'true';
+                if (vapingDetailsSection) {
+                    vapingDetailsSection.style.display = showDetails ? 'block' : 'none';
+                    const vapingDetailsField = document.getElementById('vaping_details');
+                    if (vapingDetailsField) {
+                        if (!showDetails) {
+                            vapingDetailsField.value = '';
+                        }
+                    }
+                }
+                this.updateSubmitButtonState();
+            }.bind(this));
+        });
+        
+        // Show/hide coliving details based on coliving radio buttons
+        const colivingRadios = document.querySelectorAll('input[name="coliving_has"]');
         const colivingDetailsSection = document.getElementById('coliving-details-section');
         
-        if (colivingCheckbox && colivingDetailsSection) {
-            colivingCheckbox.addEventListener('change', function() {
-                colivingDetailsSection.style.display = this.checked ? 'block' : 'none';
-                const colivingDetailsField = document.getElementById('coliving_details');
-                if (colivingDetailsField) {
-                    if (this.checked) {
-                        colivingDetailsField.setAttribute('required', 'required');
-                    } else {
-                        colivingDetailsField.removeAttribute('required');
-                        colivingDetailsField.value = '';
+        colivingRadios.forEach(radio => {
+            radio.addEventListener('change', function() {
+                const showDetails = document.querySelector('input[name="coliving_has"]:checked')?.value === 'true';
+                if (colivingDetailsSection) {
+                    colivingDetailsSection.style.display = showDetails ? 'block' : 'none';
+                    const colivingDetailsField = document.getElementById('coliving_details');
+                    if (colivingDetailsField) {
+                        if (showDetails) {
+                            colivingDetailsField.setAttribute('required', 'required');
+                        } else {
+                            colivingDetailsField.removeAttribute('required');
+                            colivingDetailsField.value = '';
+                        }
                     }
                 }
                 this.updateSubmitButtonState();
             }.bind(this));
-        }
+        });
+        
+        // Show/hide medical condition details based on medical condition radio buttons
+        const medicalRadios = document.querySelectorAll('input[name="medical_condition_has"]');
+        const medicalDetailsSection = document.getElementById('medical-condition-details-section');
+        
+        medicalRadios.forEach(radio => {
+            radio.addEventListener('change', function() {
+                const showDetails = document.querySelector('input[name="medical_condition_has"]:checked')?.value === 'true';
+                if (medicalDetailsSection) {
+                    medicalDetailsSection.style.display = showDetails ? 'block' : 'none';
+                    const medicalDetailsField = document.getElementById('medical_condition_details');
+                    if (medicalDetailsField) {
+                        if (showDetails) {
+                            medicalDetailsField.setAttribute('required', 'required');
+                        } else {
+                            medicalDetailsField.removeAttribute('required');
+                            medicalDetailsField.value = '';
+                        }
+                    }
+                }
+                this.updateSubmitButtonState();
+            }.bind(this));
+        });
         
         // Auto-populate signature fields when full name is entered
         const fullNameField = document.getElementById('full_name');
@@ -1349,33 +1605,54 @@ class AzureAccommodationForm {
                 place_of_birth: document.getElementById('place_of_birth')?.value || '',
                 email: document.getElementById('email_readonly')?.value || document.getElementById('email')?.value || '',
                 telephone: document.getElementById('telephone')?.value || '',
-                employers_name: document.getElementById('employers_name')?.value || '',
                 gender: document.getElementById('gender')?.value || '',
                 ni_number: document.getElementById('ni_number')?.value || '',
                 car: document.getElementById('car')?.checked || false,
                 bicycle: document.getElementById('bicycle')?.checked || false,
-                right_to_live_in_uk: document.getElementById('right_to_live_in_uk')?.checked || false,
+                right_to_live_in_uk: document.querySelector('input[name="right_to_live_in_uk"]:checked')?.value === 'true' || false,
                 room_occupancy: document.getElementById('room_occupancy')?.value || '',
                 other_names_has: false, // Not implemented in current form
                 other_names_details: null,
-                medical_condition_has: false, // Not implemented in current form
-                medical_condition_details: null
+                medical_condition_has: document.querySelector('input[name="medical_condition_has"]:checked')?.value === 'true' || false,
+                medical_condition_details: document.getElementById('medical_condition_details')?.value || null
             },
             bank_details: {
                 bank_name: document.getElementById('bank_name')?.value || '',
-                postcode: document.getElementById('bank_postcode')?.value || '',
+                bank_branch_address: document.getElementById('bank_branch_address')?.value || '',
                 account_no: document.getElementById('account_no')?.value || '',
                 sort_code: document.getElementById('sort_code')?.value || ''
             },
             address_history: [
+                // Current address (0)
                 {
                     address: document.getElementById('address_0')?.value || '',
                     from_date: document.getElementById('from_date_0')?.value || '',
                     to_date: null, // Current address
                     landlord_name: document.getElementById('landlord_name_0')?.value || '',
                     landlord_tel: document.getElementById('landlord_tel_0')?.value || '',
-                    landlord_email: document.getElementById('landlord_email_0')?.value || ''
-                }
+                    landlord_email: document.getElementById('landlord_email_0')?.value || '',
+                    reason_for_leaving: document.getElementById('reason_leaving_0')?.value || null
+                },
+                // Previous address 1 (if filled)
+                ...(document.getElementById('address_1')?.value ? [{
+                    address: document.getElementById('address_1')?.value || '',
+                    from_date: document.getElementById('from_date_1')?.value || '',
+                    to_date: document.getElementById('to_date_1')?.value || '',
+                    landlord_name: document.getElementById('landlord_name_1')?.value || '',
+                    landlord_tel: document.getElementById('landlord_tel_1')?.value || '',
+                    landlord_email: document.getElementById('landlord_email_1')?.value || '',
+                    reason_for_leaving: document.getElementById('reason_leaving_1')?.value || null
+                }] : []),
+                // Previous address 2 (if filled)
+                ...(document.getElementById('address_2')?.value ? [{
+                    address: document.getElementById('address_2')?.value || '',
+                    from_date: document.getElementById('from_date_2')?.value || '',
+                    to_date: document.getElementById('to_date_2')?.value || '',
+                    landlord_name: document.getElementById('landlord_name_2')?.value || '',
+                    landlord_tel: document.getElementById('landlord_tel_2')?.value || '',
+                    landlord_email: document.getElementById('landlord_email_2')?.value || '',
+                    reason_for_leaving: document.getElementById('reason_leaving_2')?.value || null
+                }] : [])
             ],
             contacts: {
                 next_of_kin: document.getElementById('next_of_kin')?.value || '',
@@ -1391,6 +1668,7 @@ class AzureAccommodationForm {
             },
             employment: {
                 employer_name_address: document.getElementById('employer_name_address')?.value || '',
+                employers_name: document.getElementById('employers_name')?.value || '',
                 job_title: document.getElementById('job_title')?.value || '',
                 manager_name: document.getElementById('manager_name')?.value || '',
                 manager_tel: document.getElementById('manager_tel')?.value || '',
@@ -1404,31 +1682,22 @@ class AzureAccommodationForm {
                 date_of_issue: document.getElementById('passport_date_of_issue')?.value || '',
                 place_of_issue: document.getElementById('passport_place_of_issue')?.value || ''
             },
-            current_living_arrangement: {
-                landlord_knows: document.getElementById('landlord_knows')?.checked || false,
-                notice_end_date: document.getElementById('notice_end_date')?.value || null,
-                reason_leaving: document.getElementById('reason_leaving')?.value || '',
-                landlord_reference: document.getElementById('landlord_reference')?.checked || false,
-                landlord_contact: {
-                    name: document.getElementById('landlord_contact_name')?.value || '',
-                    address: document.getElementById('landlord_contact_address')?.value || '',
-                    tel: document.getElementById('landlord_contact_tel')?.value || '',
-                    email: document.getElementById('landlord_contact_email')?.value || ''
-                }
-            },
             other_details: {
-                pets_has: document.getElementById('pets_has')?.checked || false,
+                pets_has: document.querySelector('input[name="pets_has"]:checked')?.value === 'true' || false,
                 pets_details: document.getElementById('pets_details')?.value || null,
-                smoke: document.getElementById('smoke')?.checked || false,
-                coliving_has: document.getElementById('coliving_has')?.checked || false,
+                smoke: document.querySelector('input[name="smoke"]:checked')?.value === 'true' || false,
+                smoke_details: document.getElementById('smoke_details')?.value || null,
+                vaping: document.querySelector('input[name="vaping"]:checked')?.value === 'true' || false,
+                vaping_details: document.getElementById('vaping_details')?.value || null,
+                coliving_has: document.querySelector('input[name="coliving_has"]:checked')?.value === 'true' || false,
                 coliving_details: document.getElementById('coliving_details')?.value || null
             },
             occupation_agreement: {
-                single_occupancy_agree: document.getElementById('single_occupancy_agree')?.checked || false,
-                hmo_terms_agree: document.getElementById('hmo_terms_agree')?.checked || false,
-                no_unlisted_occupants: document.getElementById('no_unlisted_occupants')?.checked || false,
-                no_smoking: document.getElementById('no_smoking_agree')?.checked || false,
-                kitchen_cooking_only: document.getElementById('kitchen_cooking_only')?.checked || false
+                single_occupancy_agree: document.querySelector('input[name="single_occupancy_agree"]:checked')?.value === 'true' || false,
+                hmo_terms_agree: document.querySelector('input[name="hmo_terms_agree"]:checked')?.value === 'true' || false,
+                no_unlisted_occupants: document.querySelector('input[name="no_unlisted_occupants"]:checked')?.value === 'true' || false,
+                no_smoking: document.querySelector('input[name="no_smoking_agree"]:checked')?.value === 'true' || false,
+                kitchen_cooking_only: document.querySelector('input[name="kitchen_cooking_only"]:checked')?.value === 'true' || false
             },
             consent_and_declaration: {
                 consent_given: document.getElementById('consent_given')?.checked || false,
@@ -1441,7 +1710,8 @@ class AzureAccommodationForm {
                     certify_no_judgements: document.getElementById('certify_no_judgements')?.checked || false,
                     certify_no_housing_debt: document.getElementById('certify_no_housing_debt')?.checked || false,
                     certify_no_landlord_debt: document.getElementById('certify_no_landlord_debt')?.checked || false,
-                    certify_no_abuse: document.getElementById('certify_no_abuse')?.checked || false
+                    certify_no_abuse: document.getElementById('certify_no_abuse')?.checked || false,
+                    certify_no_alcohol_substance_abuse: document.getElementById('certify_no_alcohol_substance_abuse')?.checked || false
                 },
                 declaration_signature: document.getElementById('declaration_signature')?.value || '',
                 declaration_date: document.getElementById('declaration_date')?.value || '',

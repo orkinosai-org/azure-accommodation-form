@@ -22,7 +22,6 @@ class TenantDetails(BaseModel):
     place_of_birth: str = Field(..., min_length=2, max_length=100)
     email: EmailStr
     telephone: str = Field(..., min_length=10, max_length=20)
-    employers_name: str = Field(..., min_length=2, max_length=100)
     gender: GenderEnum
     ni_number: str = Field(..., min_length=9, max_length=13)  # UK National Insurance number
     car: bool = False
@@ -47,7 +46,7 @@ class TenantDetails(BaseModel):
 
 class BankDetails(BaseModel):
     bank_name: str = Field(..., min_length=2, max_length=100)
-    postcode: str = Field(..., min_length=5, max_length=10)
+    bank_branch_address: str = Field(..., min_length=5, max_length=200)
     account_no: str = Field(..., min_length=8, max_length=8)
     sort_code: str = Field(..., min_length=6, max_length=8)
     
@@ -73,6 +72,7 @@ class AddressHistoryEntry(BaseModel):
     landlord_name: str = Field(..., min_length=2, max_length=100)
     landlord_tel: str = Field(..., min_length=10, max_length=20)
     landlord_email: EmailStr
+    reason_for_leaving: Optional[str] = Field(None, max_length=500)  # Not required for current address
 
 class Contacts(BaseModel):
     next_of_kin: str = Field(..., min_length=2, max_length=100)
@@ -88,6 +88,7 @@ class MedicalDetails(BaseModel):
 
 class Employment(BaseModel):
     employer_name_address: str = Field(..., min_length=10, max_length=200)
+    employers_name: str = Field(..., min_length=2, max_length=100)  # Moved from TenantDetails
     job_title: str = Field(..., min_length=2, max_length=100)
     manager_name: str = Field(..., min_length=2, max_length=100)
     manager_tel: str = Field(..., min_length=10, max_length=20)
@@ -117,6 +118,9 @@ class OtherDetails(BaseModel):
     pets_has: bool = False
     pets_details: Optional[str] = None
     smoke: bool = False
+    smoke_details: Optional[str] = None  # For specifying smoking details
+    vaping: bool = False
+    vaping_details: Optional[str] = None  # For specifying vaping details
     coliving_has: bool = False
     coliving_details: Optional[str] = None
 
@@ -134,6 +138,7 @@ class Declaration(BaseModel):
     certify_no_housing_debt: bool
     certify_no_landlord_debt: bool
     certify_no_abuse: bool
+    certify_no_alcohol_substance_abuse: bool  # Added missing certification
 
 class ConsentAndDeclaration(BaseModel):
     consent_given: bool
@@ -149,13 +154,12 @@ class AccommodationFormData(BaseModel):
     """Complete accommodation form data model"""
     tenant_details: TenantDetails
     bank_details: BankDetails
-    address_history: List[AddressHistoryEntry] = Field(..., min_items=1, max_items=10)
+    address_history: List[AddressHistoryEntry] = Field(..., min_items=1, max_items=5)  # Increased to allow up to 5 addresses
     contacts: Contacts
     medical_details: MedicalDetails
     employment: Employment
     employment_change: Optional[str] = None
     passport_details: PassportDetails
-    current_living_arrangement: CurrentLivingArrangement
     other_details: OtherDetails
     occupation_agreement: OccupationAgreement
     consent_and_declaration: ConsentAndDeclaration
