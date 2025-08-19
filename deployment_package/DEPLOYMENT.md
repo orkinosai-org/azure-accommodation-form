@@ -14,6 +14,8 @@ Before starting, make sure you have:
 
 ### 🔧 Edit the Configuration File
 
+**✅ No Environment Variables Required!** This deployment method uses a simple configuration file - no technical setup needed in Azure Portal.
+
 1. **Open** the `appsettings.json` file in this deployment package
 2. **Replace** the placeholder values with your real information:
 
@@ -115,25 +117,24 @@ az webapp deployment source config-zip --name YOUR_APP_NAME --resource-group rg-
 
 ## Step 3: Configure Application Settings in Azure
 
-### Method 1: Azure Portal (Recommended)
+### Azure Portal Configuration (Optional - Only for Advanced Users)
+
+**Note: This step is optional!** The app reads all settings from the `appsettings.json` file you edited in Step 1.
+
+If you need to override specific settings in Azure Portal:
 
 1. **Go to your App Service** in Azure Portal
 2. **Click "Configuration"** in the left menu
-3. **Add these Application Settings** (click "New application setting" for each):
+3. **Add these basic Azure settings** if needed:
 
-| Name | Value |
-|------|-------|
-| `WEBSITES_PORT` | `8000` |
-| `SCM_DO_BUILD_DURING_DEPLOYMENT` | `true` |
+| Name | Value | Purpose |
+|------|-------|---------|
+| `WEBSITES_PORT` | `8000` | Tells Azure which port the app uses |
+| `SCM_DO_BUILD_DURING_DEPLOYMENT` | `true` | Enables automatic package installation |
 
 4. **Click "Save"** at the top
 
-### Method 2: Update Configuration File After Deployment
-
-1. **Go to your App Service** → **Development Tools** → **SSH**
-2. **Navigate to**: `/home/site/wwwroot/`
-3. **Edit** `appsettings.json` with your real values
-4. **Restart** the app from Azure Portal
+**Important**: Your application settings (email, storage, etc.) are read from `appsettings.json`, not from Azure Portal environment variables.
 
 ## Step 4: Test Your Application
 

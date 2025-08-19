@@ -106,11 +106,19 @@ az webapp create \
   --runtime "PYTHON:3.12"
 ```
 
-## Step 4: Configure Environment Variables
+## Step 4: Configure Application Settings
 
-### 4.1 Blazor Application Configuration
+### 4.1 Recommended: Use appsettings.json Configuration
 
-Set the following environment variables in Azure Web App Configuration:
+**For easier deployment, use the deployment packages** which include pre-configured `appsettings.json` files:
+- `/deployment_package/` - Ready-to-deploy package with appsettings.json
+- `/azure-deployment-package/` - Alternative deployment package
+
+Simply edit the `appsettings.json` file with your values and deploy.
+
+### 4.2 Alternative: Azure Portal Configuration (Advanced)
+
+If you prefer to use Azure Portal environment variables:
 
 #### Storage Settings:
 ```

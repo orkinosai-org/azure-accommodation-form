@@ -53,7 +53,7 @@ The Python implementation includes a complete backend API that processes form su
 
 ### Configuration
 
-The backend can be configured via `appsettings.json` or environment variables:
+The backend is configured via `appsettings.json` file only:
 
 #### SMTP Settings
 ```json
@@ -81,10 +81,10 @@ The backend can be configured via `appsettings.json` or environment variables:
 }
 ```
 
-#### Environment Variables
-All settings can be overridden using environment variables:
-- `SMTP_SERVER`
-- `SMTP_USERNAME`
+#### Configuration File (appsettings.json)
+All settings are configured in the `appsettings.json` file:
+- `EMAIL_SMTP_SERVER`
+- `EMAIL_SMTP_USERNAME`
 - `SMTP_PASSWORD`
 - `COMPANY_EMAIL`
 - `AZURE_STORAGE_CONNECTION_STRING`
@@ -219,8 +219,8 @@ Deploy to Azure App Service with Python 3.12 runtime. The application includes c
 **Required Configuration:**
 1. Set up Azure Blob Storage account
 2. Configure SMTP email settings (Gmail, Outlook, or custom SMTP)
-3. Set environment variables for production secrets
-4. Update `appsettings.json` or use Azure App Service configuration
+3. Configure application settings in appsettings.json for production secrets
+4. Update `appsettings.json` with your production values
 
 **See [DEPLOYMENT.md](DEPLOYMENT.md) for complete step-by-step deployment instructions.**
 
@@ -229,7 +229,7 @@ Deploy to Azure App Service with Python 3.12 runtime. The application includes c
 - **No sensitive data stored in database** - only submission metadata and logs
 - **PDF files encrypted in transit and at rest** in Azure Blob Storage
 - **Comprehensive logging** for audit trails
-- **Configuration via environment variables** for secure secret management
+- **Configuration via appsettings.json** for secure and simple secret management
 
 ## Branding
 
