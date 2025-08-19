@@ -33,7 +33,7 @@
 ### 4. Configure Settings
 - Web App → Configuration → Application settings
 - Use `AZURE_CONFIG.txt` as your template
-- Add all required environment variables
+- Edit `appsettings.json` with your settings
 
 ### 5. Test Your App
 - Visit your app URL
@@ -50,27 +50,37 @@
    - Username: Your Gmail
    - Password: App Password (not regular password)
 
-## 🔧 Required Environment Variables
+## 🔧 Configuration via appsettings.json
 
-Copy from `AZURE_CONFIG.txt` - minimum required:
+**✅ No environment variables needed!** Just edit the `appsettings.json` file:
 
-```
-ENVIRONMENT=production
-SECRET_KEY=[50+ character random password]
-EMAIL_SMTP_SERVER=smtp.gmail.com
-EMAIL_SMTP_PORT=587
-EMAIL_SMTP_USERNAME=[your email]
-EMAIL_SMTP_PASSWORD=[app password]
-EMAIL_FROM_EMAIL=[your email]
-EMAIL_COMPANY_EMAIL=[where forms go]
-BLOB_STORAGE_CONNECTION_STRING=[from storage account]
-APPLICATION_APPLICATION_URL=https://[your-app].azurewebsites.net
+```json
+{
+  "ServerSettings": {
+    "Environment": "production",
+    "SecretKey": "[50+ character random password]"
+  },
+  "EmailSettings": {
+    "SmtpServer": "smtp.gmail.com",
+    "SmtpPort": 587,
+    "SmtpUsername": "[your email]",
+    "SmtpPassword": "[app password]",
+    "FromEmail": "[your email]",
+    "CompanyEmail": "[where forms go]"
+  },
+  "BlobStorageSettings": {
+    "ConnectionString": "[from storage account]"
+  },
+  "ApplicationSettings": {
+    "ApplicationUrl": "https://[your-app].azurewebsites.net"
+  }
+}
 ```
 
 ## ⚠️ Common Issues
 
 **App won't start?**
-- Check all environment variables are set
+- Check all settings are configured in `appsettings.json`
 - Verify storage connection string
 - Restart the app
 

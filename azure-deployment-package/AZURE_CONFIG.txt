@@ -1,9 +1,28 @@
-# Azure Deployment Configuration
+# Azure Deployment Configuration (DEPRECATED)
 # 
-# Fill in the values below and use them when configuring your Azure App Service
-# Copy each line (without the #) to Azure Portal → Configuration → Application settings
+# ⚠️ THIS FILE IS DEPRECATED - USE appsettings.json INSTEAD! ⚠️
 #
-# REQUIRED SETTINGS - Your app will not work without these:
+# This deployment package now uses a simple appsettings.json configuration file.
+# No environment variables needed in Azure Portal!
+#
+# TO CONFIGURE YOUR APP:
+# 1. Edit the appsettings.json file in this package
+# 2. Replace placeholder values with your real information
+# 3. Deploy the package - that's it!
+#
+# The appsettings.json approach is:
+# ✅ Simpler - just edit one file
+# ✅ More reliable - no Azure Portal configuration needed
+# ✅ Better for non-technical users
+# ✅ Easier to backup and version control
+#
+# See README_DEPLOYMENT.md for full instructions.
+
+# ============================================================================
+# LEGACY ENVIRONMENT VARIABLES (NOT NEEDED ANYMORE)
+# The settings below were used in older versions.
+# They are kept here for reference only.
+# ============================================================================
 
 # Basic Application Settings
 ENVIRONMENT=production

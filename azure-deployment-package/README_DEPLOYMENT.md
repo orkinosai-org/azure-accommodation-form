@@ -77,89 +77,61 @@ This is where your application will run.
    - Wait for deployment (3-5 minutes)
    - Click **"Go to resource"**
 
-### Step 3: Configure Environment Variables
+### Step 3: Configure Application Settings
 
-Your app needs configuration settings to work properly.
+Before uploading your app, you need to edit the configuration file with your settings.
 
-1. **Open App Configuration**
-   - In your Web App, click **"Configuration"** in left menu
-   - Click **"Application settings"** tab
+1. **Edit appsettings.json in the Deployment Package**
+   - Open the `appsettings.json` file in this deployment package
+   - Replace ALL placeholder values with your real information (see examples below)
 
-2. **Add Required Settings**
-   Click **"+ New application setting"** for each setting below:
+2. **Required Settings to Update:**
 
-   **Basic Settings:**
-   ```
-   Name: ENVIRONMENT
-   Value: production
-   ```
-
-   ```
-   Name: SECRET_KEY
-   Value: [Create a long random password - 50+ characters]
-   ```
-
-   **Email Settings (Gmail Example):**
-   ```
-   Name: EMAIL_SMTP_SERVER
-   Value: smtp.gmail.com
-   ```
-
-   ```
-   Name: EMAIL_SMTP_PORT
-   Value: 587
-   ```
-
-   ```
-   Name: EMAIL_SMTP_USERNAME
-   Value: [Your Gmail address]
-   ```
-
-   ```
-   Name: EMAIL_SMTP_PASSWORD
-   Value: [Your Gmail App Password - see guide below]
-   ```
-
-   ```
-   Name: EMAIL_FROM_EMAIL
-   Value: [Your Gmail address]
-   ```
-
-   ```
-   Name: EMAIL_FROM_NAME
-   Value: Azure Accommodation Form
-   ```
-
-   ```
-   Name: EMAIL_COMPANY_EMAIL
-   Value: [Your business email where forms will be sent]
+   **Email Settings (Required for form submissions):**
+   ```json
+   "EmailSettings": {
+     "SmtpServer": "smtp.gmail.com",
+     "SmtpPort": 587,
+     "SmtpUsername": "YOUR_EMAIL@gmail.com",          ← Your Gmail address
+     "SmtpPassword": "YOUR_GMAIL_APP_PASSWORD",       ← See Gmail setup below
+     "UseSsl": true,
+     "FromEmail": "noreply@yourdomain.com",           ← Email forms will come from
+     "FromName": "Azure Accommodation Form",
+     "CompanyEmail": "admin@yourdomain.com"           ← Where forms will be sent to
+   }
    ```
 
    **Storage Settings:**
-   ```
-   Name: BLOB_STORAGE_CONNECTION_STRING
-   Value: [Paste the storage connection string you saved earlier]
-   ```
-
-   ```
-   Name: BLOB_STORAGE_CONTAINER_NAME
-   Value: form-submissions
+   ```json
+   "BlobStorageSettings": {
+     "ConnectionString": "[Paste your storage connection string here]",
+     "ContainerName": "form-submissions"
+   }
    ```
 
    **Application Settings:**
-   ```
-   Name: APPLICATION_APPLICATION_NAME
-   Value: Azure Accommodation Form
+   ```json
+   "ApplicationSettings": {
+     "ApplicationName": "Azure Accommodation Form",
+     "ApplicationUrl": "https://YOUR_APP_NAME.azurewebsites.net/",
+     "TokenExpirationMinutes": 15,
+     "TokenLength": 6
+   }
    ```
 
-   ```
-   Name: APPLICATION_APPLICATION_URL
-   Value: https://[your-app-name].azurewebsites.net
+   **Security Settings:**
+   ```json
+   "ServerSettings": {
+     "Environment": "production",
+     "SecretKey": "CHANGE_THIS_TO_A_LONG_RANDOM_STRING_IN_PRODUCTION",
+     "AllowedHosts": ["YOUR_APP_NAME.azurewebsites.net"],
+     "AllowedOrigins": ["https://YOUR_APP_NAME.azurewebsites.net"]
+   }
    ```
 
-3. **Save Configuration**
-   - Click **"Save"** at the top
-   - Wait for restart (1-2 minutes)
+3. **Save the File**
+   - Save the `appsettings.json` file with your changes
+   - The app will read all settings from this file when deployed
 
 ### Step 4: Deploy Your Application
 
@@ -223,34 +195,38 @@ Contact your IT department for:
 - Port number (usually 587 or 465)
 - Authentication requirements
 
-## 🔧 Environment Variables Reference
+## 🔧 Configuration Reference
 
-Copy these exact names when adding application settings:
+This app uses a single `appsettings.json` file for all configuration. Below are the settings you need to update:
 
-### Required Variables
-| Setting Name | Description | Example |
-|-------------|-------------|---------|
-| `ENVIRONMENT` | Application mode | `production` |
-| `SECRET_KEY` | Security key (50+ random characters) | `your-very-long-random-secret-key-here` |
-| `EMAIL_SMTP_SERVER` | Email server | `smtp.gmail.com` |
-| `EMAIL_SMTP_PORT` | Email port | `587` |
-| `EMAIL_SMTP_USERNAME` | Your email | `youremail@gmail.com` |
-| `EMAIL_SMTP_PASSWORD` | Email password/app password | `your-app-password` |
-| `EMAIL_FROM_EMAIL` | From address | `youremail@gmail.com` |
-| `EMAIL_FROM_NAME` | From name | `Azure Accommodation Form` |
-| `EMAIL_COMPANY_EMAIL` | Where forms are sent | `admin@yourcompany.com` |
-| `BLOB_STORAGE_CONNECTION_STRING` | Azure Storage connection | `DefaultEndpointsProtocol=https;AccountName=...` |
-| `BLOB_STORAGE_CONTAINER_NAME` | Storage container | `form-submissions` |
-| `APPLICATION_APPLICATION_NAME` | App title | `Azure Accommodation Form` |
-| `APPLICATION_APPLICATION_URL` | Your app URL | `https://yourapp.azurewebsites.net` |
+### Required Settings
+| Configuration Section | Setting | Description | Example |
+|----------------------|---------|-------------|---------|
+| `ServerSettings` | `Environment` | Application mode | `production` |
+| `ServerSettings` | `SecretKey` | Security key (50+ random characters) | `your-very-long-random-secret-key-here` |
+| `EmailSettings` | `SmtpServer` | Email server | `smtp.gmail.com` |
+| `EmailSettings` | `SmtpPort` | Email port | `587` |
+| `EmailSettings` | `SmtpUsername` | Your email | `youremail@gmail.com` |
+| `EmailSettings` | `SmtpPassword` | Email password/app password | `your-app-password` |
+| `EmailSettings` | `FromEmail` | From address | `youremail@gmail.com` |
+| `EmailSettings` | `FromName` | From name | `Azure Accommodation Form` |
+| `EmailSettings` | `CompanyEmail` | Where forms are sent | `admin@yourcompany.com` |
+| `BlobStorageSettings` | `ConnectionString` | Azure Storage connection | `DefaultEndpointsProtocol=https;AccountName=...` |
+| `BlobStorageSettings` | `ContainerName` | Storage container | `form-submissions` |
+| `ApplicationSettings` | `ApplicationName` | App title | `Azure Accommodation Form` |
+| `ApplicationSettings` | `ApplicationUrl` | Your app URL | `https://yourapp.azurewebsites.net` |
 
-### Optional Variables
-| Setting Name | Description | Default |
-|-------------|-------------|---------|
-| `APPLICATION_TOKEN_EXPIRATION_MINUTES` | Email verification timeout | `15` |
-| `APPLICATION_TOKEN_LENGTH` | Verification code length | `6` |
-| `CAPTCHA_SITE_KEY` | reCAPTCHA site key | (testing keys included) |
-| `CAPTCHA_SECRET_KEY` | reCAPTCHA secret key | (testing keys included) |
+### Optional Settings
+| Configuration Section | Setting | Description | Default |
+|----------------------|---------|-------------|---------|
+| `ApplicationSettings` | `TokenExpirationMinutes` | Email verification timeout | `15` |
+| `ApplicationSettings` | `TokenLength` | Verification code length | `6` |
+
+### Important Notes:
+- ✅ **All settings are configured in the `appsettings.json` file**
+- ✅ **No environment variables needed in Azure Portal**
+- ✅ **Simple file editing - no technical knowledge required**
+- ✅ **Update settings by editing the file before deployment**
 
 ## 🚨 Troubleshooting
 
@@ -260,17 +236,17 @@ Copy these exact names when adding application settings:
 **Problem**: App won't start or shows error page
 
 **Solutions**:
-1. **Check Application Settings**
-   - Go to Configuration → Application settings
-   - Verify all required variables are set
-   - Check for typos in variable names
+1. **Check Configuration File**
+   - Open `appsettings.json` in the deployment package
+   - Verify all required settings have real values (not placeholders)
+   - Check for typos in setting names and values
 
 2. **Check Storage Connection**
-   - Test the storage connection string
+   - Test the storage connection string in BlobStorageSettings
    - Ensure storage account is accessible
 
 3. **Check Email Settings**
-   - Verify SMTP settings are correct
+   - Verify SMTP settings in EmailSettings section
    - Test with a simple email first
 
 #### "Email Sending Failed"
@@ -482,7 +458,7 @@ Before going live:
 
 - [ ] Azure Storage Account created and connection string saved
 - [ ] Azure Web App created with Python 3.12
-- [ ] All required environment variables configured
+- [ ] All required settings configured in appsettings.json
 - [ ] Application deployed successfully
 - [ ] Email settings tested and working
 - [ ] Form submission tested end-to-end

@@ -8,7 +8,7 @@ This is a ready-to-deploy package for the Azure Accommodation Form application. 
 
 - **Complete Python Application** - All source code and dependencies
 - **Step-by-Step Guide** - Detailed instructions for Azure Portal deployment
-- **Configuration Templates** - Easy-to-use environment variable templates
+- **Configuration Templates** - Easy-to-use appsettings.json templates
 - **Quick Start Guide** - 15-minute deployment guide
 - **Azure Configuration** - Pre-configured for Azure App Service
 
@@ -31,7 +31,7 @@ This is a ready-to-deploy package for the Azure Accommodation Form application. 
 2. **Read `README_DEPLOYMENT.md`** (comprehensive guide)
 3. **Or read `QUICK_START.md`** (fast track)
 4. **Upload to Azure App Service** via ZIP Deploy
-5. **Configure environment variables** using `AZURE_CONFIG.txt`
+5. **Configure settings** by editing `appsettings.json`
 
 ### 📧 Email Providers Supported
 
