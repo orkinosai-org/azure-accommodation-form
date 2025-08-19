@@ -1,0 +1,64 @@
+# Azure Deployment Configuration
+# 
+# Fill in the values below and use them when configuring your Azure App Service
+# Copy each line (without the #) to Azure Portal → Configuration → Application settings
+#
+# REQUIRED SETTINGS - Your app will not work without these:
+
+# Basic Application Settings
+ENVIRONMENT=production
+SECRET_KEY=CHANGE-THIS-TO-A-VERY-LONG-RANDOM-PASSWORD-50-CHARACTERS-OR-MORE
+
+# Email Configuration (Gmail example - adjust for your email provider)
+EMAIL_SMTP_SERVER=smtp.gmail.com
+EMAIL_SMTP_PORT=587
+EMAIL_SMTP_USERNAME=your-email@gmail.com
+EMAIL_SMTP_PASSWORD=your-gmail-app-password
+EMAIL_FROM_EMAIL=your-email@gmail.com
+EMAIL_FROM_NAME=Azure Accommodation Form
+EMAIL_COMPANY_EMAIL=admin@yourcompany.com
+
+# Azure Storage Settings (get this from your Storage Account)
+BLOB_STORAGE_CONNECTION_STRING=DefaultEndpointsProtocol=https;AccountName=yourstorageaccount;AccountKey=your-key;EndpointSuffix=core.windows.net
+BLOB_STORAGE_CONTAINER_NAME=form-submissions
+
+# Application Settings (change your-app-name to your actual app name)
+APPLICATION_APPLICATION_NAME=Azure Accommodation Form
+APPLICATION_APPLICATION_URL=https://your-app-name.azurewebsites.net
+
+# OPTIONAL SETTINGS - These have defaults but you can customize:
+
+# Form Security Settings
+APPLICATION_TOKEN_EXPIRATION_MINUTES=15
+APPLICATION_TOKEN_LENGTH=6
+
+# CAPTCHA Settings (default testing keys included - get your own from Google reCAPTCHA)
+CAPTCHA_SITE_KEY=6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI
+CAPTCHA_SECRET_KEY=6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe
+
+# HOW TO USE THIS FILE:
+# 1. Replace all placeholder values (your-email@gmail.com, etc.) with your actual values
+# 2. Copy each setting name and value to Azure Portal
+# 3. Go to your Web App → Configuration → Application settings
+# 4. Click "New application setting" and paste the Name and Value
+# 5. Save all settings and restart your app
+
+# EMAIL PROVIDER EXAMPLES:
+
+# Gmail:
+# EMAIL_SMTP_SERVER=smtp.gmail.com
+# EMAIL_SMTP_PORT=587
+# (Use Gmail App Password, not your regular password)
+
+# Outlook/Hotmail:
+# EMAIL_SMTP_SERVER=smtp-mail.outlook.com
+# EMAIL_SMTP_PORT=587
+
+# Yahoo:
+# EMAIL_SMTP_SERVER=smtp.mail.yahoo.com
+# EMAIL_SMTP_PORT=587
+
+# Custom/Business Email:
+# EMAIL_SMTP_SERVER=mail.yourdomain.com
+# EMAIL_SMTP_PORT=587
+# (Contact your IT department for settings)
