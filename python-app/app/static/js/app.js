@@ -1050,11 +1050,11 @@ class AzureAccommodationForm {
         let isValid = field.checkValidity();
         let customErrorMessage = '';
         
-        // Custom validation for specific fields with user-friendly messages
+        // Custom validation for specific fields with simplified messages
         if (field.id === 'ni_number' && field.value.trim()) {
             isValid = this.validateNationalInsuranceNumber(field.value.trim());
             if (!isValid) {
-                customErrorMessage = 'Please check your National Insurance number format (example: AB123456C)';
+                customErrorMessage = 'Invalid format (e.g. AB123456C)';
             }
         }
         
@@ -1062,7 +1062,7 @@ class AzureAccommodationForm {
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             if (!emailRegex.test(field.value.trim())) {
                 isValid = false;
-                customErrorMessage = 'Please enter a valid email address like example@email.com';
+                customErrorMessage = 'Invalid email format';
             }
         }
         
@@ -1070,14 +1070,14 @@ class AzureAccommodationForm {
             const phoneRegex = /^[\+]?[0-9\s\-\(\)]{10,}$/;
             if (!phoneRegex.test(field.value.trim())) {
                 isValid = false;
-                customErrorMessage = 'Please enter a valid phone number with at least 10 digits';
+                customErrorMessage = 'Invalid phone number';
             }
         }
         
-        // Required field validation with user-friendly message
+        // Required field validation with simplified message
         if (!field.value.trim() && field.required) {
             isValid = false;
-            customErrorMessage = 'This information is required';
+            customErrorMessage = 'Required';
         }
         
         // Apply validation styling
@@ -1195,22 +1195,22 @@ class AzureAccommodationForm {
     
     getFieldErrorMessage(field) {
         if (!field.value.trim() && field.required) {
-            return 'This information is required';
+            return 'Required';
         }
         
         if (field.id === 'ni_number' && field.value.trim()) {
-            return 'Please check your National Insurance number format';
+            return 'Invalid format (e.g. AB123456C)';
         }
         
         if (field.type === 'email' && field.value.trim()) {
-            return 'Please enter a valid email address like example@email.com';
+            return 'Invalid email format';
         }
         
         if (field.type === 'tel' && field.value.trim()) {
-            return 'Please enter a valid phone number with at least 10 digits';
+            return 'Invalid phone number';
         }
         
-        return 'Please check this information';
+        return 'Invalid format';
     }
     
     showErrorSummary(errors) {
