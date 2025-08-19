@@ -89,9 +89,16 @@ Welcome! This guide will help you deploy the Azure Accommodation Form Python app
 
 ---
 
-## 7. Environment Variables and Configuration
+## 7. Configuration Setup
 
-- Set any required environment variables in Azure Portal > App Service > Configuration > Application settings.
+**Recommended approach:** Use the pre-built deployment packages:
+- `/deployment_package/` - Includes `appsettings.json` with clear placeholder values
+- `/azure-deployment-package/` - Alternative deployment package with same structure
+
+Simply edit the `appsettings.json` file with your settings before deploying.
+
+**Alternative approach for advanced users:**
+- Set configuration via Azure Portal > App Service > Configuration > Application settings.
 - Never commit secrets to the repository.
 
 ---
