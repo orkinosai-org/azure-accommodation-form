@@ -110,9 +110,8 @@ az webapp create \
 
 ### 4.1 Recommended: Use appsettings.json Configuration
 
-**For easier deployment, use the deployment packages** which include pre-configured `appsettings.json` files:
+**For easier deployment, use the deployment package** which includes pre-configured `appsettings.json` files:
 - `/deployment_package/` - Ready-to-deploy package with appsettings.json
-- `/azure-deployment-package/` - Alternative deployment package
 
 Simply edit the `appsettings.json` file with your values and deploy.
 
