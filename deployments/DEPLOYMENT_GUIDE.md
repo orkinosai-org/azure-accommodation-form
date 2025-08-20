@@ -91,9 +91,8 @@ Welcome! This guide will help you deploy the Azure Accommodation Form Python app
 
 ## 7. Configuration Setup
 
-**Recommended approach:** Use the pre-built deployment packages:
+**Recommended approach:** Use the pre-built deployment package:
 - `/deployment_package/` - Includes `appsettings.json` with clear placeholder values
-- `/azure-deployment-package/` - Alternative deployment package with same structure
 
 Simply edit the `appsettings.json` file with your settings before deploying.
 

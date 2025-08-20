@@ -4,7 +4,7 @@
 
 A comprehensive, non-technical deployment package for the Azure Accommodation Form application:
 
-### **Main Package: `azure-deployment-package.zip` (68KB)**
+### **Main Package: `deployment_package.zip`**
 
 **Complete Application Files:**
 - ✅ Full Python FastAPI application code
