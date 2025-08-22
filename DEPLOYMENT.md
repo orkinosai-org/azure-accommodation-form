@@ -179,42 +179,19 @@ ENVIRONMENT = production
 
 ## Step 5: Deploy Application
 
-### 5.1 Deploy Blazor Application
+### 5.1 Deploy Python Application
 
 #### Option 1: Azure CLI Deployment
 ```bash
-# Navigate to blazor-app directory in deployment package
-cd deployment_package/blazor-app
-
-# Create deployment ZIP
-zip -r deploy.zip . -x "*.template" "startup.sh"
-
-# Deploy to Azure
-az webapp deployment source config-zip \
-  --name your-app-name \
-  --resource-group rg-accommodation-form \
-  --src deploy.zip
-```
-
-#### Option 2: Azure Portal Deployment
-1. Go to Azure Portal → Your Web App → Deployment Center
-2. Choose "Local Git" or "External Git" 
-3. Upload the blazor-app folder contents
-4. Configure deployment settings
-
-### 5.2 Deploy Python Application
-
-#### Option 1: Azure CLI Deployment
-```bash
-# Navigate to python-app directory
-cd deployment_package/python-app
+# Navigate to deployment package directory
+cd deployment_package
 
 # Create deployment ZIP (excluding templates)
 zip -r deploy.zip . -x "*.template" "__pycache__/*" "*.pyc"
 
 # Deploy to Azure
 az webapp deployment source config-zip \
-  --name your-python-app-name \
+  --name your-app-name \
   --resource-group rg-accommodation-form \
   --src deploy.zip
 ```

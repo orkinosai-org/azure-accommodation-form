@@ -95,7 +95,7 @@ def main():
         print("   - Ready for Python FastAPI deployment")
         print("\n🚀 Next steps:")
         print("   1. Merge PR #117 to trigger deployment")
-        print("   2. Python FastAPI app will replace current Blazor app")
+        print("   2. Python FastAPI app deployment will be activated")
         print("   3. Test endpoints will become available")
         
     except FileNotFoundError:
