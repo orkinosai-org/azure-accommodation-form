@@ -6,7 +6,7 @@ The Azure Accommodation Form Python application now uses **ONLY** an `appsetting
 
 This change provides:
 - ✅ Clear, centralized configuration in one file
-- ✅ Consistent structure matching the Blazor app's `appsettings.json`
+- ✅ Consistent structure for Python FastAPI applications
 - ✅ No dependency on environment variables or `.env` files
 - ✅ Fail-fast behavior if configuration is missing or incomplete
 - ✅ Better security (no accidental exposure through environment)
@@ -17,18 +17,12 @@ This change provides:
    
    The application will automatically detect and copy the most appropriate configuration:
    
-   **Option A - Production Deployment (Automatic, Recommended):**
-   When deployed alongside the Blazor app, the Python app will automatically copy the Blazor app's production configuration (`../BlazorApp/appsettings.json`) and adapt it by adding Python-specific settings.
+   **Option A - Development Setup (Automatic):**
+   The application will automatically copy `appsettings.example.json` to `appsettings.json` if no configuration file exists.
    
-   **Option B - Development Setup (Automatic Fallback):**
-   If no Blazor config is found, it will copy `appsettings.example.json` to `appsettings.json` with template values.
-   
-   **Option C - Manual Setup:**
+   **Option B - Manual Setup:**
    ```bash
-   # Copy from Blazor app (recommended for production)
-   cp ../BlazorApp/appsettings.json appsettings.json
-   
-   # OR copy from example (for development)
+   # Copy from example template
    cp appsettings.example.json appsettings.json
    ```
 
@@ -57,50 +51,45 @@ This change provides:
 
 If `appsettings.json` is missing when the application starts, it will:
 
-1. **Check for Blazor app configuration (Priority 1)** - Look for `../BlazorApp/appsettings.json` relative to the Python app directory
+1. **Check for existing configuration** - Look for `appsettings.json` in the Python app directory
 2. **Auto-copy and adapt Blazor config** - If found, copy the production-ready configuration and add Python-specific `ServerSettings`
 3. **Fallback to example file (Priority 2)** - If Blazor config not available, check for `appsettings.example.json`
 4. **Log informative messages** - Explain which configuration source was used
 5. **Fail gracefully** - If no configuration source exists, stop with a clear error message
 
 ### Auto-Copy Priority Order:
-1. **Blazor App Configuration** (`../BlazorApp/appsettings.json`) - **Preferred for production deployments**
+1. **Configuration File** (`appsettings.json`) - **Primary configuration source**
    - Contains production-ready settings (SMTP, Azure Storage, Application Insights)
    - Automatically adds Python-specific `ServerSettings` section
    - Sets environment to "production"
-   - Logs: *"Automatically copied production-ready configuration from Blazor app and adapted it for Python app requirements"*
+   - Logs: *"Configuration loaded successfully from appsettings.json"*
 
 2. **Example Configuration** (`appsettings.example.json`) - **Fallback for development**
    - Contains template/example values
    - Requires manual configuration updates
-   - Logs: *"Configuration file was missing and Blazor app config not found. Automatically copied from appsettings.example.json"*
+   - Logs: *"Configuration file was missing. Automatically copied from appsettings.example.json"*
 
-This ensures the Python app can start with **production-ready configuration** when deployed alongside the Blazor app, while still providing a development fallback.
+This ensures the Python app can start with **template configuration** and requires manual configuration of secrets.
 
 ## Configuration Sources and Auto-Detection
 
 The Python app intelligently detects and uses the best available configuration source:
 
-### 1. Production Deployment (Preferred)
-When the Python app is deployed alongside the Blazor app (same repository), it will:
-- Look for `../BlazorApp/appsettings.json` relative to the Python app directory
-- Automatically copy and adapt the Blazor configuration
-- Add Python-specific `ServerSettings` section with production defaults
-- Set `Environment` to "production"
-- Use the same Azure Storage, Email, and Application Insights settings as the Blazor app
+### 1. Configuration File Exists
+If `appsettings.json` is already present, the application will use it directly.
 
-### 2. Development Environment (Fallback)
-When no Blazor configuration is available, it will:
+### 2. Automatic Template Copy (Fallback)
+When no configuration file is available, it will:
 - Look for `appsettings.example.json` in the Python app directory
 - Copy the example configuration with development defaults
 - Require manual updates for SMTP and other service credentials
 
 ### 3. Manual Configuration
-You can also manually create `appsettings.json` by copying from either source and customizing as needed.
+You can also manually create `appsettings.json` by copying from the example template and customizing as needed.
 
-## Configuration Sources and Auto-Detection
+## Configuration Structure
 
-The `appsettings.json` file mirrors the structure of the Blazor app's `appsettings.json`:
+The `appsettings.json` file uses a structured format optimized for the Python FastAPI application:
 
 ```json
 {
@@ -213,8 +202,8 @@ The tool will:
 If `appsettings.json` is missing and no configuration source is available:
 ```
 ❌ Configuration file 'appsettings.json' not found. 
-Unable to find Blazor app configuration at '../BlazorApp/appsettings.json' or fallback 'appsettings.example.json'. 
-Please create 'appsettings.json' by copying from the Blazor app's appsettings.json or from appsettings.example.json and updating with your values.
+Unable to find configuration template 'appsettings.example.json'. 
+Please create 'appsettings.json' by copying from appsettings.example.json and updating with your values.
 ```
 
 ### Invalid JSON
@@ -256,14 +245,14 @@ If you previously used environment variables, here's how to migrate:
 ## Security Considerations
 
 1. **Never commit `appsettings.json` to version control** if it contains sensitive information
-2. Use `the Blazor app's appsettings.json` as a template with placeholder values
+2. Use `appsettings.example.json` as a template with placeholder values
 3. Set appropriate file permissions on `appsettings.json` (e.g., `600`)
 4. For production, consider using Azure Key Vault or similar secure storage
 
 ## Deployment
 
 ### Development
-1. Copy `the Blazor app's appsettings.json` to `appsettings.json`
+1. Copy `appsettings.example.json` to `appsettings.json`
 2. Update with your development SMTP credentials
 3. Run the application
 
@@ -278,7 +267,7 @@ If you previously used environment variables, here's how to migrate:
 ### Application Won't Start
 Check the error message:
 - Missing `appsettings.json` file → Will auto-copy from Blazor app or example file
-- No configuration sources → Copy from `../BlazorApp/appsettings.json` or `appsettings.example.json`
+- No configuration sources → Copy from `appsettings.example.json`
 - Invalid JSON → Validate JSON syntax
 - Missing fields → Add required EmailSettings fields
 

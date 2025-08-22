@@ -1,166 +1,94 @@
-# Enhanced Development Mode Debugging
+# Python Application Debugging Features
 
-This document outlines the comprehensive debugging enhancements made to improve development mode form submission troubleshooting.
+This document outlines the debugging and logging capabilities of the current Python FastAPI implementation.
 
 ## Overview
 
-The Azure Accommodation Form application now includes extensive debugging capabilities specifically designed for development mode. These enhancements provide detailed error logging, request/response analysis, and local storage fallback validation to make development mode submission failures easy to diagnose and fix.
+The Azure Accommodation Form application is built with Python FastAPI and includes comprehensive logging and debugging capabilities for development and production environments.
 
-## Key Enhancements
+## Current Debugging Features
 
-### 1. Server-side Enhanced Error Logging (`FormController.cs`)
+### 1. Application Insights Integration
+- **Telemetry tracking**: Automatic event, exception, and dependency tracking via `app/services/application_insights.py`
+- **Custom properties**: Environment-specific metadata and correlation IDs
+- **Performance monitoring**: Request timing and application performance metrics
+- **Exception tracking**: Detailed exception logging with stack traces
 
-#### Request Tracking and Payload Logging
-- **Request ID generation**: Each request gets a unique 8-character ID for tracking across logs
-- **Development mode detection**: Automatic environment detection for conditional debug output
-- **Complete request payload logging**: In development mode, logs the full JSON payload with proper formatting
-- **Request metadata logging**: Headers, content type, content length, user agent, and timing
+### 2. Comprehensive Logging System
+- **Structured logging**: JSON-formatted logs with consistent structure throughout the application
+- **Environment-aware logging**: Different log levels for development vs production
+- **Service-specific logging**: Dedicated loggers for each service (email, storage, pdf, form processing)
+- **Request correlation**: Unique request IDs for tracking across services
+- **Configuration auditing**: Complete startup configuration validation with masked secrets
 
-#### Enhanced Exception Handling
-- **Complete stack trace logging**: Full exception details including type, source, and stack trace
-- **Inner exception traversal**: Recursive logging of all inner exceptions with detailed information
-- **Exception data logging**: Additional exception metadata when available
-- **Categorized error messages**: Specific error categorization for common failure scenarios:
-  - Azure Storage/Azurite connection issues
-  - SMTP/Email service failures
-  - Database connection problems
-  - PDF generation errors
-  - File system access issues
-  - Network connectivity problems
+### 3. Service-Level Debugging
 
-#### Development Mode Error Responses
-- **Technical details in responses**: Development mode includes full technical error details
-- **Production safety**: Production mode never exposes sensitive technical information
-- **Comprehensive troubleshooting information**: Stack traces, inner exceptions, and diagnostic guidance
+#### Email Service (`app/services/email.py`)
+- **SMTP configuration validation**: Comprehensive connection testing and validation
+- **Message construction logging**: Detailed logging of email content and attachments
+- **Error categorization**: Specific error handling for SMTP failures and configuration issues
 
-#### Enhanced Validation Error Handling
-- **Field-level validation analysis**: Detailed breakdown of validation failures with field paths
-- **Form structure analysis**: Complete analysis of form data completeness for debugging
-- **Development-only detailed validation**: Field values and attempted values logged for debugging
-- **Validation error categorization**: Clear categorization of validation failure types
+#### Storage Service (`app/services/storage.py`)
+- **Azure Blob Storage monitoring**: Connection status and operation logging
+- **Local fallback debugging**: Comprehensive local storage fallback with permission validation
+- **File operation tracking**: Detailed logging of upload operations and file handling
 
-### 2. Client-side Enhanced Debug Output (`FormApiService.cs`)
+#### PDF Generation Service (`app/services/pdf.py`)
+- **Document generation logging**: Step-by-step PDF creation process logging
+- **Template processing**: Form data processing and template rendering debugging
+- **Error handling**: Detailed error reporting for PDF generation failures
 
-#### Environment-aware Logging
-- **Development mode detection**: Automatic detection of development vs production environment
-- **Conditional debug output**: Enhanced logging only in development mode
-- **Request tracking**: API call IDs for correlation with server-side logs
+#### Form Processing Service (`app/services/form.py`)
+- **Request processing**: Complete form submission workflow logging
+- **Validation debugging**: Detailed field-level validation error reporting
+- **Data transformation**: Logging of form data processing and transformation steps
 
-#### Comprehensive API Debug Information
-- **Request details**: Base address, timeout, headers, payload size and samples
-- **Form data completeness analysis**: Section-by-section completeness checking
-- **Response analysis**: Headers, status codes, timing, and detailed response parsing
-- **Enhanced error categorization**: Improved error message parsing and categorization
+### 4. Development Environment Features
+- **Real-time configuration audit**: Startup configuration validation with clear status reporting
+- **Service connectivity verification**: Automatic testing of all external service connections
+- **Enhanced error responses**: Detailed error information in development mode
+- **Debug output formatting**: Timestamped, categorized log output for easy debugging
 
-#### Network and Connectivity Debugging
-- **HTTP exception handling**: Detailed logging of network-related failures
-- **Timeout detection**: Task cancellation and timeout identification
-- **Response header logging**: Complete response header analysis for debugging
+## Accessing Debug Information
 
-### 3. Local Storage Fallback Enhancement (`BlobStorageService.cs`)
-
-#### Comprehensive Directory and Permission Validation
-- **Base directory validation**: System temp directory accessibility checking
-- **Permission testing**: Immediate write permission validation after directory creation
-- **Disk space checking**: Available disk space validation before file operations
-- **File verification**: Post-write file existence and size verification
-
-#### Enhanced Error Handling and Troubleshooting
-- **Error categorization**: Specific categorization of file system errors:
-  - Permission errors with troubleshooting guidance
-  - Directory access issues with system configuration advice
-  - I/O errors with disk space and antivirus guidance
-  - Path validation with character checking
-- **Detailed logging**: Comprehensive logging of directory paths, file sizes, and operations
-- **Troubleshooting guidance**: Specific advice for common development environment issues
-
-#### Development Storage Features
-- **Local storage fallback**: Automatic fallback to local file system when Azurite unavailable
-- **Azurite detection**: Specific detection and guidance for Azure Storage Emulator setup
-- **Development URL generation**: Local file:// URLs for development testing
-
-## Usage in Development Mode
-
-### Debugging Form Submission Failures
-
-1. **Check Request Logs**: Look for the unique Request ID in logs to track a specific submission
-2. **Review Payload Analysis**: Check form data structure and completeness analysis
-3. **Examine Error Categorization**: Review specific error categories for targeted troubleshooting
-4. **Local Storage Validation**: Verify local storage fallback is working correctly
-
-### Log Output Examples
-
-#### Request Tracking
+### Console Output
+All debug information is available in the application console with timestamped, categorized output:
 ```
-=== FORM CONTROLLER: DIRECT SUBMISSION ENTRY (Request: a1b2c3d4) ===
-Request received at 2024-01-15T10:30:00Z
-Environment: Development
-Request Content-Type: application/json
-DEVELOPMENT ONLY - Request Payload (Request: a1b2c3d4): { ... }
+HH:mm:ss main - INFO - Starting Azure Accommodation Form application...
+HH:mm:ss main - INFO - === Configuration Audit ===
+HH:mm:ss app.services.storage - INFO - Azure Blob Storage initialized
 ```
 
-#### Error Categorization
-```
-=== FORM CONTROLLER EXCEPTION (Request: a1b2c3d4) ===
-DEVELOPMENT MODE - Full Exception Details:
-Exception Type: System.IO.UnauthorizedAccessException
-Error Category: Permission Error
-Troubleshooting: Ensure the application has write permissions to the temp directory.
-```
+### Application Insights
+When configured, detailed telemetry is sent to Azure Application Insights including:
+- Custom events for application lifecycle
+- Exception tracking with full context
+- Dependency tracking for external services
+- Performance counters and metrics
 
-#### Validation Analysis
-```
-DEVELOPMENT ONLY - Form data structure analysis (Request: a1b2c3d4):
-{
-  "TenantDetailsProvided": true,
-  "BankDetailsProvided": true,
-  "SectionsComplete": 9
-}
-```
-
-## Testing
-
-The enhanced debugging features include comprehensive testing via `EnhancedDebuggingTest.cs`:
-
-- **Development mode detection testing**
-- **Validation error handling verification**
-- **Local storage fallback testing**
-- **Form data completeness logging validation**
-
-Run tests with: `cd Tests && dotnet run`
-
-## Configuration
-
-No additional configuration is required. The debugging enhancements automatically detect the development environment and activate appropriate logging levels.
-
-### Environment Detection
-- Development mode: Full debug output, detailed error messages, request payload logging
-- Production mode: Standard logging, user-friendly error messages, no sensitive data exposure
-
-## Security Considerations
-
-- **Production safety**: Technical details are never exposed in production mode
-- **Sensitive data protection**: Connection strings and credentials are masked in logs
-- **Development-only features**: Enhanced debugging is restricted to development environment
+### Log Levels
+The application supports configurable log levels in `appsettings.json`:
+- **Debug**: Detailed technical information
+- **Info**: General application flow information  
+- **Warning**: Potentially harmful situations
+- **Error**: Error events that allow the application to continue
+- **Critical**: Serious error events that may cause termination
 
 ## Troubleshooting Common Issues
 
-### Azure Storage/Azurite Issues
-- **Error**: "Connection refused" or "127.0.0.1:10000"
-- **Solution**: Start Azurite with `azurite --silent --location c:\azurite --debug c:\azurite\debug.log`
+### Form Submission Failures
+1. Check the main application logs for request processing errors
+2. Verify email service configuration in the startup audit
+3. Confirm Azure Storage connectivity status
+4. Review PDF generation logs for template processing issues
 
-### Local Storage Permission Issues
-- **Error**: "Access denied" during local storage fallback
-- **Solution**: Check temp directory permissions and antivirus settings
+### Service Configuration Issues
+1. Review the configuration audit output at application startup
+2. Check service-specific error messages in the logs
+3. Verify Azure service credentials and connection strings
+4. Confirm local fallback mechanisms are working correctly
 
-### Email Service Configuration
-- **Error**: SMTP connection failures
-- **Solution**: Verify email settings in `appsettings.Development.json`
-
-### Database Connection Issues
-- **Error**: Entity Framework connection problems
-- **Solution**: Verify SQLite database file permissions and disk space
-
-## Summary
-
-These enhancements provide comprehensive debugging capabilities for development mode, making it significantly easier to diagnose and resolve form submission failures. The implementation maintains production security while providing rich debugging information for development environments.
+## Security Considerations
+- **Credential masking**: All passwords and secrets are masked in logs as `[SET]` or `[NOT SET]`
+- **Personal data protection**: Form submission data is logged minimally to protect privacy
+- **Production safety**: Enhanced debug information is only available in development mode
