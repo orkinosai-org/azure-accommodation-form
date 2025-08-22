@@ -72,7 +72,7 @@ az storage container create \
 
 ### 3.4 Create Azure Web App
 
-#### For Blazor (.NET 8):
+#### For Python FastAPI:
 ```bash
 # Create App Service Plan
 az appservice plan create \
@@ -324,7 +324,7 @@ az webapp config appsettings set \
 
 #### 1. Application Not Starting
 - **Check logs**: Use `az webapp log tail` to view error messages
-- **Verify runtime**: Ensure correct .NET/Python version is configured
+- **Verify runtime**: Ensure correct Python version is configured
 - **Check startup command**: For Python apps, verify startup script
 
 #### 2. Email Not Sending
@@ -365,7 +365,7 @@ az webapp deployment list-publishing-profiles \
 
 ### 8.1 Regular Updates
 
-1. **Monitor security updates** for .NET/Python
+1. **Monitor security updates** for Python
 2. **Update dependencies** regularly
 3. **Review logs** for errors or performance issues
 4. **Backup configuration** and important data
@@ -395,7 +395,6 @@ az webapp deployment list-publishing-profiles \
 ### Useful Resources
 
 - [Azure Web Apps Documentation](https://docs.microsoft.com/en-us/azure/app-service/)
-- [.NET on Azure Documentation](https://docs.microsoft.com/en-us/dotnet/azure/)
 - [Python on Azure Documentation](https://docs.microsoft.com/en-us/azure/developer/python/)
 - [Azure Blob Storage Documentation](https://docs.microsoft.com/en-us/azure/storage/blobs/)
 
@@ -403,15 +402,10 @@ az webapp deployment list-publishing-profiles \
 
 ## Quick Reference
 
-### Blazor App URLs
+### Application URLs
 - **Application**: `https://your-app-name.azurewebsites.net`
-- **API Documentation**: `https://your-app-name.azurewebsites.net/swagger`
+- **API Documentation**: `https://your-app-name.azurewebsites.net/docs`
 - **Health Check**: `https://your-app-name.azurewebsites.net/health`
-
-### Python App URLs
-- **Application**: `https://your-python-app-name.azurewebsites.net`
-- **API Documentation**: `https://your-python-app-name.azurewebsites.net/docs`
-- **Health Check**: `https://your-python-app-name.azurewebsites.net/health`
 
 ### Resource Naming Convention
 ```
