@@ -305,3 +305,109 @@ Sent at: {datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")}
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to send test email: {str(e)}"
         )
+
+@router.get("/logs")
+async def get_application_logs(
+    request: Request,
+    limit: int = Query(100, ge=1, le=1000),
+    level: Optional[str] = Query(None, regex="^(DEBUG|INFO|WARNING|ERROR|CRITICAL)$"),
+    since: Optional[datetime] = Query(None)
+):
+    """Get recent application logs (admin only)"""
+    await verify_admin_access(request)
+    
+    # Get logs from logging system
+    logs = []
+    
+    # For this implementation, we'll return logged events from Application Insights
+    # In a production system, you might want to integrate with Azure Log Analytics
+    try:
+        from app.services.application_insights import get_insights_service
+        insights_service = get_insights_service()
+        
+        # Create a log entry about the logs request
+        insights_service.track_event("AdminLogsRequested", {
+            "admin_ip": get_current_ip(request),
+            "limit": limit,
+            "level_filter": level,
+            "since": since.isoformat() if since else None
+        })
+        
+        # For now, return a structured response indicating logs are tracked via Application Insights
+        response = {
+            "message": "Application logs are tracked via Application Insights",
+            "application_insights_configured": bool(insights_service.connection_string),
+            "log_info": {
+                "note": "Application events and errors are automatically tracked and can be viewed in Azure Application Insights",
+                "connection_string_configured": bool(insights_service.connection_string),
+                "recent_log_request": {
+                    "timestamp": datetime.utcnow().isoformat(),
+                    "limit": limit,
+                    "level_filter": level,
+                    "since": since.isoformat() if since else None
+                }
+            }
+        }
+        
+        if not insights_service.connection_string:
+            response["warning"] = "Application Insights not configured - logs are only available in console output"
+        
+        return response
+        
+    except Exception as e:
+        logger.error(f"Error retrieving logs: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Unable to retrieve application logs"
+        )
+
+@router.get("/logs/events")
+async def get_application_events(
+    request: Request,
+    event_type: Optional[str] = Query(None),
+    limit: int = Query(50, ge=1, le=500)
+):
+    """Get recent application events and tracking info (admin only)"""
+    await verify_admin_access(request)
+    
+    try:
+        from app.services.application_insights import get_insights_service
+        insights_service = get_insights_service()
+        
+        # Track this admin request
+        insights_service.track_event("AdminEventsRequested", {
+            "admin_ip": get_current_ip(request),
+            "event_type_filter": event_type,
+            "limit": limit
+        })
+        
+        # Return information about event tracking
+        return {
+            "message": "Application events are tracked via Application Insights",
+            "application_insights_configured": bool(insights_service.connection_string),
+            "tracking_info": {
+                "events_tracked": [
+                    "ApplicationStartup",
+                    "ApplicationShutdown", 
+                    "StorageConnectionSuccess",
+                    "FormSubmissionStarted",
+                    "FormSubmissionCompleted",
+                    "EmailSent",
+                    "AdminLogsRequested",
+                    "AdminEventsRequested"
+                ],
+                "note": "Event details and telemetry are available in Azure Application Insights dashboard",
+                "query_requested": {
+                    "timestamp": datetime.utcnow().isoformat(),
+                    "event_type_filter": event_type,
+                    "limit": limit
+                }
+            }
+        }
+        
+    except Exception as e:
+        logger.error(f"Error retrieving events: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Unable to retrieve application events"
+        )
