@@ -4,14 +4,15 @@ Admin routes for form management
 
 import os
 import logging
+import io
 from datetime import datetime, timedelta
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from fastapi import APIRouter, Request, HTTPException, status, Query, Body
-from fastapi.responses import JSONResponse, FileResponse
+from fastapi.responses import JSONResponse, FileResponse, StreamingResponse
 from pydantic import BaseModel, EmailStr
 
 from app.core.security import get_current_ip, require_certificate_auth
-from app.core.config import get_settings
+from app.core.config import get_settings, LogLevel
 from app.services.form import FormService
 from app.services.storage import AzureBlobStorageService
 from app.services.email import EmailService
@@ -304,4 +305,302 @@ Sent at: {datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")}
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to send test email: {str(e)}"
+        )
+
+# Log viewing related models
+class LogEntry(BaseModel):
+    """Model for a single log entry"""
+    timestamp: str
+    level: str
+    logger: str
+    message: str
+    module: Optional[str] = None
+    line_number: Optional[int] = None
+
+class LogLevelUpdate(BaseModel):
+    """Model for updating log levels"""
+    logger_name: str
+    level: str
+
+# In-memory log handler to capture recent logs
+class InMemoryLogHandler(logging.Handler):
+    """Custom log handler that stores recent logs in memory"""
+    
+    def __init__(self, max_records: int = 1000):
+        super().__init__()
+        self.max_records = max_records
+        self.records: List[logging.LogRecord] = []
+    
+    def emit(self, record: logging.LogRecord):
+        """Store the log record"""
+        self.records.append(record)
+        # Keep only the most recent records
+        if len(self.records) > self.max_records:
+            self.records = self.records[-self.max_records:]
+    
+    def get_recent_logs(self, count: Optional[int] = None, level_filter: Optional[str] = None) -> List[LogEntry]:
+        """Get recent log entries"""
+        records = self.records
+        
+        # Filter by level if specified
+        if level_filter:
+            level_num = getattr(logging, level_filter.upper(), None)
+            if level_num:
+                records = [r for r in records if r.levelno >= level_num]
+        
+        # Limit count if specified
+        if count:
+            records = records[-count:]
+        
+        # Convert to LogEntry objects
+        log_entries = []
+        for record in records:
+            try:
+                log_entry = LogEntry(
+                    timestamp=datetime.fromtimestamp(record.created).isoformat(),
+                    level=record.levelname,
+                    logger=record.name,
+                    message=record.getMessage(),
+                    module=getattr(record, 'filename', None),
+                    line_number=getattr(record, 'lineno', None)
+                )
+                log_entries.append(log_entry)
+            except Exception as e:
+                # If there's an error processing a record, skip it
+                continue
+        
+        return log_entries
+
+# Global in-memory log handler instance
+_memory_handler = InMemoryLogHandler()
+
+# Add the memory handler to the root logger if not already added
+def _ensure_memory_handler():
+    """Ensure the memory handler is added to the root logger"""
+    root_logger = logging.getLogger()
+    if _memory_handler not in root_logger.handlers:
+        _memory_handler.setLevel(logging.DEBUG)
+        root_logger.addHandler(_memory_handler)
+
+# Initialize the memory handler
+_ensure_memory_handler()
+
+@router.get("/logs")
+async def get_application_logs(
+    request: Request,
+    count: int = Query(100, ge=1, le=1000, description="Number of recent log entries to return"),
+    level: Optional[str] = Query(None, description="Minimum log level filter (DEBUG, INFO, WARNING, ERROR, CRITICAL)"),
+    logger_name: Optional[str] = Query(None, description="Filter by specific logger name")
+):
+    """Get recent application logs (admin only)"""
+    await verify_admin_access(request)
+    
+    _ensure_memory_handler()
+    
+    try:
+        # Get logs from the memory handler
+        log_entries = _memory_handler.get_recent_logs(count=count, level_filter=level)
+        
+        # Filter by logger name if specified
+        if logger_name:
+            log_entries = [entry for entry in log_entries if logger_name.lower() in entry.logger.lower()]
+        
+        return {
+            "logs": log_entries,
+            "total_returned": len(log_entries),
+            "filters": {
+                "count": count,
+                "level": level,
+                "logger_name": logger_name
+            },
+            "available_levels": ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
+        }
+        
+    except Exception as e:
+        logger.error(f"Error retrieving application logs: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to retrieve logs: {str(e)}"
+        )
+
+@router.get("/logs/levels")
+async def get_log_levels(request: Request):
+    """Get current log levels for all active loggers (admin only)"""
+    await verify_admin_access(request)
+    
+    try:
+        loggers_info = {}
+        
+        # Get root logger info
+        root_logger = logging.getLogger()
+        loggers_info["root"] = {
+            "level": logging.getLevelName(root_logger.level),
+            "level_number": root_logger.level,
+            "handlers": len(root_logger.handlers),
+            "effective_level": logging.getLevelName(root_logger.getEffectiveLevel())
+        }
+        
+        # Get info for all known loggers
+        logger_dict = logging.Logger.manager.loggerDict
+        for name, logger_obj in logger_dict.items():
+            if isinstance(logger_obj, logging.Logger):
+                loggers_info[name] = {
+                    "level": logging.getLevelName(logger_obj.level),
+                    "level_number": logger_obj.level,
+                    "handlers": len(logger_obj.handlers),
+                    "effective_level": logging.getLevelName(logger_obj.getEffectiveLevel()),
+                    "propagate": logger_obj.propagate
+                }
+        
+        return {
+            "loggers": loggers_info,
+            "available_levels": [
+                {"name": "DEBUG", "value": logging.DEBUG},
+                {"name": "INFO", "value": logging.INFO},
+                {"name": "WARNING", "value": logging.WARNING},
+                {"name": "ERROR", "value": logging.ERROR},
+                {"name": "CRITICAL", "value": logging.CRITICAL}
+            ],
+            "config_source": "runtime"
+        }
+        
+    except Exception as e:
+        logger.error(f"Error getting log levels: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get log levels: {str(e)}"
+        )
+
+@router.post("/logs/levels")
+async def update_log_level(
+    log_level_update: LogLevelUpdate,
+    request: Request
+):
+    """Update log level for a specific logger (admin only)"""
+    await verify_admin_access(request)
+    
+    try:
+        # Validate the log level
+        level_name = log_level_update.level.upper()
+        if level_name not in ['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL']:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid log level: {log_level_update.level}. Must be one of: DEBUG, INFO, WARNING, ERROR, CRITICAL"
+            )
+        
+        # Get the logger
+        target_logger = logging.getLogger(log_level_update.logger_name)
+        
+        # Convert level name to level number
+        level_number = getattr(logging, level_name)
+        
+        # Update the logger level
+        old_level = logging.getLevelName(target_logger.level)
+        target_logger.setLevel(level_number)
+        
+        logger.info(f"Updated log level for logger '{log_level_update.logger_name}' from {old_level} to {level_name}")
+        
+        return {
+            "message": f"Updated log level for logger '{log_level_update.logger_name}'",
+            "logger_name": log_level_update.logger_name,
+            "old_level": old_level,
+            "new_level": level_name,
+            "new_level_number": level_number
+        }
+        
+    except Exception as e:
+        logger.error(f"Error updating log level: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to update log level: {str(e)}"
+        )
+
+@router.get("/logs/download")
+async def download_logs(
+    request: Request,
+    format: str = Query("txt", description="Download format: txt or json"),
+    count: int = Query(1000, ge=1, le=5000, description="Number of recent log entries"),
+    level: Optional[str] = Query(None, description="Minimum log level filter")
+):
+    """Download application logs as a file (admin only)"""
+    await verify_admin_access(request)
+    
+    _ensure_memory_handler()
+    
+    try:
+        # Get logs from the memory handler
+        log_entries = _memory_handler.get_recent_logs(count=count, level_filter=level)
+        
+        timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
+        
+        if format.lower() == "json":
+            # JSON format
+            import json
+            logs_data = {
+                "generated_at": datetime.utcnow().isoformat(),
+                "total_entries": len(log_entries),
+                "filters": {"count": count, "level": level},
+                "logs": [entry.dict() for entry in log_entries]
+            }
+            
+            content = json.dumps(logs_data, indent=2)
+            filename = f"application_logs_{timestamp}.json"
+            media_type = "application/json"
+            
+        else:
+            # Plain text format
+            lines = [f"Application Logs Generated: {datetime.utcnow().isoformat()}"]
+            lines.append(f"Total Entries: {len(log_entries)}")
+            lines.append(f"Filters: count={count}, level={level}")
+            lines.append("=" * 80)
+            lines.append("")
+            
+            for entry in log_entries:
+                lines.append(f"{entry.timestamp} [{entry.level:8}] {entry.logger}: {entry.message}")
+                if entry.module and entry.line_number:
+                    lines.append(f"    at {entry.module}:{entry.line_number}")
+                lines.append("")
+            
+            content = "\n".join(lines)
+            filename = f"application_logs_{timestamp}.txt"
+            media_type = "text/plain"
+        
+        # Create a file-like object
+        file_obj = io.BytesIO(content.encode('utf-8'))
+        
+        return StreamingResponse(
+            io.BytesIO(content.encode('utf-8')),
+            media_type=media_type,
+            headers={"Content-Disposition": f"attachment; filename={filename}"}
+        )
+        
+    except Exception as e:
+        logger.error(f"Error downloading logs: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to download logs: {str(e)}"
+        )
+
+@router.post("/logs/clear")
+async def clear_logs(request: Request):
+    """Clear the in-memory log cache (admin only)"""
+    await verify_admin_access(request)
+    
+    try:
+        _ensure_memory_handler()
+        old_count = len(_memory_handler.records)
+        _memory_handler.records.clear()
+        
+        logger.info(f"Log cache cleared by admin (removed {old_count} entries)")
+        
+        return {
+            "message": "Log cache cleared successfully",
+            "entries_removed": old_count
+        }
+        
+    except Exception as e:
+        logger.error(f"Error clearing logs: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to clear logs: {str(e)}"
         )

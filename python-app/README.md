@@ -202,8 +202,19 @@ Easily deploy to different Azure Web Apps by updating the `DeploymentSettings` s
 ### Admin (Requires Admin Token)
 - `GET /api/admin/submissions` - List all submissions
 - `GET /api/admin/submissions/{id}` - Get submission details
+- `GET /api/admin/submissions/{id}/download` - Download submission PDF
+- `POST /api/admin/submissions/{id}/resend-email` - Resend confirmation email
 - `GET /api/admin/stats` - Get statistics
 - `DELETE /api/admin/submissions/{id}` - Delete submission
+- `GET /api/admin/config/email` - Get email configuration
+- `POST /api/admin/config/email/test` - Send test email
+
+#### Admin Logging Endpoints
+- `GET /api/admin/logs` - View recent application logs
+- `GET /api/admin/logs/levels` - Get current log levels for all loggers
+- `POST /api/admin/logs/levels` - Update log level for a specific logger
+- `GET /api/admin/logs/download` - Download application logs as file (txt/json)
+- `POST /api/admin/logs/clear` - Clear the in-memory log cache
 
 ## Form Schema
 
