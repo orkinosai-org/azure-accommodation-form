@@ -1574,6 +1574,12 @@ class AzureAccommodationForm {
             }
         }
         
+        // Additional validation: ensure library is selected
+        const librarySelector = document.getElementById('document-library');
+        if (librarySelector && librarySelector.required && !librarySelector.value) {
+            allValid = false;
+        }
+        
         if (allValid) {
             submitButton.disabled = false;
             submitButton.classList.remove('btn-secondary');
@@ -1589,7 +1595,8 @@ class AzureAccommodationForm {
         try {
             // Wait for external library API to be available
             if (typeof window.externalLibraryAPI === 'undefined') {
-                console.warn('External library API not loaded, skipping library selector initialization');
+                console.warn('External library API not loaded, using fallback message');
+                this.showLibrarySelectorFallback('External library system not available');
                 return;
             }
             
@@ -1611,16 +1618,32 @@ class AzureAccommodationForm {
                     }
                 });
                 
-                console.log('Library selector initialized successfully');
+                console.log('Library selector initialized successfully using admin API');
             }
         } catch (error) {
             console.error('Failed to initialize library selector:', error);
+            this.showLibrarySelectorFallback('Failed to load admin-managed libraries');
+        }
+    }
+    
+    showLibrarySelectorFallback(message) {
+        // Show fallback message when admin system is not available
+        const selector = document.getElementById('document-library');
+        if (selector) {
+            selector.innerHTML = `<option value="">${message}</option>`;
+            selector.disabled = true;
             
-            // Fallback: show error message in selector
-            const selector = document.getElementById('document-library');
-            if (selector) {
-                selector.innerHTML = '<option value="">Failed to load libraries</option>';
-                selector.disabled = true;
+            // Show warning message
+            const container = document.getElementById('library-selector-container');
+            if (container) {
+                const warningDiv = document.createElement('div');
+                warningDiv.className = 'alert alert-warning mt-2';
+                warningDiv.innerHTML = `
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>Library Management Unavailable:</strong> ${message}. 
+                    Please contact the administrator to configure the external library admin system.
+                `;
+                container.appendChild(warningDiv);
             }
         }
     }
@@ -1674,6 +1697,30 @@ class AzureAccommodationForm {
         div.textContent = text;
         return div.innerHTML;
     }
+    
+    validateLibrarySelection() {
+        // Ensure a library is selected and it comes from the admin-managed list
+        const librarySelector = document.getElementById('document-library');
+        if (!librarySelector || !librarySelector.value) {
+            console.error('No library selected');
+            return false;
+        }
+        
+        // Check if we have the selected library data from the admin API
+        if (!this.formData.selectedLibrary || !this.formData.selectedLibrary.id) {
+            console.error('Selected library is not from admin-managed list');
+            return false;
+        }
+        
+        // Verify the selector value matches our stored library
+        if (librarySelector.value !== this.formData.selectedLibrary.id) {
+            console.error('Library selector value does not match stored library data');
+            return false;
+        }
+        
+        console.log('Library selection validated: using admin-managed library', this.formData.selectedLibrary.name);
+        return true;
+    }
 
     
     async submitForm() {
@@ -1681,6 +1728,12 @@ class AzureAccommodationForm {
             // Validate form first
             if (!this.validateForm()) {
                 this.showAlert('Please fill in all required fields correctly before submitting.', 'danger');
+                return;
+            }
+            
+            // Validate that selected library is from admin list
+            if (!this.validateLibrarySelection()) {
+                this.showAlert('Please select a valid document library from the admin-managed list.', 'danger');
                 return;
             }
             
