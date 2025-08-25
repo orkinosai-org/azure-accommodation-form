@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>External User Management Web Part Example</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-12">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>External User Management Web Part Example</strong><br>
+                    This demonstrates how web parts should use the External Library Admin List exclusively for managing external users.
+                    All add/remove operations go through the admin API endpoints.
+                </div>
+            </div>
+        </div>
+
+        <!-- Library Selection Section -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-database me-2"></i>
+                    Library Selection
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <label class="form-label">Select Library:</label>
+                        <div id="library-selector-container"></div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">User Email (for access check):</label>
+                        <div class="input-group">
+                            <input type="email" class="form-control" id="user-email-input" placeholder="user@example.com">
+                            <button class="btn btn-outline-primary" onclick="checkAccess()">
+                                <i class="fas fa-search"></i> Check Access
+                            </button>
+                        </div>
+                        <div id="access-result" class="mt-2"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- External User Management Section -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-users me-2"></i>
+                    External User Management
+                </h5>
+            </div>
+            <div class="card-body">
+                <div id="user-management-container">
+                    <p class="text-muted">Please select a library above to manage external users.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Available Libraries Grid -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-th-large me-2"></i>
+                    Available Libraries
+                </h5>
+            </div>
+            <div class="card-body">
+                <div id="library-grid-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- External Library Integration -->
+    <script src="/static/js/external-library-integration.js"></script>
+    
+    <script>
+        let selectedLibraryId = null;
+
+        // Initialize the web part
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                // Initialize external library integration
+                await window.externalLibraryAPI.init();
+                
+                // Create library selector
+                await window.externalLibraryAPI.createSelector('library-selector-container', {
+                    selectId: 'library-select',
+                    placeholder: 'Choose a library...',
+                    onChange: (library, event) => {
+                        if (library) {
+                            selectedLibraryId = library.id;
+                            loadExternalUserManager(library.id);
+                        } else {
+                            selectedLibraryId = null;
+                            clearUserManagement();
+                        }
+                    }
+                });
+                
+                // Create library grid
+                await window.externalLibraryAPI.createGrid('library-grid-container', {
+                    showActions: true
+                });
+                
+                console.log('External user management web part initialized successfully');
+                
+            } catch (error) {
+                console.error('Failed to initialize web part:', error);
+                showError('Failed to initialize external library integration');
+            }
+        });
+
+        // Load external user manager for selected library
+        async function loadExternalUserManager(libraryId) {
+            try {
+                const managerId = await window.externalLibraryAPI.createExternalUserManager(
+                    'user-management-container', 
+                    libraryId
+                );
+                
+                console.log('External user manager loaded for library:', libraryId);
+                
+            } catch (error) {
+                console.error('Failed to load user manager:', error);
+                showError('Failed to load external user management interface');
+            }
+        }
+
+        // Clear user management interface
+        function clearUserManagement() {
+            const container = document.getElementById('user-management-container');
+            container.innerHTML = '<p class="text-muted">Please select a library above to manage external users.</p>';
+        }
+
+        // Check user access to selected library
+        async function checkAccess() {
+            const userEmail = document.getElementById('user-email-input').value.trim();
+            const resultDiv = document.getElementById('access-result');
+            
+            if (!userEmail) {
+                resultDiv.innerHTML = '<div class="alert alert-warning">Please enter an email address</div>';
+                return;
+            }
+            
+            if (!selectedLibraryId) {
+                resultDiv.innerHTML = '<div class="alert alert-warning">Please select a library first</div>';
+                return;
+            }
+            
+            try {
+                resultDiv.innerHTML = '<div class="text-muted"><i class="fas fa-spinner fa-spin"></i> Checking access...</div>';
+                
+                const result = await window.externalLibraryAPI.checkUserAccess(selectedLibraryId, userEmail);
+                
+                if (result.has_access) {
+                    resultDiv.innerHTML = `
+                        <div class="alert alert-success">
+                            <i class="fas fa-check-circle me-2"></i>
+                            <strong>Access Granted</strong><br>
+                            User: ${result.user_details.name}<br>
+                            Email: ${result.user_details.email}<br>
+                            ${result.user_details.organization ? `Organization: ${result.user_details.organization}` : ''}
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="alert alert-danger">
+                            <i class="fas fa-times-circle me-2"></i>
+                            <strong>Access Denied</strong><br>
+                            User ${userEmail} does not have access to this library.
+                        </div>
+                    `;
+                }
+                
+            } catch (error) {
+                console.error('Error checking access:', error);
+                resultDiv.innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Error checking access: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        // Listen for library selection events
+        document.addEventListener('librarySelected', (event) => {
+            const library = event.detail.library;
+            console.log('Library selected via event:', library.name);
+            
+            // Update the selector if not already selected
+            const selector = document.getElementById('library-select');
+            if (selector && selector.value !== library.id) {
+                selector.value = library.id;
+                selectedLibraryId = library.id;
+                loadExternalUserManager(library.id);
+            }
+        });
+
+        // Error display function
+        function showError(message) {
+            const alert = document.createElement('div');
+            alert.className = 'alert alert-danger alert-dismissible fade show';
+            alert.innerHTML = `
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            document.body.insertBefore(alert, document.body.firstChild);
+            
+            setTimeout(() => {
+                if (alert.parentNode) {
+                    alert.remove();
+                }
+            }, 5000);
+        }
+    </script>
+</body>
+</html>
