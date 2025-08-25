@@ -51,6 +51,12 @@ The Python implementation includes a complete backend API that processes form su
 - `GET /docs` - Interactive API documentation (Swagger UI)
 - `GET /redoc` - Alternative API documentation
 
+### 🤖 Copilot Agent Endpoints
+
+- `POST /api/copilot/chat` - Chat with the AI assistant
+- `GET /api/copilot/capabilities` - Get available capabilities
+- `GET /api/copilot/health` - Copilot health check
+
 ### Configuration
 
 The backend is configured via `appsettings.json` file only:
@@ -169,6 +175,10 @@ The application provides identical functionality across all sections:
 │   ├── app/
 │   │   ├── models/              # Pydantic models
 │   │   ├── services/            # Business logic services
+│   │   ├── copilot/             # AI Copilot agent
+│   │   │   ├── models/          # Copilot data models
+│   │   │   ├── services/        # Agent services
+│   │   │   └── api/             # Copilot API routes
 │   │   └── utils/               # Utility functions
 │   ├── tests/                   # Test files
 │   ├── main.py                  # Application entry point
@@ -177,7 +187,10 @@ The application provides identical functionality across all sections:
 │   └── README.md               # Python app documentation
 ├── docs/                        # Documentation
 │   ├── requirements.md          # Project requirements
-│   └── form_fields.md          # Form structure details
+│   ├── form_fields.md          # Form structure details
+│   ├── EXTERNAL_LIBRARY_ADMIN_GUIDE.md  # External library management
+│   ├── COPILOT_AGENT_GUIDE.md  # Copilot agent documentation
+│   └── COPILOT_DEVELOPMENT_ROADMAP.md   # Development roadmap
 └── form_schema.json            # JSON schema for form data
 ```
 
@@ -185,6 +198,50 @@ The application provides identical functionality across all sections:
 
 - **`deploy.yml`** - Python app deployment
 - **`main_testapp.yml`** - Test app deployment
+
+## External Collaboration Management Copilot Agent
+
+The project now includes an AI-powered Copilot agent for managing external collaborations and SharePoint libraries.
+
+### 🤖 Copilot Features
+
+- **Natural Language Interface**: Interact with the system using plain English
+- **Library Management**: Automated creation, updates, and management of external libraries
+- **User Access Control**: Intelligent user permission management and auditing
+- **Task Automation**: Background task execution with progress tracking
+- **Conversational AI**: Context-aware multi-turn conversations
+- **Integration**: Seamless integration with existing external library system
+
+### 🚀 Quick Start with Copilot
+
+```bash
+# The Copilot agent is automatically available when running the main application
+cd python-app
+python main.py
+
+# Access Copilot interface at: http://localhost:8000/copilot
+# Use API directly at: http://localhost:8000/api/copilot/chat
+```
+
+### 📡 Copilot API Examples
+
+**Chat with the agent:**
+```bash
+curl -X POST "http://localhost:8000/api/copilot/chat" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "user_message": "Show me all external libraries",
+    "session_id": "session-123",
+    "user_id": "admin@example.com"
+  }'
+```
+
+**Get agent capabilities:**
+```bash
+curl "http://localhost:8000/api/copilot/capabilities"
+```
+
+📖 See [docs/COPILOT_AGENT_GUIDE.md](docs/COPILOT_AGENT_GUIDE.md) for complete documentation.
 
 ## Backend Integration
 
