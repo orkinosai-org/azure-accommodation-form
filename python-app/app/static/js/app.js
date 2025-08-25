@@ -1105,6 +1105,40 @@ class AzureAccommodationForm {
                     </div>
                 </div>
             </div>
+
+            <!-- Document Library Selection Section -->
+            <div class="form-section mb-4">
+                <h4 class="section-title">11. Document Submission</h4>
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Select the document library where your application documents will be stored.
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-8">
+                        <div class="mb-3">
+                            <label for="document-library" class="form-label">Document Library *</label>
+                            <div id="library-selector-container">
+                                <!-- Library selector will be loaded here -->
+                                <select class="form-control" id="document-library" name="document_library" required disabled>
+                                    <option value="">Loading available libraries...</option>
+                                </select>
+                            </div>
+                            <div class="form-text">Select the SharePoint library where your application documents will be stored</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label class="form-label">Selected Library Info</label>
+                            <div id="selected-library-info" class="card bg-light">
+                                <div class="card-body p-2">
+                                    <small class="text-muted">No library selected</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
             
             <!-- Submit Section -->
             <div class="form-section">
@@ -1129,6 +1163,9 @@ class AzureAccommodationForm {
         if (emailField) {
             emailField.value = document.getElementById('email').value;
         }
+        
+        // Initialize external library selector
+        this.initializeLibrarySelector();
         
         // Set default dates to today
         const signatureDateField = document.getElementById('signature_date');
@@ -1537,6 +1574,12 @@ class AzureAccommodationForm {
             }
         }
         
+        // Additional validation: ensure library is selected
+        const librarySelector = document.getElementById('document-library');
+        if (librarySelector && librarySelector.required && !librarySelector.value) {
+            allValid = false;
+        }
+        
         if (allValid) {
             submitButton.disabled = false;
             submitButton.classList.remove('btn-secondary');
@@ -1548,12 +1591,149 @@ class AzureAccommodationForm {
         }
     }
 
+    async initializeLibrarySelector() {
+        try {
+            // Wait for external library API to be available
+            if (typeof window.externalLibraryAPI === 'undefined') {
+                console.warn('External library API not loaded, using fallback message');
+                this.showLibrarySelectorFallback('External library system not available');
+                return;
+            }
+            
+            // Initialize the library integration and load libraries
+            await window.externalLibraryAPI.init();
+            
+            // Replace the temporary selector with the admin-managed one
+            const container = document.getElementById('library-selector-container');
+            if (container) {
+                // Clear loading message
+                container.innerHTML = '';
+                
+                // Create the library selector using admin API
+                await window.externalLibraryAPI.createSelector('library-selector-container', {
+                    selectId: 'document-library',
+                    placeholder: 'Choose a document library...',
+                    onChange: (library, event) => {
+                        this.handleLibrarySelection(library, event);
+                    }
+                });
+                
+                console.log('Library selector initialized successfully using admin API');
+            }
+        } catch (error) {
+            console.error('Failed to initialize library selector:', error);
+            this.showLibrarySelectorFallback('Failed to load admin-managed libraries');
+        }
+    }
+    
+    showLibrarySelectorFallback(message) {
+        // Show fallback message when admin system is not available
+        const selector = document.getElementById('document-library');
+        if (selector) {
+            selector.innerHTML = `<option value="">${message}</option>`;
+            selector.disabled = true;
+            
+            // Show warning message
+            const container = document.getElementById('library-selector-container');
+            if (container) {
+                const warningDiv = document.createElement('div');
+                warningDiv.className = 'alert alert-warning mt-2';
+                warningDiv.innerHTML = `
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>Library Management Unavailable:</strong> ${message}. 
+                    Please contact the administrator to configure the external library admin system.
+                `;
+                container.appendChild(warningDiv);
+            }
+        }
+    }
+    
+    handleLibrarySelection(library, event) {
+        const infoContainer = document.getElementById('selected-library-info');
+        
+        if (library && infoContainer) {
+            // Update the library info display
+            infoContainer.innerHTML = `
+                <div class="card-body p-2">
+                    <h6 class="card-title mb-1">${this.escapeHtml(library.name)}</h6>
+                    <p class="card-text mb-1">
+                        <small class="text-muted">${this.escapeHtml(library.description || 'No description')}</small>
+                    </p>
+                    <p class="card-text mb-0">
+                        <small class="text-primary">
+                            <i class="fas fa-external-link-alt me-1"></i>
+                            <a href="${this.escapeHtml(library.url)}" target="_blank" rel="noopener">Open Library</a>
+                        </small>
+                    </p>
+                </div>
+            `;
+            
+            // Store the selected library for form submission
+            this.formData.selectedLibrary = library;
+            
+            console.log('Library selected:', library.name);
+            
+            // Trigger form validation update
+            this.updateSubmitButtonState();
+        } else if (infoContainer) {
+            // Reset to default state
+            infoContainer.innerHTML = `
+                <div class="card-body p-2">
+                    <small class="text-muted">No library selected</small>
+                </div>
+            `;
+            
+            // Clear stored library
+            delete this.formData.selectedLibrary;
+            
+            // Update validation
+            this.updateSubmitButtonState();
+        }
+    }
+    
+    escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+    
+    validateLibrarySelection() {
+        // Ensure a library is selected and it comes from the admin-managed list
+        const librarySelector = document.getElementById('document-library');
+        if (!librarySelector || !librarySelector.value) {
+            console.error('No library selected');
+            return false;
+        }
+        
+        // Check if we have the selected library data from the admin API
+        if (!this.formData.selectedLibrary || !this.formData.selectedLibrary.id) {
+            console.error('Selected library is not from admin-managed list');
+            return false;
+        }
+        
+        // Verify the selector value matches our stored library
+        if (librarySelector.value !== this.formData.selectedLibrary.id) {
+            console.error('Library selector value does not match stored library data');
+            return false;
+        }
+        
+        console.log('Library selection validated: using admin-managed library', this.formData.selectedLibrary.name);
+        return true;
+    }
+
     
     async submitForm() {
         try {
             // Validate form first
             if (!this.validateForm()) {
                 this.showAlert('Please fill in all required fields correctly before submitting.', 'danger');
+                return;
+            }
+            
+            // Validate that selected library is from admin list
+            if (!this.validateLibrarySelection()) {
+                this.showAlert('Please select a valid document library from the admin-managed list.', 'danger');
                 return;
             }
             
@@ -1719,7 +1899,12 @@ class AzureAccommodationForm {
             },
             client_ip: null, // Will be set by backend
             form_opened_at: null,
-            form_submitted_at: null
+            form_submitted_at: null,
+            document_library: this.formData.selectedLibrary ? {
+                id: this.formData.selectedLibrary.id,
+                name: this.formData.selectedLibrary.name,
+                url: this.formData.selectedLibrary.url
+            } : null
         };
     }
     
