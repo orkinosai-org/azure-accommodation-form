@@ -75,6 +75,22 @@ class ExternalLibraryIntegration {
             return;
         }
         
+        // Clear loading content
+        container.innerHTML = '';
+        
+        if (options.allowMultiple || options.showDescriptions) {
+            // Create a multi-select interface with cards
+            return this.createLibraryMultiSelector(container, options);
+        } else {
+            // Create traditional dropdown selector
+            return this.createLibraryDropdown(container, options);
+        }
+    }
+    
+    /**
+     * Create a dropdown-style library selector
+     */
+    createLibraryDropdown(container, options) {
         const selectElement = document.createElement('select');
         selectElement.className = 'form-control';
         selectElement.id = options.selectId || 'library-selector';
@@ -104,6 +120,60 @@ class ExternalLibraryIntegration {
         
         container.appendChild(selectElement);
         return selectElement;
+    }
+    
+    /**
+     * Create a multi-select library interface with cards
+     */
+    createLibraryMultiSelector(container, options) {
+        const selectorDiv = document.createElement('div');
+        selectorDiv.className = 'library-selector';
+        
+        if (this.libraries.length === 0) {
+            selectorDiv.innerHTML = '<p class="text-muted text-center">No external libraries available.</p>';
+            container.appendChild(selectorDiv);
+            return selectorDiv;
+        }
+        
+        this.libraries.forEach(library => {
+            const libraryOption = document.createElement('div');
+            libraryOption.className = 'library-option';
+            libraryOption.setAttribute('data-library-id', library.id);
+            
+            const title = document.createElement('strong');
+            title.textContent = library.name;
+            libraryOption.appendChild(title);
+            
+            if (options.showDescriptions && library.description) {
+                const description = document.createElement('div');
+                description.className = 'library-description';
+                description.textContent = library.description;
+                libraryOption.appendChild(description);
+            }
+            
+            // Add click handler
+            libraryOption.addEventListener('click', () => {
+                if (options.allowMultiple) {
+                    // Toggle selection for multi-select
+                    libraryOption.classList.toggle('selected');
+                } else {
+                    // Single selection - clear others and select this one
+                    container.querySelectorAll('.library-option').forEach(opt => 
+                        opt.classList.remove('selected')
+                    );
+                    libraryOption.classList.add('selected');
+                }
+                
+                if (options.onChange) {
+                    options.onChange(library, { target: libraryOption });
+                }
+            });
+            
+            selectorDiv.appendChild(libraryOption);
+        });
+        
+        container.appendChild(selectorDiv);
+        return selectorDiv;
     }
     
     /**
