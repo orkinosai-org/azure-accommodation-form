@@ -323,21 +323,17 @@ async function selectLibrary(libraryId) {
 
 // Example of how to use in a form
 document.addEventListener('DOMContentLoaded', async () => {
-    // Example: Create a library selector in a form
-    if (document.getElementById('library-selector-container')) {
-        await window.externalLibraryAPI.createSelector('library-selector-container', {
-            selectId: 'document-library',
-            placeholder: 'Choose a document library...',
-            onChange: (library, event) => {
-                if (library) {
-                    console.log('Library selected:', library.name);
-                    // Handle library selection in your form
-                }
-            }
-        });
+    // Initialize global library integration instance
+    if (!window.libraryIntegration) {
+        window.libraryIntegration = new ExternalLibraryIntegration();
     }
     
-    // Example: Create a library grid
+    // Example: Create a library selector in a form (if container exists)
+    if (document.getElementById('library-selector-container')) {
+        console.log('Library selector container found, will be initialized by form');
+    }
+    
+    // Example: Create a library grid (if container exists)
     if (document.getElementById('library-grid-container')) {
         await window.externalLibraryAPI.createGrid('library-grid-container', {
             showActions: true
@@ -350,4 +346,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.log('Library selected event:', library);
         // Handle the selection in your application
     });
+    
+    console.log('External library integration initialized');
 });

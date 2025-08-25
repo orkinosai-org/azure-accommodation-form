@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>External Library Integration Test</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-12">
+                <h1>External Library Integration Test</h1>
+                <div class="alert alert-info">
+                    <strong>Test Purpose:</strong> This page tests the external library integration to ensure web parts use the admin list for library management.
+                </div>
+            </div>
+        </div>
+
+        <!-- Test Library Selector -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Test: Library Selector Component</h5>
+                    </div>
+                    <div class="card-body">
+                        <p>This selector should load libraries from the admin-managed list:</p>
+                        <div id="test-library-selector-container">
+                            <!-- Library selector will be created here -->
+                        </div>
+                        <div id="test-selected-library-info" class="mt-3">
+                            <strong>Selected Library:</strong> <span class="text-muted">None</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Test Library Grid -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Test: Library Grid Component</h5>
+                    </div>
+                    <div class="card-body">
+                        <p>This grid should display all active libraries from the admin-managed list:</p>
+                        <div id="test-library-grid-container">
+                            <!-- Library grid will be created here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Test Results -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Test Results</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="test-results">
+                            <div class="alert alert-warning">
+                                <i class="fas fa-clock me-2"></i>
+                                Running tests...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/static/js/external-library-integration.js"></script>
+    <script>
+        // Test Script
+        document.addEventListener('DOMContentLoaded', async () => {
+            const testResults = document.getElementById('test-results');
+            const results = [];
+            
+            try {
+                // Test 1: Check if external library API is available
+                if (typeof window.externalLibraryAPI !== 'undefined') {
+                    results.push('✅ External Library API is available');
+                } else {
+                    results.push('❌ External Library API is NOT available');
+                }
+                
+                // Test 2: Initialize the API and load libraries
+                try {
+                    await window.externalLibraryAPI.init();
+                    results.push('✅ External Library API initialized successfully');
+                    
+                    // Test 3: Get libraries
+                    const libraries = await window.externalLibraryAPI.getLibraries();
+                    results.push(`✅ Loaded ${libraries.length} libraries from admin list`);
+                    
+                    // Test 4: Create selector component
+                    try {
+                        await window.externalLibraryAPI.createSelector('test-library-selector-container', {
+                            selectId: 'test-document-library',
+                            placeholder: 'Choose a document library...',
+                            onChange: (library, event) => {
+                                const infoElement = document.getElementById('test-selected-library-info');
+                                if (library) {
+                                    infoElement.innerHTML = `<strong>Selected Library:</strong> ${library.name} (${library.url})`;
+                                } else {
+                                    infoElement.innerHTML = '<strong>Selected Library:</strong> <span class="text-muted">None</span>';
+                                }
+                            }
+                        });
+                        results.push('✅ Library selector component created successfully');
+                    } catch (error) {
+                        results.push(`❌ Failed to create selector component: ${error.message}`);
+                    }
+                    
+                    // Test 5: Create grid component
+                    try {
+                        await window.externalLibraryAPI.createGrid('test-library-grid-container', {
+                            showActions: false
+                        });
+                        results.push('✅ Library grid component created successfully');
+                    } catch (error) {
+                        results.push(`❌ Failed to create grid component: ${error.message}`);
+                    }
+                    
+                } catch (error) {
+                    results.push(`❌ Failed to initialize External Library API: ${error.message}`);
+                }
+                
+            } catch (error) {
+                results.push(`❌ Test failed with error: ${error.message}`);
+            }
+            
+            // Display results
+            testResults.innerHTML = `
+                <div class="alert alert-${results.some(r => r.includes('❌')) ? 'danger' : 'success'}">
+                    <h6>Test Completion:</h6>
+                    <ul class="mb-0">
+                        ${results.map(result => `<li>${result}</li>`).join('')}
+                    </ul>
+                </div>
+                <div class="mt-3">
+                    <h6>Next Steps:</h6>
+                    <p class="mb-0">
+                        If all tests pass, the web parts are properly using the admin list for library management.
+                        Any failures indicate areas that need to be fixed to ensure exclusive use of the admin system.
+                    </p>
+                </div>
+            `;
+        });
+    </script>
+</body>
+</html>
