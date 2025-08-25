@@ -14,6 +14,7 @@ from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
 import uvicorn
 
 from app.api.routes import auth, form, admin, external_library
+from app.copilot.api import copilot
 from app.core.config import get_settings
 from app.core.security import get_current_ip
 from app.services.storage import AzureBlobStorageService
@@ -118,6 +119,7 @@ app.include_router(auth.router, prefix="/api/auth", tags=["authentication"])
 app.include_router(form.router, prefix="/api/form", tags=["form"])
 app.include_router(admin.router, prefix="/api/admin", tags=["admin"])
 app.include_router(external_library.router, prefix="/api/admin", tags=["external-libraries"])
+app.include_router(copilot.router, prefix="/api/copilot", tags=["copilot-agent"])
 
 @app.get("/")
 async def root(request: Request):
@@ -138,6 +140,17 @@ async def admin_libraries_page(request: Request):
     
     return templates.TemplateResponse(
         "admin-libraries.html",
+        {"request": request, "client_ip": client_ip}
+    )
+
+@app.get("/copilot")
+async def copilot_page(request: Request):
+    """External Collaboration Management Copilot page"""
+    client_ip = get_current_ip(request)
+    logger.info(f"Copilot page accessed from IP: {client_ip}")
+    
+    return templates.TemplateResponse(
+        "copilot.html",
         {"request": request, "client_ip": client_ip}
     )
 
