@@ -1000,9 +1000,38 @@ class AzureAccommodationForm {
                 </div>
             </div>
 
+            <!-- Document Libraries Section -->
+            <div class="form-section mb-4">
+                <h4 class="section-title">10. Document Libraries (Optional)</h4>
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Select any external document libraries you may need access to for accommodation-related documents.
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">Available Document Libraries</label>
+                    <div id="library-selector-container" class="mb-3">
+                        <!-- Library selector will be loaded here -->
+                        <div class="text-center text-muted">
+                            <div class="spinner-border spinner-border-sm me-2" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            Loading available libraries...
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="selected-libraries" class="mb-3" style="display: none;">
+                    <label class="form-label">Selected Libraries</label>
+                    <div id="selected-libraries-list">
+                        <!-- Selected libraries will be displayed here -->
+                    </div>
+                </div>
+            </div>
+
             <!-- Consent & Declaration Section -->
             <div class="form-section mb-4">
-                <h4 class="section-title">10. Consent & Declaration</h4>
+                <h4 class="section-title">11. Consent & Declaration</h4>
                 <div class="alert alert-warning">
                     <i class="fas fa-exclamation-triangle me-2"></i>
                     Please read carefully and complete all declaration fields.
@@ -1141,6 +1170,9 @@ class AzureAccommodationForm {
         if (declarationDateField) {
             declarationDateField.value = today;
         }
+
+        // Initialize external library integration
+        this.initializeLibraryIntegration();
         
         // Conditional field handlers for radio button groups
         
@@ -1281,6 +1313,133 @@ class AzureAccommodationForm {
         
         // Initial submit button state
         setTimeout(() => this.updateSubmitButtonState(), 100);
+    }
+
+    async initializeLibraryIntegration() {
+        try {
+            // Initialize the external library integration system
+            if (typeof window.externalLibraryAPI !== 'undefined') {
+                await window.externalLibraryAPI.init();
+                
+                // Create library selector
+                await window.externalLibraryAPI.createSelector('library-selector-container', {
+                    selectId: 'document-library',
+                    placeholder: 'Choose a document library...',
+                    allowMultiple: true,
+                    showDescriptions: true,
+                    onChange: (library, event) => {
+                        this.handleLibrarySelection(library, event);
+                    }
+                });
+                
+                // Listen for library selection events
+                document.addEventListener('librarySelected', (event) => {
+                    this.handleLibrarySelectionEvent(event);
+                });
+                
+                console.log('External library integration initialized successfully');
+            } else {
+                console.warn('External library API not available - library selector will not be functional');
+                this.showLibraryLoadError();
+            }
+        } catch (error) {
+            console.error('Failed to initialize library integration:', error);
+            this.showLibraryLoadError();
+        }
+    }
+
+    handleLibrarySelection(library, event) {
+        if (library) {
+            console.log('Library selected:', library.name);
+            this.addSelectedLibrary(library);
+        }
+    }
+
+    handleLibrarySelectionEvent(event) {
+        const library = event.detail.library;
+        if (library) {
+            console.log('Library selection event:', library.name);
+            this.addSelectedLibrary(library);
+        }
+    }
+
+    addSelectedLibrary(library) {
+        const selectedContainer = document.getElementById('selected-libraries');
+        const selectedList = document.getElementById('selected-libraries-list');
+        
+        if (!selectedContainer || !selectedList) return;
+
+        // Check if library is already selected
+        const existingCard = selectedList.querySelector(`[data-library-id="${library.id}"]`);
+        if (existingCard) {
+            this.showAlert(`Library "${library.name}" is already selected.`, 'info');
+            return;
+        }
+
+        // Create library card
+        const libraryCard = document.createElement('div');
+        libraryCard.className = 'card mb-2';
+        libraryCard.setAttribute('data-library-id', library.id);
+        libraryCard.innerHTML = `
+            <div class="card-body py-2">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title mb-1">${this.escapeHtml(library.name)}</h6>
+                        ${library.description ? `<small class="text-muted">${this.escapeHtml(library.description)}</small>` : ''}
+                    </div>
+                    <button type="button" class="btn btn-outline-danger btn-sm" onclick="accommodationForm.removeSelectedLibrary('${library.id}')">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+        `;
+
+        selectedList.appendChild(libraryCard);
+        selectedContainer.style.display = 'block';
+
+        // Store library data for form submission
+        if (!this.formData.selected_libraries) {
+            this.formData.selected_libraries = [];
+        }
+        this.formData.selected_libraries.push({
+            id: library.id,
+            name: library.name,
+            url: library.url,
+            description: library.description
+        });
+    }
+
+    removeSelectedLibrary(libraryId) {
+        const libraryCard = document.querySelector(`[data-library-id="${libraryId}"]`);
+        if (libraryCard) {
+            libraryCard.remove();
+        }
+
+        // Remove from form data
+        if (this.formData.selected_libraries) {
+            this.formData.selected_libraries = this.formData.selected_libraries.filter(
+                lib => lib.id !== libraryId
+            );
+        }
+
+        // Hide container if no libraries selected
+        const selectedList = document.getElementById('selected-libraries-list');
+        const selectedContainer = document.getElementById('selected-libraries');
+        if (selectedList && selectedList.children.length === 0 && selectedContainer) {
+            selectedContainer.style.display = 'none';
+        }
+    }
+
+    showLibraryLoadError() {
+        const container = document.getElementById('library-selector-container');
+        if (container) {
+            container.innerHTML = `
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    External library system is not available. You can still submit the form, but library selection is disabled.
+                </div>
+            `;
+        }
     }
     
     addFormValidation() {
@@ -1717,6 +1876,7 @@ class AzureAccommodationForm {
                 declaration_date: document.getElementById('declaration_date')?.value || '',
                 declaration_print_name: document.getElementById('declaration_print_name')?.value || ''
             },
+            selected_libraries: this.formData.selected_libraries || [],
             client_ip: null, // Will be set by backend
             form_opened_at: null,
             form_submitted_at: null
@@ -1827,6 +1987,14 @@ class AzureAccommodationForm {
         }
         
         return null;
+    }
+
+    // Utility method for HTML escaping
+    escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
     }
 }
 

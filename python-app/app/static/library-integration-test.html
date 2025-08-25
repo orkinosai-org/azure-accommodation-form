@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>External Library Integration Test</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="/static/css/style.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-12">
+                <h1 class="mb-4">External Library Integration Test</h1>
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    This page demonstrates the External Library Admin integration with web parts.
+                </div>
+            </div>
+        </div>
+
+        <!-- Document Libraries Section -->
+        <div class="form-section mb-4">
+            <h4 class="section-title">Document Libraries Integration</h4>
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i>
+                Select any external document libraries you may need access to for accommodation-related documents.
+                <br>
+                <strong>All libraries are loaded from the External Library Admin List - no hardcoded sources!</strong>
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label">Available Document Libraries</label>
+                <div id="library-selector-container" class="mb-3">
+                    <!-- Library selector will be loaded here -->
+                    <div class="text-center text-muted">
+                        <div class="spinner-border spinner-border-sm me-2" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        Loading available libraries from External Library Admin List...
+                    </div>
+                </div>
+            </div>
+            
+            <div id="selected-libraries" class="mb-3" style="display: none;">
+                <label class="form-label">Selected Libraries</label>
+                <div id="selected-libraries-list">
+                    <!-- Selected libraries will be displayed here -->
+                </div>
+            </div>
+
+            <div class="mt-4">
+                <h5>API Integration Details</h5>
+                <ul class="list-group">
+                    <li class="list-group-item">
+                        <strong>Endpoint:</strong> <code>/api/admin/public/active-libraries</code>
+                        <span class="badge bg-success ms-2">No Authentication Required</span>
+                    </li>
+                    <li class="list-group-item">
+                        <strong>Method:</strong> GET
+                    </li>
+                    <li class="list-group-item">
+                        <strong>Response:</strong> JSON array of active libraries only
+                    </li>
+                    <li class="list-group-item">
+                        <strong>Management:</strong> Libraries are managed through the External Library Admin interface at <code>/admin/libraries</code>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Library Grid Display -->
+        <div class="form-section mb-4">
+            <h4 class="section-title">Library Grid Display</h4>
+            <p class="text-muted">Alternative display format showing all available libraries in a grid layout:</p>
+            <div id="library-grid-container">
+                <!-- Library grid will be loaded here -->
+            </div>
+        </div>
+
+        <!-- Test Results -->
+        <div class="form-section mb-4">
+            <h4 class="section-title">Integration Test Results</h4>
+            <div id="test-results">
+                <div class="alert alert-secondary">
+                    <i class="fas fa-clock me-2"></i>
+                    Waiting for library integration to initialize...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/static/js/external-library-integration.js"></script>
+    <script>
+        // Simple test class to demonstrate the integration
+        class LibraryIntegrationTest {
+            constructor() {
+                this.selectedLibraries = [];
+                this.init();
+            }
+
+            async init() {
+                try {
+                    await this.initializeLibraryIntegration();
+                    this.showTestResults(true, 'Library integration initialized successfully');
+                } catch (error) {
+                    console.error('Library integration test failed:', error);
+                    this.showTestResults(false, 'Library integration failed: ' + error.message);
+                }
+            }
+
+            async initializeLibraryIntegration() {
+                // Initialize the external library integration system
+                if (typeof window.externalLibraryAPI !== 'undefined') {
+                    await window.externalLibraryAPI.init();
+                    
+                    // Create library selector
+                    await window.externalLibraryAPI.createSelector('library-selector-container', {
+                        selectId: 'document-library',
+                        placeholder: 'Choose a document library...',
+                        allowMultiple: true,
+                        showDescriptions: true,
+                        onChange: (library, event) => {
+                            this.handleLibrarySelection(library, event);
+                        }
+                    });
+
+                    // Create library grid
+                    await window.externalLibraryAPI.createGrid('library-grid-container', {
+                        showActions: true
+                    });
+                    
+                    // Listen for library selection events
+                    document.addEventListener('librarySelected', (event) => {
+                        this.handleLibrarySelectionEvent(event);
+                    });
+                    
+                    console.log('External library integration initialized successfully');
+                } else {
+                    throw new Error('External library API not available');
+                }
+            }
+
+            handleLibrarySelection(library, event) {
+                if (library) {
+                    console.log('Library selected:', library.name);
+                    this.addSelectedLibrary(library);
+                }
+            }
+
+            handleLibrarySelectionEvent(event) {
+                const library = event.detail.library;
+                if (library) {
+                    console.log('Library selection event:', library.name);
+                    this.addSelectedLibrary(library);
+                }
+            }
+
+            addSelectedLibrary(library) {
+                const selectedContainer = document.getElementById('selected-libraries');
+                const selectedList = document.getElementById('selected-libraries-list');
+                
+                if (!selectedContainer || !selectedList) return;
+
+                // Check if library is already selected
+                const existingCard = selectedList.querySelector(`[data-library-id="${library.id}"]`);
+                if (existingCard) {
+                    this.showAlert(`Library "${library.name}" is already selected.`, 'info');
+                    return;
+                }
+
+                // Create library card
+                const libraryCard = document.createElement('div');
+                libraryCard.className = 'card mb-2 selected-library-card';
+                libraryCard.setAttribute('data-library-id', library.id);
+                libraryCard.innerHTML = `
+                    <div class="card-body py-2">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="card-title mb-1">${this.escapeHtml(library.name)}</h6>
+                                ${library.description ? `<small class="text-muted">${this.escapeHtml(library.description)}</small>` : ''}
+                                <br>
+                                <small class="text-primary">
+                                    <i class="fas fa-link me-1"></i>
+                                    <a href="${library.url}" target="_blank" class="text-decoration-none">View Library</a>
+                                </small>
+                            </div>
+                            <button type="button" class="btn btn-outline-danger btn-sm library-remove-btn" onclick="test.removeSelectedLibrary('${library.id}')">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+
+                selectedList.appendChild(libraryCard);
+                selectedContainer.style.display = 'block';
+
+                // Store library data
+                this.selectedLibraries.push({
+                    id: library.id,
+                    name: library.name,
+                    url: library.url,
+                    description: library.description
+                });
+
+                this.updateTestResults();
+            }
+
+            removeSelectedLibrary(libraryId) {
+                const libraryCard = document.querySelector(`[data-library-id="${libraryId}"]`);
+                if (libraryCard) {
+                    libraryCard.remove();
+                }
+
+                // Remove from selected libraries
+                this.selectedLibraries = this.selectedLibraries.filter(lib => lib.id !== libraryId);
+
+                // Hide container if no libraries selected
+                const selectedList = document.getElementById('selected-libraries-list');
+                const selectedContainer = document.getElementById('selected-libraries');
+                if (selectedList && selectedList.children.length === 0 && selectedContainer) {
+                    selectedContainer.style.display = 'none';
+                }
+
+                this.updateTestResults();
+            }
+
+            updateTestResults() {
+                const count = this.selectedLibraries.length;
+                let message = `✅ Integration working correctly. ${count} ${count === 1 ? 'library' : 'libraries'} selected.`;
+                if (count > 0) {
+                    message += `<br><small class="text-muted">Selected: ${this.selectedLibraries.map(lib => lib.name).join(', ')}</small>`;
+                }
+                this.showTestResults(true, message);
+            }
+
+            showTestResults(success, message) {
+                const container = document.getElementById('test-results');
+                if (container) {
+                    const alertClass = success ? 'alert-success' : 'alert-danger';
+                    const icon = success ? 'check-circle' : 'exclamation-triangle';
+                    container.innerHTML = `
+                        <div class="alert ${alertClass}">
+                            <i class="fas fa-${icon} me-2"></i>
+                            ${message}
+                        </div>
+                    `;
+                }
+            }
+
+            showAlert(message, type = 'info') {
+                // Create and show alert
+                const alertHTML = `
+                    <div class="alert alert-${type} alert-dismissible fade show mt-2" role="alert">
+                        ${message}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                `;
+                
+                // Insert after test results
+                const testResults = document.getElementById('test-results');
+                if (testResults) {
+                    testResults.insertAdjacentHTML('afterend', alertHTML);
+                }
+            }
+
+            escapeHtml(text) {
+                if (!text) return '';
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+        }
+
+        // Global function for library selection (can be called from buttons)
+        async function selectLibrary(libraryId) {
+            if (window.libraryIntegration) {
+                const library = window.libraryIntegration.getLibraryById(libraryId);
+                if (library) {
+                    console.log('Selected library:', library);
+                    
+                    // Trigger custom event for other components to listen to
+                    const event = new CustomEvent('librarySelected', {
+                        detail: { library }
+                    });
+                    document.dispatchEvent(event);
+                    
+                    return library;
+                }
+            }
+            return null;
+        }
+
+        // Initialize test when DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            window.test = new LibraryIntegrationTest();
+        });
+    </script>
+</body>
+</html>
