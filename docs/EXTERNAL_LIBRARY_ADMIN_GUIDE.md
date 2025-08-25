@@ -139,6 +139,77 @@ Full CRUD operations are available through admin-authenticated endpoints:
 - `GET /api/admin/libraries/stats` - Get statistics
 - `GET /api/admin/libraries/{id}/test-connection` - Test connectivity
 
+### External User Management Endpoints
+
+These endpoints ensure all external user operations go through the admin-managed system:
+
+#### Add External User (Admin Only)
+```
+POST /api/admin/libraries/{library_id}/external-users
+Content-Type: application/json
+X-Admin-Token: your-admin-token
+
+{
+    "email": "user@example.com",
+    "name": "User Name",
+    "organization": "Company Name"
+}
+```
+
+#### Remove External User (Admin Only)
+```
+DELETE /api/admin/libraries/{library_id}/external-users/{user_email}
+X-Admin-Token: your-admin-token
+```
+
+#### Get External Users (Admin Only)
+```
+GET /api/admin/libraries/{library_id}/external-users
+X-Admin-Token: your-admin-token
+```
+
+#### Check User Access (Public)
+```
+POST /api/admin/libraries/{library_id}/external-users/check-access
+Content-Type: application/json
+
+{
+    "user_email": "user@example.com"
+}
+```
+
+### Response Examples
+
+#### Add User Response
+```json
+{
+    "message": "User user@example.com added to library successfully",
+    "library_id": "lib-123",
+    "user": {
+        "email": "user@example.com",
+        "name": "User Name",
+        "organization": "Company Name"
+    },
+    "total_users": 3
+}
+```
+
+#### Check Access Response
+```json
+{
+    "library_id": "lib-123",
+    "library_name": "Project Documents",
+    "user_email": "user@example.com",
+    "has_access": true,
+    "user_details": {
+        "email": "user@example.com",
+        "name": "User Name",
+        "organization": "Company Name"
+    },
+    "total_external_users": 3
+}
+```
+
 ## Frontend Integration
 
 ### Loading Libraries in Web Parts
@@ -168,6 +239,88 @@ Always check the library status and only show active libraries to end users:
 function filterActiveLibraries(libraries) {
     return libraries.filter(lib => lib.status === 'active');
 }
+```
+
+### External User Management in Web Parts
+
+**IMPORTANT:** All external user add/remove operations must go through the External Library Admin API. Web parts should never manage external users directly.
+
+#### Using the External Library Integration API
+
+```javascript
+// Initialize the integration
+await window.externalLibraryAPI.init();
+
+// Create external user manager interface
+await window.externalLibraryAPI.createExternalUserManager('container-id', 'library-id');
+
+// Add external user (admin only)
+await window.externalLibraryAPI.addExternalUser('library-id', {
+    email: 'user@example.com',
+    name: 'User Name',
+    organization: 'Company Name'
+});
+
+// Remove external user (admin only)
+await window.externalLibraryAPI.removeExternalUser('library-id', 'user@example.com');
+
+// Check user access
+const accessInfo = await window.externalLibraryAPI.checkUserAccess('library-id', 'user@example.com');
+```
+
+#### Web Part Best Practices
+
+1. **Always use admin-managed lists**: Never hardcode external user lists in web parts
+2. **Use API endpoints**: All external user operations must go through `/api/admin/libraries/{id}/external-users`
+3. **Check permissions**: Validate user access using the admin list before granting access
+4. **Handle errors gracefully**: Provide user-friendly error messages for failed operations
+5. **Refresh data**: Reload library data after user management operations
+
+#### Example Web Part Structure
+
+```javascript
+class ExternalUserWebPart {
+    async init() {
+        // Initialize external library integration
+        await window.externalLibraryAPI.init();
+        
+        // Create library selector
+        await this.createLibrarySelector();
+        
+        // Set up user management interface
+        this.setupUserManagement();
+    }
+    
+    async createLibrarySelector() {
+        await window.externalLibraryAPI.createSelector('library-container', {
+            onChange: (library) => this.onLibrarySelected(library)
+        });
+    }
+    
+    async onLibrarySelected(library) {
+        // Create user management interface for selected library
+        await window.externalLibraryAPI.createExternalUserManager(
+            'user-management-container', 
+            library.id
+        );
+    }
+    
+    async checkUserAccess(userEmail) {
+        // Always check against admin-managed list
+        return await window.externalLibraryAPI.checkUserAccess(
+            this.selectedLibraryId, 
+            userEmail
+        );
+    }
+}
+```
+
+### Required Script Includes
+
+Include the external library integration script in your web parts:
+
+```html
+<script src="/static/js/external-library-integration.js"></script>
 ```
 
 ## Security Considerations
