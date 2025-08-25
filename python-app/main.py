@@ -13,7 +13,7 @@ from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
 import uvicorn
 
-from app.api.routes import auth, form, admin
+from app.api.routes import auth, form, admin, external_library
 from app.core.config import get_settings
 from app.core.security import get_current_ip
 from app.services.storage import AzureBlobStorageService
@@ -117,6 +117,7 @@ templates = Jinja2Templates(directory="app/templates")
 app.include_router(auth.router, prefix="/api/auth", tags=["authentication"])
 app.include_router(form.router, prefix="/api/form", tags=["form"])
 app.include_router(admin.router, prefix="/api/admin", tags=["admin"])
+app.include_router(external_library.router, prefix="/api/admin", tags=["external-libraries"])
 
 @app.get("/")
 async def root(request: Request):
@@ -126,6 +127,17 @@ async def root(request: Request):
     
     return templates.TemplateResponse(
         "index.html",
+        {"request": request, "client_ip": client_ip}
+    )
+
+@app.get("/admin/libraries")
+async def admin_libraries_page(request: Request):
+    """Admin libraries management page"""
+    client_ip = get_current_ip(request)
+    logger.info(f"Admin libraries page accessed from IP: {client_ip}")
+    
+    return templates.TemplateResponse(
+        "admin-libraries.html",
         {"request": request, "client_ip": client_ip}
     )
 
